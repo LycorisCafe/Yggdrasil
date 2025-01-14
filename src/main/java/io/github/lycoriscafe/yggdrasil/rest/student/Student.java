@@ -17,30 +17,20 @@
 package io.github.lycoriscafe.yggdrasil.rest.student;
 
 import io.github.lycoriscafe.yggdrasil.rest.Gender;
-import io.github.lycoriscafe.yggdrasil.rest.classroom.Classroom;
-import io.github.lycoriscafe.yggdrasil.rest.guardian.Guardian;
-import io.github.lycoriscafe.yggdrasil.rest.subject.Subject;
-import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
 import java.time.LocalDate;
 import java.time.Year;
-import java.util.List;
 
 @Data
 @NoArgsConstructor
-@Entity
 public class Student {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @NonNull
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Guardian guardian;
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Classroom classroom;
+    private Long guardianId;
+    private Long classroomId;
     @NonNull
     private String initName;
     @NonNull
@@ -55,7 +45,5 @@ public class Student {
     private Year regYear;
     private String contactNo;
     private String email;
-    @ManyToMany(fetch = FetchType.LAZY)
-    private List<Subject> subjects;
     private Boolean disabled;
 }

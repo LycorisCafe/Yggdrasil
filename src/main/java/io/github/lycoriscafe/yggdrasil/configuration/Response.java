@@ -14,12 +14,16 @@
  * limitations under the License.
  */
 
-package io.github.lycoriscafe.yggdrasil.rest.teacher;
+package io.github.lycoriscafe.yggdrasil.configuration;
 
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.data.repository.PagingAndSortingRepository;
-import org.springframework.data.rest.core.annotation.RepositoryRestResource;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@RepositoryRestResource
-public interface TeacherRepository extends PagingAndSortingRepository<Teacher, Long>, CrudRepository<Teacher, Long> {
+import java.time.LocalDateTime;
+
+@Data
+@NoArgsConstructor
+public class Response {
+    private LocalDateTime timestamp;
+    private Object data;
 }

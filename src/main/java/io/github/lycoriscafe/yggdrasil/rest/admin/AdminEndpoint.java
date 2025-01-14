@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 
-package io.github.lycoriscafe.yggdrasil.rest.student;
+package io.github.lycoriscafe.yggdrasil.rest.admin;
 
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.data.repository.PagingAndSortingRepository;
-import org.springframework.data.rest.core.annotation.RepositoryRestResource;
+import io.github.lycoriscafe.nexus.http.core.headers.auth.Authenticated;
 
-@RepositoryRestResource
-public interface StudentRepository extends PagingAndSortingRepository<Student, Long>, CrudRepository<Student, Long> {
+@Authenticated
+public class AdminEndpoint {
 }

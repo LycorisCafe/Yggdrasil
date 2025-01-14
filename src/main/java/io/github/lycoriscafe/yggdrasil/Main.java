@@ -14,17 +14,18 @@
  * limitations under the License.
  */
 
-package io.github.lycoriscafe.yggdrasil.rest.student;
+package io.github.lycoriscafe.yggdrasil;
 
-import jakarta.persistence.Embeddable;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.ManyToOne;
+import io.github.lycoriscafe.nexus.http.helper.scanners.ScannerException;
+import io.github.lycoriscafe.yggdrasil.configuration.YggdrasilConfig;
 
-import java.time.LocalDate;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.sql.SQLException;
 
-@Embeddable
-public class StudentAttendanceId {
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Student student;
-    private LocalDate date;
+public class Main {
+    public static void main(String[] args) throws ScannerException, SQLException, IOException, URISyntaxException {
+        // initialize application configurations
+        YggdrasilConfig.initialize();
+    }
 }

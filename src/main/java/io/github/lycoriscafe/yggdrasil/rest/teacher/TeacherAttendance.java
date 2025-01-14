@@ -16,19 +16,17 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.teacher;
 
-import jakarta.persistence.EmbeddedId;
-import jakarta.persistence.Entity;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Data
 @NoArgsConstructor
-@Entity
 public class TeacherAttendance {
-    @EmbeddedId
-    private TeacherAttendanceId id;
+    private Long teacherId;
+    private LocalDate date;
     private LocalTime time;
     private Boolean disabled;
 }

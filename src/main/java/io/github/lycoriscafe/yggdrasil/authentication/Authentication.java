@@ -14,12 +14,25 @@
  * limitations under the License.
  */
 
-package io.github.lycoriscafe.yggdrasil.rest.relief;
+package io.github.lycoriscafe.yggdrasil.authentication;
 
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.data.repository.PagingAndSortingRepository;
-import org.springframework.data.rest.core.annotation.RepositoryRestResource;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
-@RepositoryRestResource
-public interface ReliefRepository extends PagingAndSortingRepository<Relief, Long>, CrudRepository<Relief, Long> {
+import java.time.LocalDateTime;
+
+@Data
+@NoArgsConstructor
+public class Authentication {
+    @NonNull
+    private Role role;
+    @NonNull
+    private Long userId;
+    @NonNull
+    private String password;
+    private String accessToken;
+    private LocalDateTime expires;
+    private String refreshToken;
+    private Boolean disabled;
 }

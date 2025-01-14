@@ -16,22 +16,19 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.admin;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
-@Entity
 public class Admin {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @NonNull
     private String name;
+    @NonNull
+    private List<AccessLevel> accessLevel;
     private Boolean disabled;
 }

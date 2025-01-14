@@ -16,10 +16,6 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.timetable;
 
-import io.github.lycoriscafe.yggdrasil.rest.classroom.Classroom;
-import io.github.lycoriscafe.yggdrasil.rest.subject.Subject;
-import io.github.lycoriscafe.yggdrasil.rest.teacher.Teacher;
-import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -28,20 +24,14 @@ import java.time.DayOfWeek;
 
 @Data
 @NoArgsConstructor
-@Entity
 public class Timetable {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @NonNull
-    @OneToOne(fetch = FetchType.LAZY)
-    private Teacher teacher;
+    private Long teacherId;
     @NonNull
-    @OneToOne(fetch = FetchType.LAZY)
-    private Subject subject;
+    private Long subjectId;
     @NonNull
-    @OneToOne(fetch = FetchType.LAZY)
-    private Classroom classroom;
+    private Long classroomId;
     @NonNull
     private DayOfWeek day;
     @NonNull

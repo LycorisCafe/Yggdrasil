@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 
-package io.github.lycoriscafe.yggdrasil.rest.timetable;
+package io.github.lycoriscafe.yggdrasil.authentication;
 
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.data.repository.PagingAndSortingRepository;
-import org.springframework.data.rest.core.annotation.RepositoryRestResource;
-
-@RepositoryRestResource
-public interface TimetableRepository extends PagingAndSortingRepository<Timetable, Long>, CrudRepository<Timetable, Long> {
+public enum Role {
+    ADMIN,
+    TEACHER,
+    STUDENT
 }

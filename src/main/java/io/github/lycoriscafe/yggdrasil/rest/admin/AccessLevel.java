@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-package io.github.lycoriscafe.yggdrasil;
+package io.github.lycoriscafe.yggdrasil.rest.admin;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-
-@SpringBootApplication
-public class YggdrasilApplication {
-    public static void main(String[] args) {
-        SpringApplication.run(YggdrasilApplication.class, args);
-    }
+public enum AccessLevel {
+    SUPERUSER,
+    TEACHER_READ,
+    TEACHER_WRITE,
+    STUDENT_READ,
+    STUDENT_WRITE,
+    NOTIFICATION
 }

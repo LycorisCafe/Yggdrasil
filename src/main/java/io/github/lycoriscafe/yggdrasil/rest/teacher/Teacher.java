@@ -17,20 +17,13 @@
 package io.github.lycoriscafe.yggdrasil.rest.teacher;
 
 import io.github.lycoriscafe.yggdrasil.rest.Gender;
-import io.github.lycoriscafe.yggdrasil.rest.subject.Subject;
-import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
-import java.util.List;
-
 @Data
 @NoArgsConstructor
-@Entity
 public class Teacher {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @NonNull
     private String nic;
@@ -46,8 +39,5 @@ public class Teacher {
     private String email;
     @NonNull
     private String contactNo;
-    @NonNull
-    @OneToMany(fetch = FetchType.LAZY)
-    private List<Subject> subjects;
     private Boolean disabled;
 }

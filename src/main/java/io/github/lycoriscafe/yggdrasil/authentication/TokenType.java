@@ -14,13 +14,9 @@
  * limitations under the License.
  */
 
-package io.github.lycoriscafe.yggdrasil.rest.student;
+package io.github.lycoriscafe.yggdrasil.authentication;
 
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.data.repository.PagingAndSortingRepository;
-import org.springframework.data.rest.core.annotation.RepositoryRestResource;
-
-@RepositoryRestResource
-public interface StudentAttendanceRepository
-        extends PagingAndSortingRepository<StudentAttendance, Student>, CrudRepository<StudentAttendance, Student> {
+public enum TokenType {
+    ACCESS_TOKEN,
+    REFRESH_TOKEN
 }

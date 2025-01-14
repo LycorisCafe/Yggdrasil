@@ -25,34 +25,35 @@ START TRANSACTION;
 ## ADMIN
 CREATE TABLE admin
 (
-    id       SERIAL PRIMARY KEY,
-    name     VARCHAR(100) NOT NULL,
-    disabled BOOLEAN DEFAULT FALSE # Used for disabling without deleting
+    id          SERIAL PRIMARY KEY,
+    name        VARCHAR(100)                                                                                        NOT NULL,
+    accessLevel SET ('SUPERUSER', 'TEACHER_READ', 'TEACHER_WRITE', 'STUDENT_READ', 'STUDENT_WRITE', 'NOTIFICATION') NOT NULL,
+    disabled    BOOLEAN DEFAULT FALSE # Used for disabling without deleting
 );
 
 ## CLASSROOM
 CREATE TABLE classroom
 (
-    id         SERIAL PRIMARY KEY,
-    teacher_id BIGINT UNSIGNED UNIQUE,
-    grade      TINYINT(2)  NOT NULL,
-    name       VARCHAR(10) NOT NULL,
-    disabled   BOOLEAN DEFAULT FALSE, # Used for disabling without deleting
+    id        SERIAL PRIMARY KEY,
+    teacherId BIGINT UNSIGNED UNIQUE,
+    grade     TINYINT(2)  NOT NULL,
+    name      VARCHAR(10) NOT NULL,
+    disabled  BOOLEAN DEFAULT FALSE, # Used for disabling without deleting
     UNIQUE (grade, name)
 );
 
 ## GUARDIAN
 CREATE TABLE guardian
 (
-    id         SERIAL PRIMARY KEY,
-    nic        VARCHAR(12)             NOT NULL UNIQUE,
-    init_name  VARCHAR(50)             NOT NULL,
-    full_name  VARCHAR(200)            NOT NULL,
-    gender     ENUM ('MALE', 'FEMALE') NOT NULL,
-    address    VARCHAR(300)            NOT NULL,
-    email      VARCHAR(300),
-    contact_no VARCHAR(10)             NOT NULL,
-    disabled   BOOLEAN DEFAULT FALSE # Used for disabling without deleting
+    id        SERIAL PRIMARY KEY,
+    nic       VARCHAR(12)             NOT NULL UNIQUE,
+    initName  VARCHAR(50)             NOT NULL,
+    fullName  VARCHAR(200)            NOT NULL,
+    gender    ENUM ('MALE', 'FEMALE') NOT NULL,
+    address   VARCHAR(300)            NOT NULL,
+    email     VARCHAR(300),
+    contactNo VARCHAR(10)             NOT NULL,
+    disabled  BOOLEAN DEFAULT FALSE # Used for disabling without deleting
 );
 
 ## NOTIFICATION
@@ -68,153 +69,152 @@ CREATE TABLE notification
 ## RELIEF
 CREATE TABLE relief
 (
-    id           SERIAL PRIMARY KEY,
-    timetable_id BIGINT UNSIGNED NOT NULL,
-    teacher_id   BIGINT UNSIGNED NOT NULL,
-    date         DATE            NOT NULL,
-    disabled     BOOLEAN DEFAULT FALSE, # Used for disabling without deleting
-    UNIQUE (timetable_id, date)
+    id          SERIAL PRIMARY KEY,
+    timetableId BIGINT UNSIGNED NOT NULL,
+    teacherId   BIGINT UNSIGNED NOT NULL,
+    date        DATE            NOT NULL,
+    disabled    BOOLEAN DEFAULT FALSE, # Used for disabling without deleting
+    UNIQUE (timetableId, date)
 );
 
 ## STUDENT
 CREATE TABLE student
 (
-    id            SERIAL PRIMARY KEY,
-    guardian_id   BIGINT UNSIGNED         NOT NULL,
-    classroom_id  BIGINT UNSIGNED,
-    initName      VARCHAR(50)             NOT NULL,
-    fullName      VARCHAR(200)            NOT NULL,
-    gender        ENUM ('MALE', 'FEMALE') NOT NULL,
-    date_of_birth DATE                    NOT NULL,
-    nic           VARCHAR(12) UNIQUE,
-    address       VARCHAR(300)            NOT NULL,
-    reg_year      YEAR,
-    contact_no    VARCHAR(10),
-    email         VARCHAR(300),
-    disabled      BOOLEAN DEFAULT FALSE # Used for disabling without deleting
+    id          SERIAL PRIMARY KEY,
+    guardianId  BIGINT UNSIGNED         NOT NULL,
+    classroomId BIGINT UNSIGNED,
+    initName    VARCHAR(50)             NOT NULL,
+    fullName    VARCHAR(200)            NOT NULL,
+    gender      ENUM ('MALE', 'FEMALE') NOT NULL,
+    dateOfBirth DATE                    NOT NULL,
+    nic         VARCHAR(12) UNIQUE,
+    address     VARCHAR(300)            NOT NULL,
+    regYear     YEAR,
+    contactNo   VARCHAR(10),
+    email       VARCHAR(300),
+    disabled    BOOLEAN DEFAULT FALSE # Used for disabling without deleting
 );
 
 ## STUDENT ATTENDANCE
-CREATE TABLE student_attendance
+CREATE TABLE studentAttendance
 (
-    student_id BIGINT UNSIGNED NOT NULL,
-    date       DATE    DEFAULT (DATE(NOW())),
-    time       TIME    DEFAULT (TIME(NOW())),
-    disabled   BOOLEAN DEFAULT FALSE, # Used for disabling without deleting
-    UNIQUE (student_id, date)
+    studentId BIGINT UNSIGNED NOT NULL,
+    date      DATE    DEFAULT (DATE(NOW())),
+    time      TIME    DEFAULT (TIME(NOW())),
+    disabled  BOOLEAN DEFAULT FALSE, # Used for disabling without deleting
+    UNIQUE (studentId, date)
 );
 
 ## STUDENT SUBJECT JOIN
-CREATE TABLE student_subject_join
+CREATE TABLE studentSubjectJoin
 (
-    student_id BIGINT UNSIGNED NOT NULL,
-    subject_id BIGINT UNSIGNED NOT NULL,
-    disabled   BOOLEAN DEFAULT FALSE, # Used for disabling without deleting
-    UNIQUE (student_id, subject_id)
+    studentId BIGINT UNSIGNED NOT NULL,
+    subjectId BIGINT UNSIGNED NOT NULL,
+    disabled  BOOLEAN DEFAULT FALSE, # Used for disabling without deleting
+    UNIQUE (studentId, subjectId)
 );
 
 ## SUBJECT
 CREATE TABLE subject
 (
-    id         SERIAL PRIMARY KEY,
-    grade      TINYINT(2)  NOT NULL,
-    short_name VARCHAR(10) NOT NULL,
-    long_name  VARCHAR(50),
-    teacher_id BIGINT UNSIGNED,
-    disabled   BOOLEAN DEFAULT FALSE, # Used for disabling without deleting
-    UNIQUE (grade, short_name)
+    id        SERIAL PRIMARY KEY,
+    grade     TINYINT(2)  NOT NULL,
+    shortName VARCHAR(10) NOT NULL,
+    longName  VARCHAR(50),
+    teacherId BIGINT UNSIGNED,
+    disabled  BOOLEAN DEFAULT FALSE, # Used for disabling without deleting
+    UNIQUE (grade, shortName)
 );
 
 ## TEACHER
 CREATE TABLE teacher
 (
-    id         SERIAL PRIMARY KEY,
-    nic        VARCHAR(12)             NOT NULL UNIQUE,
-    init_name  VARCHAR(50)             NOT NULL,
-    full_name  VARCHAR(200)            NOT NULL,
-    gender     ENUM ('MALE', 'FEMALE') NOT NULL,
-    address    VARCHAR(300)            NOT NULL,
-    email      VARCHAR(300)            NOT NULL UNIQUE,
-    contact_no VARCHAR(10)             NOT NULL UNIQUE,
-    disabled   BOOLEAN DEFAULT FALSE # Used for disabling without deleting
+    id        SERIAL PRIMARY KEY,
+    nic       VARCHAR(12)             NOT NULL UNIQUE,
+    initName  VARCHAR(50)             NOT NULL,
+    fullName  VARCHAR(200)            NOT NULL,
+    gender    ENUM ('MALE', 'FEMALE') NOT NULL,
+    address   VARCHAR(300)            NOT NULL,
+    email     VARCHAR(300)            NOT NULL UNIQUE,
+    contactNo VARCHAR(10)             NOT NULL UNIQUE,
+    disabled  BOOLEAN DEFAULT FALSE # Used for disabling without deleting
 );
 
 ## TEACHER ATTENDANCE
-CREATE TABLE teacher_attendance
+CREATE TABLE teacherAttendance
 (
-    teacher_id BIGINT UNSIGNED NOT NULL,
-    date       DATE    DEFAULT (DATE(NOW())),
-    time       TIME    DEFAULT (TIME(NOW())),
-    disabled   BOOLEAN DEFAULT FALSE, # Used for disabling without deleting
-    UNIQUE (teacher_id, date)
+    teacherId BIGINT UNSIGNED NOT NULL,
+    date      DATE    DEFAULT (DATE(NOW())),
+    time      TIME    DEFAULT (TIME(NOW())),
+    disabled  BOOLEAN DEFAULT FALSE, # Used for disabling without deleting
+    UNIQUE (teacherId, date)
 );
 
 ## TEACHER SUBJECT JOIN
-CREATE TABLE teacher_subject_join
+CREATE TABLE teacherSubjectJoin
 (
-    teacher_id BIGINT UNSIGNED NOT NULL,
-    subject_id BIGINT UNSIGNED NOT NULL,
-    disabled   BOOLEAN DEFAULT FALSE, # Used for disabling without deleting
-    UNIQUE (teacher_id, subject_id)
+    teacherId BIGINT UNSIGNED NOT NULL,
+    subjectId BIGINT UNSIGNED NOT NULL,
+    disabled  BOOLEAN DEFAULT FALSE, # Used for disabling without deleting
+    UNIQUE (teacherId, subjectId)
 );
 
 ## TIMETABLE
 CREATE TABLE timetable
 (
-    id           SERIAL PRIMARY KEY,
-    teacher_id   BIGINT UNSIGNED NOT NULL,
-    subject_id   BIGINT UNSIGNED NOT NULL,
-    classroom_id BIGINT UNSIGNED NOT NULL,
-    day          TINYINT(1)      NOT NULL,
-    timeslot     TINYINT(1)      NOT NULL, # Typical 8 periods of daily timetable
-    disabled     BOOLEAN DEFAULT FALSE,    # Used for disabling without deleting
-    UNIQUE (teacher_id, day, timeslot)
+    id          SERIAL PRIMARY KEY,
+    teacherId   BIGINT UNSIGNED NOT NULL,
+    subjectId   BIGINT UNSIGNED NOT NULL,
+    classroomId BIGINT UNSIGNED NOT NULL,
+    day         TINYINT(1)      NOT NULL,
+    timeslot    TINYINT(1)      NOT NULL, # Typical 8 periods of daily timetable
+    disabled    BOOLEAN DEFAULT FALSE     # Used for disabling without deleting
 );
 
 ## AUTHENTICATION
 CREATE TABLE authentication
 (
-    role          ENUM ('STUDENT', 'TEACHER', 'ADMIN') NOT NULL,
-    user_id       BIGINT UNSIGNED                      NOT NULL,
-    password      VARBINARY(100)                       NOT NULL,
-    access_token  VARBINARY(100) UNIQUE,
-    expires       TIMESTAMP DEFAULT (TIMESTAMPADD(HOUR, 1, NOW())),
-    refresh_token VARBINARY(100) UNIQUE,
-    disabled      BOOLEAN   DEFAULT FALSE,
-    UNIQUE (role, user_id)
+    role         ENUM ('STUDENT', 'TEACHER', 'ADMIN') NOT NULL,
+    userId       BIGINT UNSIGNED                      NOT NULL,
+    password     VARBINARY(100)                       NOT NULL,
+    accessToken  VARBINARY(100) UNIQUE,
+    expires      TIMESTAMP ON UPDATE (TIMESTAMPADD(HOUR, 1, NOW())),
+    refreshToken VARBINARY(100) UNIQUE,
+    disabled     BOOLEAN DEFAULT FALSE,
+    UNIQUE (role, userId)
 );
 
 ALTER TABLE classroom
-    ADD FOREIGN KEY (teacher_id) REFERENCES teacher (id) ON UPDATE CASCADE ON DELETE CASCADE;
+    ADD FOREIGN KEY (teacherId) REFERENCES teacher (id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 ALTER TABLE relief
-    ADD FOREIGN KEY (timetable_id) REFERENCES timetable (id) ON UPDATE CASCADE ON DELETE CASCADE,
-    ADD FOREIGN KEY (teacher_id) REFERENCES teacher (id) ON UPDATE CASCADE ON DELETE CASCADE;
+    ADD FOREIGN KEY (timetableId) REFERENCES timetable (id) ON UPDATE CASCADE ON DELETE CASCADE,
+    ADD FOREIGN KEY (teacherId) REFERENCES teacher (id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 ALTER TABLE student
-    ADD FOREIGN KEY (guardian_id) REFERENCES guardian (id) ON UPDATE CASCADE ON DELETE CASCADE;
+    ADD FOREIGN KEY (guardianId) REFERENCES guardian (id) ON UPDATE CASCADE ON DELETE CASCADE;
 
-ALTER TABLE student_attendance
-    ADD FOREIGN KEY (student_id) REFERENCES student (id) ON UPDATE CASCADE ON DELETE CASCADE;
+ALTER TABLE studentAttendance
+    ADD FOREIGN KEY (studentId) REFERENCES student (id) ON UPDATE CASCADE ON DELETE CASCADE;
 
-ALTER TABLE student_subject_join
-    ADD FOREIGN KEY (student_id) REFERENCES student (id) ON UPDATE CASCADE ON DELETE CASCADE,
-    ADD FOREIGN KEY (subject_id) REFERENCES subject (id) ON UPDATE CASCADE ON DELETE CASCADE;
+ALTER TABLE studentSubjectJoin
+    ADD FOREIGN KEY (studentId) REFERENCES student (id) ON UPDATE CASCADE ON DELETE CASCADE,
+    ADD FOREIGN KEY (subjectId) REFERENCES subject (id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 ALTER TABLE subject
-    ADD FOREIGN KEY (teacher_id) REFERENCES teacher (id) ON UPDATE CASCADE ON DELETE CASCADE;
+    ADD FOREIGN KEY (teacherId) REFERENCES teacher (id) ON UPDATE CASCADE ON DELETE CASCADE;
 
-ALTER TABLE teacher_attendance
-    ADD FOREIGN KEY (teacher_id) REFERENCES teacher (id) ON UPDATE CASCADE ON DELETE CASCADE;
+ALTER TABLE teacherAttendance
+    ADD FOREIGN KEY (teacherId) REFERENCES teacher (id) ON UPDATE CASCADE ON DELETE CASCADE;
 
-ALTER TABLE teacher_subject_join
-    ADD FOREIGN KEY (teacher_id) REFERENCES teacher (id) ON UPDATE CASCADE ON DELETE CASCADE,
-    ADD FOREIGN KEY (subject_id) REFERENCES subject (id) ON UPDATE CASCADE ON DELETE CASCADE;
+ALTER TABLE teacherSubjectJoin
+    ADD FOREIGN KEY (teacherId) REFERENCES teacher (id) ON UPDATE CASCADE ON DELETE CASCADE,
+    ADD FOREIGN KEY (subjectId) REFERENCES subject (id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 ALTER TABLE timetable
-    ADD FOREIGN KEY (teacher_id) REFERENCES teacher (id) ON UPDATE CASCADE ON DELETE CASCADE,
-    ADD FOREIGN KEY (subject_id) REFERENCES subject (id) ON UPDATE CASCADE ON DELETE CASCADE,
-    ADD FOREIGN KEY (classroom_id) REFERENCES classroom (id) ON UPDATE CASCADE ON DELETE CASCADE;
+    ADD FOREIGN KEY (teacherId) REFERENCES teacher (id) ON UPDATE CASCADE ON DELETE CASCADE,
+    ADD FOREIGN KEY (subjectId) REFERENCES subject (id) ON UPDATE CASCADE ON DELETE CASCADE,
+    ADD FOREIGN KEY (classroomId) REFERENCES classroom (id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 /*
  * Copyright 2025 Lycoris Café
@@ -240,12 +240,12 @@ COMMIT;
 ## INSERT SUPERUSER (DEFAULT)
 START TRANSACTION;
 
-INSERT INTO admin (name, disabled)
-VALUES ('SUPERUSER', false);
+INSERT INTO admin (name, accessLevel)
+VALUES ('SUPERUSER', 'SUPERUSER');
 
 SET @userId = LAST_INSERT_ID();
 
-INSERT INTO authentication (role, user_id, password)
+INSERT INTO authentication (role, userId, password)
 VALUES ('ADMIN', @userId, 'SUPERUSER');
 
 COMMIT;

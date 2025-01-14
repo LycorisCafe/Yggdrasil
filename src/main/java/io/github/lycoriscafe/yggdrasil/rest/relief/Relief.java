@@ -16,9 +16,6 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.relief;
 
-import io.github.lycoriscafe.yggdrasil.rest.teacher.Teacher;
-import io.github.lycoriscafe.yggdrasil.rest.timetable.Timetable;
-import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -27,17 +24,12 @@ import java.time.LocalDate;
 
 @Data
 @NoArgsConstructor
-@Entity
 public class Relief {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @NonNull
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Timetable timetable;
+    private Long timetableId;
     @NonNull
-    @OneToOne(fetch = FetchType.LAZY)
-    private Teacher teacher;
+    private Long teacherId;
     @NonNull
     private LocalDate date;
     private Boolean disabled;
