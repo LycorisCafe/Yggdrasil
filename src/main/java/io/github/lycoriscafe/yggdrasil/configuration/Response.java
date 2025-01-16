@@ -16,14 +16,88 @@
 
 package io.github.lycoriscafe.yggdrasil.configuration;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import io.github.lycoriscafe.nexus.http.core.headers.content.Content;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
-@Data
-@NoArgsConstructor
-public class Response {
+public class Response<T> {
+    private boolean success;
     private LocalDateTime timestamp;
-    private Object data;
+    private String error;
+    private Long generableResults;
+    private Long resultsFrom;
+    private Long resultsOffset;
+    private List<T> data;
+
+    public Response() {
+        timestamp = LocalDateTime.now();
+    }
+
+    public boolean isSuccess() {
+        return success;
+    }
+
+    public Response<T> setSuccess(boolean success) {
+        this.success = success;
+        return this;
+    }
+
+    public LocalDateTime getTimestamp() {
+        return timestamp;
+    }
+
+    public Response<T> setTimestamp(LocalDateTime timestamp) {
+        this.timestamp = timestamp;
+        return this;
+    }
+
+    public String getError() {
+        return error;
+    }
+
+    public Response<T> setError(String error) {
+        this.error = error;
+        return this;
+    }
+
+    public Long getGenerableResults() {
+        return generableResults;
+    }
+
+    public Response<T> setGenerableResults(Long generableResults) {
+        this.generableResults = generableResults;
+        return this;
+    }
+
+    public Long getResultsFrom() {
+        return resultsFrom;
+    }
+
+    public Response<T> setResultsFrom(Long resultsFrom) {
+        this.resultsFrom = (resultsFrom == null ? 0L : resultsFrom);
+        return this;
+    }
+
+    public Long getResultsOffset() {
+        return resultsOffset;
+    }
+
+    public Response<T> setResultsOffset(Long resultsOffset) {
+        this.resultsOffset = resultsOffset;
+        return this;
+    }
+
+    public List<T> getData() {
+        return data;
+    }
+
+    public Response<T> setData(List<T> data) {
+        this.data = data;
+        return this;
+    }
+
+    public Content parse() {
+        return new Content("application/json", "");
+    }
 }

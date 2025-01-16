@@ -22,6 +22,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 public class Utils {
     public static Connection getDatabaseConnection() throws SQLException {
@@ -34,5 +35,30 @@ public class Utils {
 
     public static DateTimeFormatter getDateTimeFormatter() {
         return DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    }
+
+    public static class ResultsHolder<T> {
+        private Long generableResults;
+        private List<T> results;
+
+        public ResultsHolder() {}
+
+        public Long getGenerableResults() {
+            return generableResults;
+        }
+
+        public ResultsHolder<T> setGenerableResults(Long generableResults) {
+            this.generableResults = generableResults;
+            return this;
+        }
+
+        public List<T> getResults() {
+            return results;
+        }
+
+        public ResultsHolder<T> setResults(List<T> results) {
+            this.results = results;
+            return this;
+        }
     }
 }

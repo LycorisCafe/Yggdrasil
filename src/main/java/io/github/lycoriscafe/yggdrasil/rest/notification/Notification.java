@@ -26,10 +26,11 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class Notification {
     private Long id;
-    private LocalDateTime timestamp;
+    private LocalDateTime createTimestamp;
+    private LocalDateTime updateTimestamp;
     @NonNull
     private Scope scope;
     @NonNull
     private String message;
-    private Boolean disabled;
+    private Boolean draft;
 }

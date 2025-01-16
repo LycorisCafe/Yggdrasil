@@ -28,5 +28,4 @@ public class TeacherAttendance {
     private Long teacherId;
     private LocalDate date;
     private LocalTime time;
-    private Boolean disabled;
 }

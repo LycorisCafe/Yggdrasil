@@ -25,8 +25,7 @@ import io.github.lycoriscafe.nexus.http.engine.ReqResManager.httpReq.HttpRequest
 import io.github.lycoriscafe.nexus.http.engine.ReqResManager.httpRes.HttpResponse;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
 import io.github.lycoriscafe.yggdrasil.rest.admin.AccessLevel;
-import lombok.Cleanup;
-import lombok.NonNull;
+import io.github.lycoriscafe.yggdrasil.rest.admin.AdminService;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -39,12 +38,16 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Base64;
+import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 public class AuthenticationService {
-    public static HttpResponse authenticate(@NonNull HttpRequest httpRequest,
-                                            @NonNull Role targetRole,
-                                            AccessLevel accessLevel) {
+    public static HttpResponse authenticate(HttpRequest httpRequest,
+                                            Role targetRole,
+                                            AccessLevel... accessLevels) {
+        Objects.requireNonNull(httpRequest);
+        Objects.requireNonNull(targetRole);
         var httpResponse = new HttpResponse(httpRequest.getRequestId(), httpRequest.getRequestConsumer());
         if (httpRequest.getAuthorization() == null || httpRequest.getAuthorization().getAuthScheme() != AuthScheme.BEARER) {
             return httpResponse.setStatusCode(HttpStatusCode.BAD_REQUEST).addAuthentication(
@@ -53,35 +56,41 @@ public class AuthenticationService {
         }
         var authRequest = (BearerAuthorization) httpRequest.getAuthorization();
         try {
-            var authChecked = getAuthentication(TokenType.ACCESS_TOKEN, authRequest.getAccessToken());
-            if (authChecked == null) {
+            var auth = getAuthentication(TokenType.ACCESS_TOKEN, authRequest.getAccessToken());
+            if (auth == null) {
                 return httpResponse.setStatusCode(HttpStatusCode.UNAUTHORIZED).addAuthentication(
                         new BearerAuthentication(BearerAuthorizationError.INVALID_TOKEN)
                                 .setErrorDescription("Invalid access token. Try again."));
             }
-            if (Instant.now().getEpochSecond() > authChecked.getExpires().atZone(ZoneId.systemDefault()).toEpochSecond()) {
+            if (Instant.now().getEpochSecond() > auth.getExpires().atZone(ZoneId.systemDefault()).toEpochSecond()) {
                 return httpResponse.setStatusCode(HttpStatusCode.UNAUTHORIZED).addAuthentication(
                         new BearerAuthentication(BearerAuthorizationError.INVALID_TOKEN)
                                 .setErrorDescription("Invalid access token. Token expired."));
             }
-            if (authChecked.getRole() != targetRole) {
+            if (auth.getRole() != targetRole) {
                 return httpResponse.setStatusCode(HttpStatusCode.FORBIDDEN).addAuthentication(
                         new BearerAuthentication(BearerAuthorizationError.INSUFFICIENT_SCOPE).setScope(targetRole.toString())
                                 .setErrorDescription("Insufficient scope. Contact your system admin for more details."));
             }
-            if (authChecked.getDisabled()) {
+            // TODO implement
+            var person = switch (auth.getRole()) {
+                case ADMIN -> AdminService.getAdminById(auth.getUserId());
+                case TEACHER -> null;
+                case STUDENT -> null;
+            };
+            if (person.getData().getFirst().getDisabled()) {
                 return httpResponse.setStatusCode(HttpStatusCode.UNAUTHORIZED).addAuthentication(
                         new BearerAuthentication(BearerAuthorizationError.INVALID_TOKEN)
                                 .setErrorDescription("Target account is disabled. Contact your system admin for more details."));
             }
-            if (targetRole == Role.ADMIN && accessLevel != null) {
-                // TODO implement
-//                var admin = AdminService.getAdmin(authChecked.getUserId());
-//                if (!admin.getAccessLevel().contains(accessLevel)) {
-//                    return httpResponse.setStatusCode(HttpStatusCode.FORBIDDEN).addAuthentication(
-//                            new BearerAuthentication(BearerAuthorizationError.INSUFFICIENT_SCOPE).setScope(targetRole + "#" + admin.getAccessLevel())
-//                                    .setErrorDescription("Insufficient scope. Contact your system admin for more details."));
-//                }
+            if (targetRole == Role.ADMIN && accessLevels != null) {
+                var admin = AdminService.getAdminById(auth.getUserId());
+                var accessLevel = admin.getData().getFirst().getAccessLevel();
+                if (!accessLevel.containsAll(List.of(accessLevels))) {
+                    return httpResponse.setStatusCode(HttpStatusCode.FORBIDDEN).addAuthentication(
+                            new BearerAuthentication(BearerAuthorizationError.INSUFFICIENT_SCOPE).setScope(targetRole + "#" + accessLevel)
+                                    .setErrorDescription("Insufficient scope. Contact your system admin for more details."));
+                }
             }
             return null;
         } catch (SQLException e) {
@@ -89,109 +98,110 @@ public class AuthenticationService {
         }
     }
 
-    public static Authentication getAuthentication(@NonNull TokenType tokenType,
-                                                   @NonNull String token) throws SQLException {
-        @Cleanup
-        var connection = Utils.getDatabaseConnection();
-        @Cleanup
-        var statement = connection.prepareStatement("SELECT * FROM authentication WHERE " + tokenType.toString().toLowerCase() + " = ?");
-        statement.setString(1, token);
-        @Cleanup
-        var resultSet = statement.executeQuery();
-        connection.commit();
-        if (resultSet.next()) {
-            var authentication = new Authentication();
-            authentication.setRole(Role.valueOf(resultSet.getString("role")));
-            authentication.setUserId(Long.parseLong(resultSet.getString("userId")));
-            authentication.setPassword(resultSet.getString("password"));
-            authentication.setAccessToken(resultSet.getString("accessToken"));
-            authentication.setExpires(LocalDateTime.parse(resultSet.getString("expires")));
-            authentication.setRefreshToken(resultSet.getString("refreshToken"));
-            authentication.setDisabled(resultSet.getBoolean("disabled"));
-            return authentication;
+    public static Authentication getAuthentication(TokenType tokenType,
+                                                   String token) throws SQLException {
+        Objects.requireNonNull(tokenType);
+        Objects.requireNonNull(token);
+        try (var connection = Utils.getDatabaseConnection();
+             var statement = connection.prepareStatement("SELECT * FROM authentication WHERE " + tokenType.toString().toLowerCase() + " = ?")) {
+            statement.setString(1, token);
+            try (var resultSet = statement.executeQuery()) {
+                connection.commit();
+                if (resultSet.next()) {
+                    var authentication = new Authentication();
+                    authentication.setRole(Role.valueOf(resultSet.getString("role")));
+                    authentication.setUserId(Long.parseLong(resultSet.getString("userId")));
+                    authentication.setPassword(resultSet.getString("password"));
+                    authentication.setAccessToken(resultSet.getString("accessToken"));
+                    authentication.setExpires(LocalDateTime.parse(resultSet.getString("expires")));
+                    authentication.setRefreshToken(resultSet.getString("refreshToken"));
+                    return authentication;
+                }
+                return null;
+            }
         }
-        return null;
     }
 
-    public static Authentication getAuthentication(@NonNull Role role,
-                                                   @NonNull Long userId) throws SQLException {
-        @Cleanup
-        var connection = Utils.getDatabaseConnection();
-        @Cleanup
-        var statement = connection.prepareStatement("SELECT * FROM authentication WHERE role = ? AND userId = ?");
-        statement.setString(1, role.toString());
-        statement.setString(2, Long.toUnsignedString(userId));
-        @Cleanup
-        var resultSet = statement.executeQuery();
-        connection.commit();
-        if (resultSet.next()) {
-            var authentication = new Authentication();
-            authentication.setRole(Role.valueOf(resultSet.getString("role")));
-            authentication.setUserId(Long.parseLong(resultSet.getString("userId")));
-            authentication.setPassword(resultSet.getString("password"));
-            authentication.setAccessToken(resultSet.getString("accessToken"));
-            authentication.setExpires(LocalDateTime.parse(resultSet.getString("expires")));
-            authentication.setRefreshToken(resultSet.getString("refreshToken"));
-            authentication.setDisabled(resultSet.getBoolean("disabled"));
-            return authentication;
+    public static Authentication getAuthentication(Role role,
+                                                   Long userId) throws SQLException {
+        Objects.requireNonNull(role);
+        Objects.requireNonNull(userId);
+        try (var connection = Utils.getDatabaseConnection();
+             var statement = connection.prepareStatement("SELECT * FROM authentication WHERE role = ? AND userId = ?")) {
+            statement.setString(1, role.toString());
+            statement.setString(2, Long.toUnsignedString(userId));
+            try (var resultSet = statement.executeQuery()) {
+                connection.commit();
+                if (resultSet.next()) {
+                    var authentication = new Authentication();
+                    authentication.setRole(Role.valueOf(resultSet.getString("role")));
+                    authentication.setUserId(Long.parseLong(resultSet.getString("userId")));
+                    authentication.setPassword(resultSet.getString("password"));
+                    authentication.setAccessToken(resultSet.getString("accessToken"));
+                    authentication.setExpires(LocalDateTime.parse(resultSet.getString("expires")));
+                    authentication.setRefreshToken(resultSet.getString("refreshToken"));
+                    return authentication;
+                }
+                return null;
+            }
         }
-        return null;
     }
 
-    public static Authentication createAuthentication(@NonNull Authentication authentication) throws SQLException {
-        @Cleanup
-        var connection = Utils.getDatabaseConnection();
-        @Cleanup
-        var statement = connection.prepareStatement("INSERT INTO authentication (role, userId, password) VALUES (?, ?, ?)");
-        statement.setString(1, authentication.getRole().toString());
-        statement.setString(2, Long.toUnsignedString(authentication.getUserId()));
-        statement.setString(3, authentication.getPassword());
-        if (statement.executeUpdate() != 1) {
-            connection.rollback();
-            return null;
+    public static Authentication createAuthentication(Authentication authentication) throws SQLException {
+        Objects.requireNonNull(authentication);
+        try (var connection = Utils.getDatabaseConnection();
+             var statement = connection.prepareStatement("INSERT INTO authentication (role, userId, password) VALUES (?, ?, ?)")) {
+            statement.setString(1, authentication.getRole().toString());
+            statement.setString(2, Long.toUnsignedString(authentication.getUserId()));
+            statement.setString(3, authentication.getPassword());
+            if (statement.executeUpdate() != 1) {
+                connection.rollback();
+                return null;
+            }
+            connection.commit();
+            return getAuthentication(authentication.getRole(), authentication.getUserId());
         }
-        connection.commit();
-        return getAuthentication(authentication.getRole(), authentication.getUserId());
     }
 
-    public static Authentication updateAuthentication(@NonNull Authentication authentication) throws SQLException {
-        @Cleanup
-        var connection = Utils.getDatabaseConnection();
-        @Cleanup
-        var statement = connection.prepareStatement("UPDATE authentication SET password = ?, accessToken = ?, expires = ?, refreshToken = ?, " +
-                "disabled = ? WHERE role = ? AND userId = ?");
-        statement.setString(1, authentication.getPassword());
-        statement.setString(2, authentication.getAccessToken());
-        statement.setString(3, Utils.getDateTimeFormatter().format(authentication.getExpires()));
-        statement.setString(4, authentication.getRefreshToken());
-        statement.setBoolean(5, authentication.getDisabled());
-        statement.setString(6, authentication.getRole().toString());
-        statement.setString(7, Long.toUnsignedString(authentication.getUserId()));
-        if (statement.executeUpdate() != 1) {
-            connection.rollback();
-            return null;
+    public static Authentication updateAuthentication(Authentication authentication) throws SQLException {
+        Objects.requireNonNull(authentication);
+        try (var connection = Utils.getDatabaseConnection();
+             var statement = connection.prepareStatement("UPDATE authentication SET password = ?, accessToken = ?, expires = ?, refreshToken = ? " +
+                     "WHERE role = ? AND userId = ?")) {
+            statement.setString(1, authentication.getPassword());
+            statement.setString(2, authentication.getAccessToken());
+            statement.setString(3, Utils.getDateTimeFormatter().format(authentication.getExpires()));
+            statement.setString(4, authentication.getRefreshToken());
+            statement.setString(6, authentication.getRole().toString());
+            statement.setString(7, Long.toUnsignedString(authentication.getUserId()));
+            if (statement.executeUpdate() != 1) {
+                connection.rollback();
+                return null;
+            }
+            connection.commit();
+            return getAuthentication(authentication.getRole(), authentication.getUserId());
         }
-        connection.commit();
-        return getAuthentication(authentication.getRole(), authentication.getUserId());
     }
 
-    public static boolean deleteAuthentication(@NonNull Role role,
-                                               @NonNull Long userId) throws SQLException {
-        @Cleanup
-        var connection = Utils.getDatabaseConnection();
-        @Cleanup
-        var statement = connection.prepareStatement("DELETE FROM authentication WHERE role = ? AND userId = ?");
-        statement.setString(1, role.toString());
-        statement.setString(2, Long.toUnsignedString(userId));
-        if (statement.executeUpdate() != 1) {
-            connection.rollback();
-            return false;
+    public static boolean deleteAuthentication(Role role,
+                                               Long userId) throws SQLException {
+        Objects.requireNonNull(role);
+        Objects.requireNonNull(userId);
+        try (var connection = Utils.getDatabaseConnection();
+             var statement = connection.prepareStatement("DELETE FROM authentication WHERE role = ? AND userId = ?")) {
+            statement.setString(1, role.toString());
+            statement.setString(2, Long.toUnsignedString(userId));
+            if (statement.executeUpdate() != 1) {
+                connection.rollback();
+                return false;
+            }
+            connection.commit();
+            return true;
         }
-        connection.commit();
-        return true;
     }
 
-    public static Authentication updatePassword(@NonNull Authentication authentication) throws SQLException, NoSuchAlgorithmException {
+    public static Authentication updatePassword(Authentication authentication) throws SQLException, NoSuchAlgorithmException {
+        Objects.requireNonNull(authentication);
         authentication.setPassword(encryptData(authentication.getPassword().getBytes(StandardCharsets.UTF_8)));
         return updateAuthentication(authentication);
     }

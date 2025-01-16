@@ -32,5 +32,4 @@ public class Relief {
     private Long teacherId;
     @NonNull
     private LocalDate date;
-    private Boolean disabled;
 }

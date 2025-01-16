@@ -36,5 +36,4 @@ public class Timetable {
     private DayOfWeek day;
     @NonNull
     private Integer timeslot;
-    private Boolean disabled;
 }

@@ -16,19 +16,81 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.admin;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
+import io.github.lycoriscafe.nexus.http.core.headers.content.MultipartFormData;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
-@Data
-@NoArgsConstructor
 public class Admin {
     private Long id;
-    @NonNull
     private String name;
-    @NonNull
-    private List<AccessLevel> accessLevel;
+    private Set<AccessLevel> accessLevel;
     private Boolean disabled;
+
+    private Admin() {}
+
+    public Admin(String name,
+                 Set<AccessLevel> accessLevel) {
+        this.name = Objects.requireNonNull(name);
+        this.accessLevel = Objects.requireNonNull(accessLevel);
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public Admin setId(Long id) {
+        this.id = id;
+        return this;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public Admin setName(String name) {
+        this.name = Objects.requireNonNull(name);
+        return this;
+    }
+
+    public Set<AccessLevel> getAccessLevel() {
+        return accessLevel;
+    }
+
+    public Admin setAccessLevel(Set<AccessLevel> accessLevel) {
+        Objects.requireNonNull(accessLevel);
+        if (accessLevel.isEmpty()) throw new NullPointerException("empty accessLevel set");
+        this.accessLevel = accessLevel;
+        return this;
+    }
+
+    public Boolean getDisabled() {
+        return disabled;
+    }
+
+    public Admin setDisabled(Boolean disabled) {
+        this.disabled = disabled;
+        return this;
+    }
+
+    public static Admin toAdmin(List<MultipartFormData> multipartFormData) {
+        var admin = new Admin();
+        for (var formData : multipartFormData) {
+            switch (formData.getName()) {
+                case "id" -> admin.setId(Long.parseLong(new String(formData.getData())));
+                case "name" -> admin.setName(new String(formData.getData()));
+                case "accessLevel" -> {
+                    var accessLevels = new HashSet<AccessLevel>();
+                    for (String accessLevel : new String(formData.getData()).split(",")) {
+                        accessLevels.add(AccessLevel.valueOf(accessLevel));
+                    }
+                    admin.setAccessLevel(accessLevels);
+                }
+                case "disabled" -> admin.setDisabled(Boolean.valueOf(new String(formData.getData())));
+            }
+        }
+        return admin;
+    }
 }

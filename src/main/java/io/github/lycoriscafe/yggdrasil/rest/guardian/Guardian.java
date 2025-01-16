@@ -37,5 +37,4 @@ public class Guardian {
     private String email;
     @NonNull
     private String contactNo;
-    private Boolean disabled;
 }

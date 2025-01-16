@@ -22,8 +22,6 @@ import io.github.lycoriscafe.nexus.http.HttpServer;
 import io.github.lycoriscafe.nexus.http.core.headers.auth.scheme.bearer.BearerAuthentication;
 import io.github.lycoriscafe.nexus.http.helper.configuration.HttpServerConfiguration;
 import io.github.lycoriscafe.nexus.http.helper.scanners.ScannerException;
-import lombok.Cleanup;
-import lombok.Getter;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -35,20 +33,22 @@ import java.util.Objects;
 import java.util.Properties;
 
 public class YggdrasilConfig {
-    @Getter
     private static HikariDataSource database;
-    @Getter
     private static HttpServer httpServer;
+    private static Long defaultResultsOffset = 50L;
 
     public static void initialize() throws IOException, ScannerException, SQLException, URISyntaxException {
         initializeDatabase();
         initializeHttpServer();
 
         Path path = Paths.get(Objects.requireNonNull(YggdrasilConfig.class.getResource("/yggdrasil.properties")).toURI()).toAbsolutePath();
-        @Cleanup
-        FileInputStream inputStream = new FileInputStream(path.toFile());
-        Properties properties = new Properties();
-        properties.load(inputStream);
+        try (FileInputStream inputStream = new FileInputStream(path.toFile())) {
+            Properties properties = new Properties();
+            properties.load(inputStream);
+
+            String defaultResultsOffsetString = properties.getProperty("defaultResultsOffset");
+            if (defaultResultsOffsetString != null) defaultResultsOffset = Long.parseLong(defaultResultsOffsetString);
+        }
     }
 
     private static void initializeDatabase() throws URISyntaxException {
@@ -62,5 +62,17 @@ public class YggdrasilConfig {
                 .setUrlPrefix("api/v1.0.0").addDefaultAuthentication(new BearerAuthentication("Access for Yggdrasil API"));
         httpServer = new HttpServer(httpServerConfiguration);
         httpServer.initialize();
+    }
+
+    public static HikariDataSource getDatabase() {
+        return database;
+    }
+
+    public static HttpServer getHttpServer() {
+        return httpServer;
+    }
+
+    public static Long getDefaultResultsOffset() {
+        return defaultResultsOffset;
     }
 }

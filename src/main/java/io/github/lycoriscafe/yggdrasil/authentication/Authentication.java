@@ -16,23 +16,70 @@
 
 package io.github.lycoriscafe.yggdrasil.authentication;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
-
 import java.time.LocalDateTime;
+import java.util.Objects;
 
-@Data
-@NoArgsConstructor
 public class Authentication {
-    @NonNull
     private Role role;
-    @NonNull
     private Long userId;
-    @NonNull
     private String password;
     private String accessToken;
     private LocalDateTime expires;
     private String refreshToken;
-    private Boolean disabled;
+
+    public Authentication() {}
+
+    public Role getRole() {
+        return role;
+    }
+
+    public Authentication setRole(Role role) {
+        this.role = Objects.requireNonNull(role);
+        return this;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public Authentication setUserId(Long userId) {
+        this.userId = Objects.requireNonNull(userId);
+        return this;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public Authentication setPassword(String password) {
+        this.password = Objects.requireNonNull(password);
+        return this;
+    }
+
+    public String getAccessToken() {
+        return accessToken;
+    }
+
+    public Authentication setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
+        return this;
+    }
+
+    public LocalDateTime getExpires() {
+        return expires;
+    }
+
+    public Authentication setExpires(LocalDateTime expires) {
+        this.expires = expires;
+        return this;
+    }
+
+    public String getRefreshToken() {
+        return refreshToken;
+    }
+
+    public Authentication setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+        return this;
+    }
 }

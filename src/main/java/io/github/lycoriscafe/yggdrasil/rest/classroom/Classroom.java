@@ -29,5 +29,4 @@ public class Classroom {
     private Integer grade;
     @NonNull
     private String name;
-    private Boolean disabled;
 }

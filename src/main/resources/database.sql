@@ -38,7 +38,6 @@ CREATE TABLE classroom
     teacherId BIGINT UNSIGNED UNIQUE,
     grade     TINYINT(2)  NOT NULL,
     name      VARCHAR(10) NOT NULL,
-    disabled  BOOLEAN DEFAULT FALSE, # Used for disabling without deleting
     UNIQUE (grade, name)
 );
 
@@ -52,18 +51,18 @@ CREATE TABLE guardian
     gender    ENUM ('MALE', 'FEMALE') NOT NULL,
     address   VARCHAR(300)            NOT NULL,
     email     VARCHAR(300),
-    contactNo VARCHAR(10)             NOT NULL,
-    disabled  BOOLEAN DEFAULT FALSE # Used for disabling without deleting
+    contactNo VARCHAR(10) NOT NULL
 );
 
 ## NOTIFICATION
 CREATE TABLE notification
 (
-    id        SERIAL PRIMARY KEY,
-    timestamp TIMESTAMP DEFAULT (NOW()),
-    scope     SET ('STUDENT', 'TEACHER') NOT NULL,
-    message   JSON                       NOT NULL,
-    disabled  BOOLEAN   DEFAULT FALSE # Used for disabling without deleting
+    id              SERIAL PRIMARY KEY,
+    createTimestamp TIMESTAMP DEFAULT NOW(),
+    updateTimestamp TIMESTAMP DEFAULT NOW() ON UPDATE NOW(),
+    scope           SET ('STUDENT', 'TEACHER') NOT NULL,
+    message         JSON                       NOT NULL,
+    draft           BOOLEAN   DEFAULT FALSE
 );
 
 ## RELIEF
@@ -73,7 +72,6 @@ CREATE TABLE relief
     timetableId BIGINT UNSIGNED NOT NULL,
     teacherId   BIGINT UNSIGNED NOT NULL,
     date        DATE            NOT NULL,
-    disabled    BOOLEAN DEFAULT FALSE, # Used for disabling without deleting
     UNIQUE (timetableId, date)
 );
 
@@ -99,9 +97,8 @@ CREATE TABLE student
 CREATE TABLE studentAttendance
 (
     studentId BIGINT UNSIGNED NOT NULL,
-    date      DATE    DEFAULT (DATE(NOW())),
-    time      TIME    DEFAULT (TIME(NOW())),
-    disabled  BOOLEAN DEFAULT FALSE, # Used for disabling without deleting
+    date DATE DEFAULT (DATE(NOW())),
+    time TIME DEFAULT (TIME(NOW())),
     UNIQUE (studentId, date)
 );
 
@@ -110,7 +107,6 @@ CREATE TABLE studentSubjectJoin
 (
     studentId BIGINT UNSIGNED NOT NULL,
     subjectId BIGINT UNSIGNED NOT NULL,
-    disabled  BOOLEAN DEFAULT FALSE, # Used for disabling without deleting
     UNIQUE (studentId, subjectId)
 );
 
@@ -122,7 +118,6 @@ CREATE TABLE subject
     shortName VARCHAR(10) NOT NULL,
     longName  VARCHAR(50),
     teacherId BIGINT UNSIGNED,
-    disabled  BOOLEAN DEFAULT FALSE, # Used for disabling without deleting
     UNIQUE (grade, shortName)
 );
 
@@ -144,9 +139,8 @@ CREATE TABLE teacher
 CREATE TABLE teacherAttendance
 (
     teacherId BIGINT UNSIGNED NOT NULL,
-    date      DATE    DEFAULT (DATE(NOW())),
-    time      TIME    DEFAULT (TIME(NOW())),
-    disabled  BOOLEAN DEFAULT FALSE, # Used for disabling without deleting
+    date DATE DEFAULT (DATE(NOW())),
+    time TIME DEFAULT (TIME(NOW())),
     UNIQUE (teacherId, date)
 );
 
@@ -155,7 +149,6 @@ CREATE TABLE teacherSubjectJoin
 (
     teacherId BIGINT UNSIGNED NOT NULL,
     subjectId BIGINT UNSIGNED NOT NULL,
-    disabled  BOOLEAN DEFAULT FALSE, # Used for disabling without deleting
     UNIQUE (teacherId, subjectId)
 );
 
@@ -167,8 +160,7 @@ CREATE TABLE timetable
     subjectId   BIGINT UNSIGNED NOT NULL,
     classroomId BIGINT UNSIGNED NOT NULL,
     day         TINYINT(1)      NOT NULL,
-    timeslot    TINYINT(1)      NOT NULL, # Typical 8 periods of daily timetable
-    disabled    BOOLEAN DEFAULT FALSE     # Used for disabling without deleting
+    timeslot TINYINT(1) NOT NULL # Typical 8 periods of daily timetable
 );
 
 ## AUTHENTICATION
@@ -178,9 +170,8 @@ CREATE TABLE authentication
     userId       BIGINT UNSIGNED                      NOT NULL,
     password     VARBINARY(100)                       NOT NULL,
     accessToken  VARBINARY(100) UNIQUE,
-    expires      TIMESTAMP ON UPDATE (TIMESTAMPADD(HOUR, 1, NOW())),
+    expires TIMESTAMP,
     refreshToken VARBINARY(100) UNIQUE,
-    disabled     BOOLEAN DEFAULT FALSE,
     UNIQUE (role, userId)
 );
 
@@ -245,7 +236,7 @@ VALUES ('SUPERUSER', 'SUPERUSER');
 
 SET @userId = LAST_INSERT_ID();
 
-INSERT INTO authentication (role, userId, password)
-VALUES ('ADMIN', @userId, 'SUPERUSER');
+INSERT INTO authentication (role, userId, password) # password is SUPERUSER
+VALUES ('ADMIN', @userId, '0ah66cwBDYMR1Gft+FRFe4y02jwep3Mmrsx19TLlI+c');
 
 COMMIT;

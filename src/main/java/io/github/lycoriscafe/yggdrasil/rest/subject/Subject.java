@@ -30,5 +30,4 @@ public class Subject {
     private String shortName;
     private String longGame;
     private Long teacherId;
-    private Boolean disabled;
 }

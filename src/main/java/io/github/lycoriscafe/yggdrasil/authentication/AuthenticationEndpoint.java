@@ -19,11 +19,13 @@ package io.github.lycoriscafe.yggdrasil.authentication;
 import io.github.lycoriscafe.nexus.http.core.HttpEndpoint;
 import io.github.lycoriscafe.nexus.http.core.headers.auth.scheme.bearer.*;
 import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.POST;
+import io.github.lycoriscafe.yggdrasil.rest.admin.AdminService;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 @HttpEndpoint("/login")
@@ -42,7 +44,7 @@ public class AuthenticationEndpoint {
                 }
 
                 Role role;
-                Long userId;
+                long userId;
                 try {
                     String username = tokenRequest.getParams().get("username");
                     role = switch (username.toLowerCase().charAt(0)) {
@@ -67,15 +69,22 @@ public class AuthenticationEndpoint {
                     return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_CLIENT)
                             .setErrorDescription("Invalid password. Try again.");
                 }
-                if (auth.getDisabled()) {
+                // TODO implement
+                var person = switch (auth.getRole()) {
+                    case ADMIN -> AdminService.getAdminById(auth.getUserId());
+                    case TEACHER -> null;
+                    case STUDENT -> null;
+                };
+                if (person.getData().getFirst().getDisabled()) {
                     return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_CLIENT)
                             .setErrorDescription("Target account is disabled. Contact your system admin for more details.");
                 }
 
                 var accessToken = AuthenticationService.generateToken();
                 var refreshToken = AuthenticationService.generateToken();
-                auth.setAccessToken(accessToken);
-                auth.setRefreshToken(refreshToken);
+                auth.setAccessToken(accessToken)
+                        .setExpires(LocalDateTime.now().plusHours(1))
+                        .setRefreshToken(refreshToken);
                 auth = AuthenticationService.updateAuthentication(auth);
                 if (auth == null) throw new RuntimeException("Failed to update authentication.");
                 return new BearerTokenSuccessResponse(accessToken)
@@ -88,12 +97,13 @@ public class AuthenticationEndpoint {
                     return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_REQUEST)
                             .setErrorDescription("Invalid parameters detected. Please provide two parameter: token");
                 }
-                if (!tokenRequest.getParams().containsKey("token")) {
-                    return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_REQUEST)
-                            .setErrorDescription("token parameter missing");
-                }
 
                 var token = tokenRequest.getParams().get("token");
+                if (token == null) {
+                    return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_REQUEST)
+                            .setErrorDescription("Invalid token. Try again.");
+                }
+
                 var auth = AuthenticationService.getAuthentication(TokenType.REFRESH_TOKEN, token);
                 if (auth == null) {
                     return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_CLIENT)
@@ -103,13 +113,19 @@ public class AuthenticationEndpoint {
                     return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_CLIENT)
                             .setErrorDescription("Invalid refresh token. Use credentials or try again.");
                 }
-                if (auth.getDisabled()) {
+                // TODO implement
+                var person = switch (auth.getRole()) {
+                    case ADMIN -> AdminService.getAdminById(auth.getUserId());
+                    case TEACHER -> null;
+                    case STUDENT -> null;
+                };
+                if (person.getData().getFirst().getDisabled()) {
                     return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_CLIENT)
                             .setErrorDescription("Target account is disabled. Contact your system admin for more details.");
                 }
 
                 var accessToken = AuthenticationService.generateToken();
-                auth.setAccessToken(accessToken);
+                auth.setAccessToken(accessToken).setExpires(LocalDateTime.now().plusHours(1));
                 auth = AuthenticationService.updateAuthentication(auth);
                 if (auth == null) throw new RuntimeException("Failed to update authentication.");
                 return new BearerTokenSuccessResponse(accessToken)
