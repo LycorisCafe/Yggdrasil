@@ -89,6 +89,7 @@ public class Admin {
                     admin.setAccessLevel(accessLevels);
                 }
                 case "disabled" -> admin.setDisabled(Boolean.valueOf(new String(formData.getData())));
+                default -> throw new IllegalArgumentException("invalid form data: " + formData.getName());
             }
         }
         return admin;

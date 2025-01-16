@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.github.lycoriscafe.yggdrasil.rest.student;
+package io.github.lycoriscafe.yggdrasil.rest.student.attendance;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;

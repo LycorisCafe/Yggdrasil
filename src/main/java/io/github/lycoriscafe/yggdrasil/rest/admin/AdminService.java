@@ -36,21 +36,22 @@ public class AdminService {
         disabled
     }
 
-    public static Utils.ResultsHolder<Admin> getAdmins(Columns[] searchBy,
-                                                       String[] searchByValues,
-                                                       boolean[] isCaseSensitive,
-                                                       Columns[] orderBy,
-                                                       Boolean isAscending,
-                                                       Long resultsFrom,
-                                                       Long resultsOffset) throws SQLException {
+    public static Response<Admin> getAdmins(Columns[] searchBy,
+                                            String[] searchByValues,
+                                            boolean[] isCaseSensitive,
+                                            Columns[] orderBy,
+                                            Boolean isAscending,
+                                            Long resultsFrom,
+                                            Long resultsOffset) throws SQLException {
         if (resultsFrom == null || resultsFrom < 0) resultsFrom = 0L;
         if (resultsOffset == null || resultsOffset < 0) resultsOffset = YggdrasilConfig.getDefaultResultsOffset();
+        if (resultsFrom > resultsOffset) return new Response<Admin>().setError("Invalid boundaries");
 
         StringBuilder query = new StringBuilder("SELECT * FROM admin");
         if (searchBy != null) {
-            if (searchBy.length != searchByValues.length) throw new IllegalStateException("searchBy != searchByValues (length)");
+            if (searchBy.length != searchByValues.length) new Response<Admin>().setError("searchBy != searchByValues (length)");
             if (isCaseSensitive != null && searchBy.length != isCaseSensitive.length) {
-                throw new IllegalStateException("searchBy != isCaseSensitive (length)");
+                return new Response<Admin>().setError("searchBy != isCaseSensitive (length)");
             }
             query.append(" WHERE ");
             for (int i = 0; i < searchBy.length; i++) {
@@ -90,29 +91,25 @@ public class AdminService {
                     for (String accessLevel : accessLevelsSet) {
                         accessLevels.add(AccessLevel.valueOf(accessLevel));
                     }
-                    Admin admin = new Admin(resultSet.getString("name"), accessLevels);
-                    admin.setId(Long.parseLong(resultSet.getString("id")));
-                    admin.setAccessLevel(accessLevels);
-                    admin.setDisabled(resultSet.getBoolean("disabled"));
+                    admins.add(new Admin(resultSet.getString("name"), accessLevels)
+                            .setId(Long.parseLong(resultSet.getString("id")))
+                            .setAccessLevel(accessLevels)
+                            .setDisabled(resultSet.getBoolean("disabled")));
                 }
 
-                return new Utils.ResultsHolder<Admin>()
+                return new Response<Admin>()
+                        .setSuccess(true)
                         .setGenerableResults(Long.parseLong(resultSet.getString("generableValues")))
-                        .setResults(admins);
+                        .setResultsFrom(resultsFrom)
+                        .setResultsOffset(resultsOffset)
+                        .setData(admins);
             }
         }
     }
 
     public static Response<Admin> getAdminById(Long id) {
         try {
-            var results = getAdmins(new Columns[]{Columns.id}, new String[]{Long.toUnsignedString(id)},
-                    null, null, null, null, 1L);
-            return new Response<Admin>()
-                    .setSuccess(true)
-                    .setGenerableResults(results.getGenerableResults())
-                    .setResultsFrom(0L)
-                    .setResultsOffset(1L)
-                    .setData(results.getResults());
+            return getAdmins(new Columns[]{Columns.id}, new String[]{Long.toUnsignedString(id)}, null, null, null, null, 1L);
         } catch (Exception e) {
             return new Response<Admin>().setError(e.getMessage());
         }
@@ -121,13 +118,7 @@ public class AdminService {
     public static Response<Admin> getAllAdmins(Long resultsFrom,
                                                Long resultsOffset) {
         try {
-            var results = getAdmins(null, null, null, null, null, resultsFrom, resultsOffset);
-            return new Response<Admin>()
-                    .setSuccess(true)
-                    .setGenerableResults(results.getGenerableResults())
-                    .setResultsFrom(0L)
-                    .setResultsOffset(1L)
-                    .setData(results.getResults());
+            return getAdmins(null, null, null, null, null, resultsFrom, resultsOffset);
         } catch (Exception e) {
             return new Response<Admin>().setError(e.getMessage());
         }
@@ -136,7 +127,8 @@ public class AdminService {
     public static Response<Admin> createAdmin(Admin admin) {
         Objects.requireNonNull(admin);
         try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement("INSERT INTO admin VALUES (?, ?, ?, COALESCE(?, DEFAULT(disabled)))",
+             var statement = connection.prepareStatement("INSERT INTO admin (id, name, accessLevel, disabled) " +
+                             "VALUES (?, ?, ?, COALESCE(?, DEFAULT(disabled)))",
                      Statement.RETURN_GENERATED_KEYS)) {
             statement.setString(1, admin.getId() == null ? null : Long.toUnsignedString(admin.getId()));
             statement.setString(2, admin.getName());
@@ -148,7 +140,7 @@ public class AdminService {
             }
             statement.setString(3, accessLevels.toString());
             statement.setString(4, admin.getDisabled().toString());
-            if (statement.executeUpdate() != 0) {
+            if (statement.executeUpdate() != 1) {
                 connection.rollback();
                 return new Response<Admin>().setError("Internal server error");
             }
@@ -243,20 +235,6 @@ public class AdminService {
                 return new Response<Admin>().setSuccess(true);
             }
             return new Response<Admin>().setError("Old password doesn't match");
-        } catch (Exception e) {
-            return new Response<Admin>().setError(e.getMessage());
-        }
-    }
-
-    public static Response<Admin> logoutFromAll(Long id) {
-        Objects.requireNonNull(id);
-        try {
-            var auth = AuthenticationService.getAuthentication(Role.ADMIN, id);
-            if (auth == null) return new Response<Admin>().setError("Invalid ID");
-            if (AuthenticationService.updateAuthentication(auth.setAccessToken(null).setExpires(null).setRefreshToken(null)) == null) {
-                return new Response<Admin>().setError("Internal server error");
-            }
-            return new Response<Admin>().setSuccess(true);
         } catch (Exception e) {
             return new Response<Admin>().setError(e.getMessage());
         }

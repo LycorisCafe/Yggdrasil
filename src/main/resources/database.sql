@@ -87,7 +87,7 @@ CREATE TABLE student
     dateOfBirth DATE                    NOT NULL,
     nic         VARCHAR(12) UNIQUE,
     address     VARCHAR(300)            NOT NULL,
-    regYear     YEAR,
+    regYear YEAR NOT NULL,
     contactNo   VARCHAR(10),
     email       VARCHAR(300),
     disabled    BOOLEAN DEFAULT FALSE # Used for disabling without deleting

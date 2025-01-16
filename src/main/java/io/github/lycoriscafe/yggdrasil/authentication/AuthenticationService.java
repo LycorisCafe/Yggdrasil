@@ -23,8 +23,10 @@ import io.github.lycoriscafe.nexus.http.core.headers.auth.scheme.bearer.BearerAu
 import io.github.lycoriscafe.nexus.http.core.statusCodes.HttpStatusCode;
 import io.github.lycoriscafe.nexus.http.engine.ReqResManager.httpReq.HttpRequest;
 import io.github.lycoriscafe.nexus.http.engine.ReqResManager.httpRes.HttpResponse;
+import io.github.lycoriscafe.yggdrasil.configuration.Response;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
 import io.github.lycoriscafe.yggdrasil.rest.admin.AccessLevel;
+import io.github.lycoriscafe.yggdrasil.rest.admin.Admin;
 import io.github.lycoriscafe.yggdrasil.rest.admin.AdminService;
 
 import java.io.ByteArrayOutputStream;
@@ -103,7 +105,8 @@ public class AuthenticationService {
         Objects.requireNonNull(tokenType);
         Objects.requireNonNull(token);
         try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement("SELECT * FROM authentication WHERE " + tokenType.toString().toLowerCase() + " = ?")) {
+             var statement = connection.prepareStatement("SELECT * FROM authentication WHERE " + tokenType.toString()
+                     .toLowerCase() + " LIKE BINARY ?")) {
             statement.setString(1, token);
             try (var resultSet = statement.executeQuery()) {
                 connection.commit();
@@ -204,6 +207,22 @@ public class AuthenticationService {
         Objects.requireNonNull(authentication);
         authentication.setPassword(encryptData(authentication.getPassword().getBytes(StandardCharsets.UTF_8)));
         return updateAuthentication(authentication);
+    }
+
+    public static Response<?> logoutFromAll(Role role,
+                                            Long id) {
+        Objects.requireNonNull(role);
+        Objects.requireNonNull(id);
+        try {
+            var auth = AuthenticationService.getAuthentication(role, id);
+            if (auth == null) return new Response<>().setError("Invalid ID");
+            if (AuthenticationService.updateAuthentication(auth.setAccessToken(null).setExpires(null).setRefreshToken(null)) == null) {
+                return new Response<Admin>().setError("Internal server error");
+            }
+            return new Response<>().setSuccess(true);
+        } catch (Exception e) {
+            return new Response<>().setError(e.getMessage());
+        }
     }
 
     public static String generateToken() throws IOException, NoSuchAlgorithmException {
