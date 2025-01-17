@@ -79,17 +79,17 @@ public class TeacherAttendanceService {
                 }
             }
 
-            long generableValues;
+            Long generableValues = null;
             List<TeacherAttendance> teacherAttendances = new ArrayList<>();
             try (var resultSet = statement.executeQuery()) {
                 connection.commit();
                 while (resultSet.next()) {
+                    if (generableValues == null) generableValues = Long.parseLong(resultSet.getString("generableValues"));
                     teacherAttendances.add(new TeacherAttendance(
                             Long.parseLong(resultSet.getString("teacherId"))
                     ).setDate(LocalDate.parse(resultSet.getString("date")))
                             .setTime(LocalTime.parse(resultSet.getString("time"))));
                 }
-                generableValues = Long.parseLong(resultSet.getString("generableValues"));
             }
 
             return new Response<TeacherAttendance>()

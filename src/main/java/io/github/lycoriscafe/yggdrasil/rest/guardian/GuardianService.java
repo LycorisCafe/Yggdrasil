@@ -84,11 +84,12 @@ public class GuardianService {
                 }
             }
 
-            long generableValues;
+            Long generableValues = null;
             List<Guardian> guardians = new ArrayList<>();
             try (var resultSet = statement.executeQuery()) {
                 connection.commit();
                 while (resultSet.next()) {
+                    if (generableValues == null) generableValues = Long.parseLong(resultSet.getString("generableValues"));
                     guardians.add(new Guardian(
                             resultSet.getString("nic"),
                             resultSet.getString("initName"),
@@ -99,7 +100,6 @@ public class GuardianService {
                     ).setId(Long.parseLong(resultSet.getString("id")))
                             .setEmail(resultSet.getString("email")));
                 }
-                generableValues = Long.parseLong(resultSet.getString("generableValues"));
             }
 
             return new Response<Guardian>()

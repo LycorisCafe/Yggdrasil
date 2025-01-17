@@ -82,11 +82,12 @@ public class AdminService {
                 }
             }
 
-            long generableValues;
+            Long generableValues = null;
             List<Admin> admins = new ArrayList<>();
             try (var resultSet = statement.executeQuery()) {
                 connection.commit();
                 while (resultSet.next()) {
+                    if (generableValues == null) generableValues = Long.parseLong(resultSet.getString("generableValues"));
                     String[] accessLevelsSet = resultSet.getString("accessLevel").split(",", 0);
                     Set<AccessLevel> accessLevels = new HashSet<>();
                     for (String accessLevel : accessLevelsSet) {
@@ -96,7 +97,6 @@ public class AdminService {
                             .setId(Long.parseLong(resultSet.getString("id")))
                             .setDisabled(resultSet.getBoolean("disabled")));
                 }
-                generableValues = Long.parseLong(resultSet.getString("generableValues"));
             }
 
             return new Response<Admin>()

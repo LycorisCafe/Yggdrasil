@@ -80,18 +80,18 @@ public class ReliefService {
                 }
             }
 
-            long generableValues;
+            Long generableValues = null;
             List<Relief> reliefs = new ArrayList<>();
             try (var resultSet = statement.executeQuery()) {
                 connection.commit();
                 while (resultSet.next()) {
+                    if (generableValues == null) generableValues = Long.parseLong(resultSet.getString("generableValues"));
                     reliefs.add(new Relief(
                             Long.parseLong(resultSet.getString("timetableId")),
                             Long.parseLong(resultSet.getString("teacherId")),
                             LocalDate.parse(resultSet.getString("date"))
                     ).setId(Long.parseLong(resultSet.getString("id"))));
                 }
-                generableValues = Long.parseLong(resultSet.getString("generableValues"));
             }
 
             return new Response<Relief>()

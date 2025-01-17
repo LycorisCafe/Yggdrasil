@@ -82,11 +82,12 @@ public class TimetableService {
                 }
             }
 
-            long generableValues;
+            Long generableValues = null;
             List<Timetable> timetables = new ArrayList<>();
             try (var resultSet = statement.executeQuery()) {
                 connection.commit();
                 while (resultSet.next()) {
+                    if (generableValues == null) generableValues = Long.parseLong(resultSet.getString("generableValues"));
                     timetables.add(new Timetable(
                             Long.parseLong(resultSet.getString("teacherId")),
                             Long.parseLong(resultSet.getString("subjectId")),
@@ -95,7 +96,6 @@ public class TimetableService {
                             resultSet.getInt("timeslot")
                     ).setId(Long.parseLong(resultSet.getString("id"))));
                 }
-                generableValues = Long.parseLong(resultSet.getString("generableValues"));
             }
 
             return new Response<Timetable>()

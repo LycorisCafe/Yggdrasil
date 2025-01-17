@@ -20,6 +20,7 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import io.github.lycoriscafe.nexus.http.HttpServer;
 import io.github.lycoriscafe.nexus.http.core.headers.auth.scheme.bearer.BearerAuthentication;
+import io.github.lycoriscafe.nexus.http.helper.configuration.DatabaseType;
 import io.github.lycoriscafe.nexus.http.helper.configuration.HttpServerConfiguration;
 import io.github.lycoriscafe.nexus.http.helper.scanners.ScannerException;
 
@@ -60,6 +61,7 @@ public class YggdrasilConfig {
     private static void initializeHttpServer() throws ScannerException, SQLException, IOException {
         var httpServerConfiguration = new HttpServerConfiguration("io.github.lycoriscafe.yggdrasil", "YggdrasilTemp")
 //                .setUrlPrefix("/api/v1.0.0")
+                .setDatabaseType(DatabaseType.TEMPORARY)
                 .addDefaultAuthentication(new BearerAuthentication("Access for Yggdrasil API"));
         httpServer = new HttpServer(httpServerConfiguration);
         httpServer.initialize();

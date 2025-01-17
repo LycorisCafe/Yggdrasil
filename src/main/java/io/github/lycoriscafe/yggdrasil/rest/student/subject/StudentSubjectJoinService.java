@@ -76,17 +76,17 @@ public class StudentSubjectJoinService {
                 }
             }
 
-            long generableValues;
+            Long generableValues = null;
             List<StudentSubjectJoin> studentSubjectJoins = new ArrayList<>();
             try (var resultSet = statement.executeQuery()) {
                 connection.commit();
                 while (resultSet.next()) {
+                    if (generableValues == null) generableValues = Long.parseLong(resultSet.getString("generableValues"));
                     studentSubjectJoins.add(new StudentSubjectJoin(
                             Long.parseLong(resultSet.getString("studentId")),
                             Long.parseLong(resultSet.getString("subjectId"))
                     ));
                 }
-                generableValues = Long.parseLong(resultSet.getString("generableValues"));
             }
 
             return new Response<StudentSubjectJoin>()

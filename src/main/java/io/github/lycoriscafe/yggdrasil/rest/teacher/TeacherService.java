@@ -89,11 +89,12 @@ public class TeacherService {
                 }
             }
 
-            long generableValues;
+            Long generableValues = null;
             List<Teacher> teachers = new ArrayList<>();
             try (var resultSet = statement.executeQuery()) {
                 connection.commit();
                 while (resultSet.next()) {
+                    if (generableValues == null) generableValues = Long.parseLong(resultSet.getString("generableValues"));
                     teachers.add(new Teacher(
                             resultSet.getString("nic"),
                             resultSet.getString("initName"),
@@ -105,7 +106,6 @@ public class TeacherService {
                     ).setId(Long.parseLong(resultSet.getString("id")))
                             .setDisabled(resultSet.getBoolean("disabled")));
                 }
-                generableValues = Long.parseLong(resultSet.getString("generableValues"));
             }
 
             return new Response<Teacher>()
