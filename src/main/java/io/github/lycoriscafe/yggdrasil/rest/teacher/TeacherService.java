@@ -89,9 +89,10 @@ public class TeacherService {
                 }
             }
 
+            long generableValues;
+            List<Teacher> teachers = new ArrayList<>();
             try (var resultSet = statement.executeQuery()) {
                 connection.commit();
-                List<Teacher> teachers = new ArrayList<>();
                 while (resultSet.next()) {
                     teachers.add(new Teacher(
                             resultSet.getString("nic"),
@@ -104,14 +105,15 @@ public class TeacherService {
                     ).setId(Long.parseLong(resultSet.getString("id")))
                             .setDisabled(resultSet.getBoolean("disabled")));
                 }
-
-                return new Response<Teacher>()
-                        .setSuccess(true)
-                        .setGenerableResults(Long.parseLong(resultSet.getString("generableValues")))
-                        .setResultsFrom(resultsFrom)
-                        .setResultsOffset(resultsOffset)
-                        .setData(teachers);
+                generableValues = Long.parseLong(resultSet.getString("generableValues"));
             }
+
+            return new Response<Teacher>()
+                    .setSuccess(true)
+                    .setGenerableResults(generableValues)
+                    .setResultsFrom(resultsFrom)
+                    .setResultsOffset(resultsOffset)
+                    .setData(teachers);
         } catch (Exception e) {
             return new Response<Teacher>().setError(e.getMessage());
         }
@@ -119,7 +121,8 @@ public class TeacherService {
 
     public static Response<Teacher> getTeacherById(Long id) {
         try {
-            return getTeachers(new Columns[]{Columns.id}, new String[]{Long.toUnsignedString(id)}, null, null, null, null, 1L);
+            return getTeachers(new Columns[]{Columns.id}, new String[]{Long.toUnsignedString(id)},
+                    null, null, null, null, 1L);
         } catch (Exception e) {
             return new Response<Teacher>().setError(e.getMessage());
         }
@@ -150,10 +153,9 @@ public class TeacherService {
                 }
                 if (AuthenticationService.updatePassword(
                         AuthenticationService.createAuthentication(
-                                new Authentication()
-                                        .setRole(Role.TEACHER)
-                                        .setUserId(Long.parseLong(resultSet.getString(1)))
-                                        .setPassword("T" + resultSet.getString(1)))) == null) {
+                                new Authentication(Role.TEACHER,
+                                        Long.parseLong(resultSet.getString(1)),
+                                        "T" + resultSet.getString(1)))) == null) {
                     connection.rollback();
                     return new Response<Teacher>().setError("Internal server error");
                 }

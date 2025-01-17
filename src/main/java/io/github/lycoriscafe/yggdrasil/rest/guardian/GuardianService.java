@@ -84,9 +84,10 @@ public class GuardianService {
                 }
             }
 
+            long generableValues;
+            List<Guardian> guardians = new ArrayList<>();
             try (var resultSet = statement.executeQuery()) {
                 connection.commit();
-                List<Guardian> guardians = new ArrayList<>();
                 while (resultSet.next()) {
                     guardians.add(new Guardian(
                             resultSet.getString("nic"),
@@ -98,14 +99,15 @@ public class GuardianService {
                     ).setId(Long.parseLong(resultSet.getString("id")))
                             .setEmail(resultSet.getString("email")));
                 }
-
-                return new Response<Guardian>()
-                        .setSuccess(true)
-                        .setGenerableResults(Long.parseLong(resultSet.getString("generableValues")))
-                        .setResultsFrom(resultsFrom)
-                        .setResultsOffset(resultsOffset)
-                        .setData(guardians);
+                generableValues = Long.parseLong(resultSet.getString("generableValues"));
             }
+
+            return new Response<Guardian>()
+                    .setSuccess(true)
+                    .setGenerableResults(generableValues)
+                    .setResultsFrom(resultsFrom)
+                    .setResultsOffset(resultsOffset)
+                    .setData(guardians);
         } catch (Exception e) {
             return new Response<Guardian>().setError(e.getMessage());
         }
@@ -113,7 +115,8 @@ public class GuardianService {
 
     public static Response<Guardian> getGuardianById(Long id) {
         try {
-            return getGuardians(new Columns[]{Columns.id}, new String[]{Long.toUnsignedString(id)}, null, null, null, null, 1L);
+            return getGuardians(new Columns[]{Columns.id}, new String[]{Long.toUnsignedString(id)},
+                    null, null, null, null, 1L);
         } catch (Exception e) {
             return new Response<Guardian>().setError(e.getMessage());
         }

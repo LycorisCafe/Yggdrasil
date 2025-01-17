@@ -80,25 +80,28 @@ public class SubjectService {
                 }
             }
 
+            long generableValues;
+            List<Subject> subjects = new ArrayList<>();
             try (var resultSet = statement.executeQuery()) {
                 connection.commit();
-                List<Subject> subjects = new ArrayList<>();
                 while (resultSet.next()) {
                     subjects.add(new Subject(
                             resultSet.getInt("grade"),
                             resultSet.getString("shortName")
                     ).setId(Long.parseLong(resultSet.getString("id")))
                             .setLongName(resultSet.getString("longName"))
-                            .setTeacherId(Long.parseLong(resultSet.getString("teacherId"))));
+                            .setTeacherId(resultSet.getString("teacherId") == null ?
+                                    null : Long.parseLong(resultSet.getString("teacherId"))));
                 }
-
-                return new Response<Subject>()
-                        .setSuccess(true)
-                        .setGenerableResults(Long.parseLong(resultSet.getString("generableValues")))
-                        .setResultsFrom(resultsFrom)
-                        .setResultsOffset(resultsOffset)
-                        .setData(subjects);
+                generableValues = Long.parseLong(resultSet.getString("generableValues"));
             }
+
+            return new Response<Subject>()
+                    .setSuccess(true)
+                    .setGenerableResults(generableValues)
+                    .setResultsFrom(resultsFrom)
+                    .setResultsOffset(resultsOffset)
+                    .setData(subjects);
         } catch (Exception e) {
             return new Response<Subject>().setError(e.getMessage());
         }

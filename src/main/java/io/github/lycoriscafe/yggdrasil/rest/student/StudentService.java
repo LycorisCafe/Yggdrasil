@@ -95,9 +95,10 @@ public class StudentService {
                 }
             }
 
+            long generableValues;
+            List<Student> students = new ArrayList<>();
             try (var resultSet = statement.executeQuery()) {
                 connection.commit();
-                List<Student> students = new ArrayList<>();
                 while (resultSet.next()) {
                     students.add(new Student(
                             Long.parseLong(resultSet.getString("guardianId")),
@@ -108,20 +109,22 @@ public class StudentService {
                             resultSet.getString("address"),
                             Year.parse(resultSet.getString("regYear"))
                     ).setId(Long.parseLong(resultSet.getString("id")))
-                            .setClassroomId(Long.parseLong(resultSet.getString("classroomId")))
+                            .setClassroomId(resultSet.getString("classroomId") == null ?
+                                    null : Long.parseLong(resultSet.getString("classroomId")))
                             .setNic(resultSet.getString("nic"))
                             .setContactNo(resultSet.getString("contactNo"))
                             .setEmail(resultSet.getString("email"))
                             .setDisabled(resultSet.getBoolean("disabled")));
                 }
-
-                return new Response<Student>()
-                        .setSuccess(true)
-                        .setGenerableResults(Long.parseLong(resultSet.getString("generableValues")))
-                        .setResultsFrom(resultsFrom)
-                        .setResultsOffset(resultsOffset)
-                        .setData(students);
+                generableValues = Long.parseLong(resultSet.getString("generableValues"));
             }
+
+            return new Response<Student>()
+                    .setSuccess(true)
+                    .setGenerableResults(generableValues)
+                    .setResultsFrom(resultsFrom)
+                    .setResultsOffset(resultsOffset)
+                    .setData(students);
         } catch (Exception e) {
             return new Response<Student>().setError(e.getMessage());
         }
@@ -129,7 +132,8 @@ public class StudentService {
 
     public static Response<Student> getStudentById(Long id) {
         try {
-            return getStudents(new Columns[]{Columns.id}, new String[]{Long.toUnsignedString(id)}, null, null, null, null, 1L);
+            return getStudents(new Columns[]{Columns.id}, new String[]{Long.toUnsignedString(id)},
+                    null, null, null, null, 1L);
         } catch (Exception e) {
             return new Response<Student>().setError(e.getMessage());
         }
@@ -165,10 +169,9 @@ public class StudentService {
                 }
                 if (AuthenticationService.updatePassword(
                         AuthenticationService.createAuthentication(
-                                new Authentication()
-                                        .setRole(Role.STUDENT)
-                                        .setUserId(Long.parseLong(resultSet.getString(1)))
-                                        .setPassword("S" + resultSet.getString(1)))) == null) {
+                                new Authentication(Role.STUDENT,
+                                        Long.parseLong(resultSet.getString(1)),
+                                        "S" + resultSet.getString(1)))) == null) {
                     connection.rollback();
                     return new Response<Student>().setError("Internal server error");
                 }

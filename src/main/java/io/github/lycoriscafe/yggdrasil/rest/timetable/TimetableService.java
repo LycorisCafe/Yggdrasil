@@ -82,9 +82,10 @@ public class TimetableService {
                 }
             }
 
+            long generableValues;
+            List<Timetable> timetables = new ArrayList<>();
             try (var resultSet = statement.executeQuery()) {
                 connection.commit();
-                List<Timetable> timetables = new ArrayList<>();
                 while (resultSet.next()) {
                     timetables.add(new Timetable(
                             Long.parseLong(resultSet.getString("teacherId")),
@@ -94,14 +95,15 @@ public class TimetableService {
                             resultSet.getInt("timeslot")
                     ).setId(Long.parseLong(resultSet.getString("id"))));
                 }
-
-                return new Response<Timetable>()
-                        .setSuccess(true)
-                        .setGenerableResults(Long.parseLong(resultSet.getString("generableValues")))
-                        .setResultsFrom(resultsFrom)
-                        .setResultsOffset(resultsOffset)
-                        .setData(timetables);
+                generableValues = Long.parseLong(resultSet.getString("generableValues"));
             }
+
+            return new Response<Timetable>()
+                    .setSuccess(true)
+                    .setGenerableResults(generableValues)
+                    .setResultsFrom(resultsFrom)
+                    .setResultsOffset(resultsOffset)
+                    .setData(timetables);
         } catch (Exception e) {
             return new Response<Timetable>().setError(e.getMessage());
         }

@@ -14,20 +14,7 @@
  * limitations under the License.
  */
 
-package io.github.lycoriscafe.yggdrasil.authentication;
+package io.github.lycoriscafe.yggdrasil.rest.teacher.attendance;
 
-public enum TokenType {
-    ACCESS_TOKEN("accessToken"),
-    REFRESH_TOKEN("refreshToken");
-
-    private final String value;
-
-    TokenType(final String value) {
-        this.value = value;
-    }
-
-    @Override
-    public String toString() {
-        return value;
-    }
+public class TeacherAttendanceEndpoint {
 }

@@ -79,24 +79,27 @@ public class ClassroomService {
                 }
             }
 
+            long generableValues;
+            List<Classroom> classrooms = new ArrayList<>();
             try (var resultSet = statement.executeQuery()) {
                 connection.commit();
-                List<Classroom> classrooms = new ArrayList<>();
                 while (resultSet.next()) {
                     classrooms.add(new Classroom(
                             resultSet.getInt("grade"),
                             resultSet.getString("name")
                     ).setId(Long.parseLong(resultSet.getString("id")))
-                            .setTeacherId(Long.parseLong(resultSet.getString("teacherId"))));
+                            .setTeacherId(resultSet.getString("teacherId") == null ?
+                                    null : Long.parseLong(resultSet.getString("teacherId"))));
                 }
-
-                return new Response<Classroom>()
-                        .setSuccess(true)
-                        .setGenerableResults(Long.parseLong(resultSet.getString("generableValues")))
-                        .setResultsFrom(resultsFrom)
-                        .setResultsOffset(resultsOffset)
-                        .setData(classrooms);
+                generableValues = Long.parseLong(resultSet.getString("generableValues"));
             }
+
+            return new Response<Classroom>()
+                    .setSuccess(true)
+                    .setGenerableResults(generableValues)
+                    .setResultsFrom(resultsFrom)
+                    .setResultsOffset(resultsOffset)
+                    .setData(classrooms);
         } catch (Exception e) {
             return new Response<Classroom>().setError(e.getMessage());
         }
@@ -104,7 +107,8 @@ public class ClassroomService {
 
     public static Response<Classroom> getClassroomById(Long id) {
         try {
-            return getClassrooms(new Columns[]{Columns.id}, new String[]{Long.toUnsignedString(id)}, null, null, null, null, 1L);
+            return getClassrooms(new Columns[]{Columns.id}, new String[]{Long.toUnsignedString(id)},
+                    null, null, null, null, 1L);
         } catch (Exception e) {
             return new Response<Classroom>().setError(e.getMessage());
         }

@@ -27,7 +27,13 @@ public class Authentication {
     private LocalDateTime expires;
     private String refreshToken;
 
-    public Authentication() {}
+    public Authentication(Role role,
+                          Long userId,
+                          String password) {
+        this.role = Objects.requireNonNull(role);
+        this.userId = Objects.requireNonNull(userId);
+        this.password = Objects.requireNonNull(password);
+    }
 
     public Role getRole() {
         return role;

@@ -83,26 +83,30 @@ public class NotificationService {
                 }
             }
 
+            long generableValues;
+            List<Notification> notifications = new ArrayList<>();
             try (var resultSet = statement.executeQuery()) {
                 connection.commit();
-                List<Notification> notifications = new ArrayList<>();
                 while (resultSet.next()) {
                     notifications.add(new Notification(
                             Scope.valueOf(resultSet.getString("scope")),
                             resultSet.getString("message")
                     ).setId(Long.parseLong(resultSet.getString("id")))
-                            .setCreateTimestamp(LocalDateTime.parse(resultSet.getString("createTimestamp")))
-                            .setUpdateTimestamp(LocalDateTime.parse(resultSet.getString("updateTimestamp")))
+                            .setCreateTimestamp(resultSet.getString("createTimestamp") == null ?
+                                    null : LocalDateTime.parse(resultSet.getString("createTimestamp"), Utils.getDateTimeFormatter()))
+                            .setUpdateTimestamp(resultSet.getString("updateTimestamp") == null ?
+                                    null : LocalDateTime.parse(resultSet.getString("updateTimestamp"), Utils.getDateTimeFormatter()))
                             .setDraft(resultSet.getBoolean("draft")));
                 }
-
-                return new Response<Notification>()
-                        .setSuccess(true)
-                        .setGenerableResults(Long.parseLong(resultSet.getString("generableValues")))
-                        .setResultsFrom(resultsFrom)
-                        .setResultsOffset(resultsOffset)
-                        .setData(notifications);
+                generableValues = Long.parseLong(resultSet.getString("generableValues"));
             }
+
+            return new Response<Notification>()
+                    .setSuccess(true)
+                    .setGenerableResults(generableValues)
+                    .setResultsFrom(resultsFrom)
+                    .setResultsOffset(resultsOffset)
+                    .setData(notifications);
         } catch (Exception e) {
             return new Response<Notification>().setError(e.getMessage());
         }
@@ -110,7 +114,8 @@ public class NotificationService {
 
     public static Response<Notification> getNotificationById(Long id) {
         try {
-            return getNotifications(new Columns[]{Columns.id}, new String[]{Long.toUnsignedString(id)}, null, null, null, null, 1L);
+            return getNotifications(new Columns[]{Columns.id}, new String[]{Long.toUnsignedString(id)},
+                    null, null, null, null, 1L);
         } catch (Exception e) {
             return new Response<Notification>().setError(e.getMessage());
         }

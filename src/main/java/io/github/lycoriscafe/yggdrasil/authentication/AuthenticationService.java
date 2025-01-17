@@ -114,14 +114,14 @@ public class AuthenticationService {
             try (var resultSet = statement.executeQuery()) {
                 connection.commit();
                 if (resultSet.next()) {
-                    var authentication = new Authentication();
-                    authentication.setRole(Role.valueOf(resultSet.getString("role")));
-                    authentication.setUserId(Long.parseLong(resultSet.getString("userId")));
-                    authentication.setPassword(resultSet.getString("password"));
-                    authentication.setAccessToken(resultSet.getString("accessToken"));
-                    authentication.setExpires(LocalDateTime.parse(resultSet.getString("expires")));
-                    authentication.setRefreshToken(resultSet.getString("refreshToken"));
-                    return authentication;
+                    return new Authentication(
+                            Role.valueOf(resultSet.getString("role")),
+                            Long.parseLong(resultSet.getString("userId")),
+                            resultSet.getString("password"))
+                            .setAccessToken(resultSet.getString("accessToken"))
+                            .setExpires(resultSet.getString("expires") == null ?
+                                    null : LocalDateTime.parse(resultSet.getString("expires")))
+                            .setRefreshToken(resultSet.getString("refreshToken"));
                 }
                 return null;
             }
@@ -136,20 +136,21 @@ public class AuthenticationService {
              var statement = connection.prepareStatement("SELECT * FROM authentication WHERE role = ? AND userId = ?")) {
             statement.setString(1, role.toString());
             statement.setString(2, Long.toUnsignedString(userId));
+            Authentication authentication = null;
             try (var resultSet = statement.executeQuery()) {
                 connection.commit();
                 if (resultSet.next()) {
-                    var authentication = new Authentication();
-                    authentication.setRole(Role.valueOf(resultSet.getString("role")));
-                    authentication.setUserId(Long.parseLong(resultSet.getString("userId")));
-                    authentication.setPassword(resultSet.getString("password"));
-                    authentication.setAccessToken(resultSet.getString("accessToken"));
-                    authentication.setExpires(LocalDateTime.parse(resultSet.getString("expires")));
-                    authentication.setRefreshToken(resultSet.getString("refreshToken"));
-                    return authentication;
+                    authentication = new Authentication(
+                            Role.valueOf(resultSet.getString("role")),
+                            Long.parseLong(resultSet.getString("userId")),
+                            resultSet.getString("password"))
+                            .setAccessToken(resultSet.getString("accessToken"))
+                            .setExpires(resultSet.getString("expires") == null ?
+                                    null : LocalDateTime.parse(resultSet.getString("expires"), Utils.getDateTimeFormatter()))
+                            .setRefreshToken(resultSet.getString("refreshToken"));
                 }
-                return null;
             }
+            return authentication;
         }
     }
 
@@ -165,8 +166,8 @@ public class AuthenticationService {
                 return null;
             }
             connection.commit();
-            return getAuthentication(authentication.getRole(), authentication.getUserId());
         }
+        return getAuthentication(authentication.getRole(), authentication.getUserId());
     }
 
     public static Authentication updateAuthentication(Authentication authentication) throws SQLException {
@@ -178,15 +179,15 @@ public class AuthenticationService {
             statement.setString(2, authentication.getAccessToken());
             statement.setString(3, Utils.getDateTimeFormatter().format(authentication.getExpires()));
             statement.setString(4, authentication.getRefreshToken());
-            statement.setString(6, authentication.getRole().toString());
-            statement.setString(7, Long.toUnsignedString(authentication.getUserId()));
+            statement.setString(5, authentication.getRole().toString());
+            statement.setString(6, Long.toUnsignedString(authentication.getUserId()));
             if (statement.executeUpdate() != 1) {
                 connection.rollback();
                 return null;
             }
             connection.commit();
-            return getAuthentication(authentication.getRole(), authentication.getUserId());
         }
+        return getAuthentication(authentication.getRole(), authentication.getUserId());
     }
 
     public static boolean deleteAuthentication(Role role,

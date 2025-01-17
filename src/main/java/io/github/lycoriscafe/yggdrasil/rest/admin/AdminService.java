@@ -78,12 +78,14 @@ public class AdminService {
             if (searchByValues != null) {
                 for (int i = 0; i < searchByValues.length; i++) {
                     statement.setString(i + 1, searchByValues[i]);
+                    statement.setString(i + searchByValues.length + 1, searchByValues[i]);
                 }
             }
 
+            long generableValues;
+            List<Admin> admins = new ArrayList<>();
             try (var resultSet = statement.executeQuery()) {
                 connection.commit();
-                List<Admin> admins = new ArrayList<>();
                 while (resultSet.next()) {
                     String[] accessLevelsSet = resultSet.getString("accessLevel").split(",", 0);
                     Set<AccessLevel> accessLevels = new HashSet<>();
@@ -92,17 +94,17 @@ public class AdminService {
                     }
                     admins.add(new Admin(resultSet.getString("name"), accessLevels)
                             .setId(Long.parseLong(resultSet.getString("id")))
-                            .setAccessLevel(accessLevels)
                             .setDisabled(resultSet.getBoolean("disabled")));
                 }
-
-                return new Response<Admin>()
-                        .setSuccess(true)
-                        .setGenerableResults(Long.parseLong(resultSet.getString("generableValues")))
-                        .setResultsFrom(resultsFrom)
-                        .setResultsOffset(resultsOffset)
-                        .setData(admins);
+                generableValues = Long.parseLong(resultSet.getString("generableValues"));
             }
+
+            return new Response<Admin>()
+                    .setSuccess(true)
+                    .setGenerableResults(generableValues)
+                    .setResultsFrom(resultsFrom)
+                    .setResultsOffset(resultsOffset)
+                    .setData(admins);
         } catch (Exception e) {
             return new Response<Admin>().setError(e.getMessage());
         }
@@ -110,7 +112,8 @@ public class AdminService {
 
     public static Response<Admin> getAdminById(Long id) {
         try {
-            return getAdmins(new Columns[]{Columns.id}, new String[]{Long.toUnsignedString(id)}, null, null, null, null, 1L);
+            return getAdmins(new Columns[]{Columns.id}, new String[]{Long.toUnsignedString(id)},
+                    null, null, null, null, 1L);
         } catch (Exception e) {
             return new Response<Admin>().setError(e.getMessage());
         }
@@ -140,7 +143,7 @@ public class AdminService {
                 accessLevels.append(accessLevelList.get(i).toString());
             }
             statement.setString(3, accessLevels.toString());
-            statement.setString(4, admin.getDisabled().toString());
+            statement.setBoolean(4, admin.getDisabled());
             if (statement.executeUpdate() != 1) {
                 connection.rollback();
                 return new Response<Admin>().setError("Internal server error");
@@ -153,10 +156,9 @@ public class AdminService {
                 }
                 if (AuthenticationService.updatePassword(
                         AuthenticationService.createAuthentication(
-                                new Authentication()
-                                        .setRole(Role.ADMIN)
-                                        .setUserId(Long.parseLong(resultSet.getString(1)))
-                                        .setPassword("A" + resultSet.getString(1)))) == null) {
+                                new Authentication(Role.ADMIN,
+                                        Long.parseLong(resultSet.getString(1)),
+                                        "A" + resultSet.getString(1)))) == null) {
                     connection.rollback();
                     return new Response<Admin>().setError("Internal server error");
                 }

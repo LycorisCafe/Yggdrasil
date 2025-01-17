@@ -3,6 +3,7 @@ module Yggdrasil {
     requires com.zaxxer.hikari;
     requires java.sql;
     requires nexus.http;
+    requires jdk.jshell;
 
     opens io.github.lycoriscafe.yggdrasil.rest.admin;
     opens io.github.lycoriscafe.yggdrasil.rest.classroom;
@@ -15,6 +16,7 @@ module Yggdrasil {
     opens io.github.lycoriscafe.yggdrasil.rest.timetable;
 
     exports io.github.lycoriscafe.yggdrasil;
+    opens io.github.lycoriscafe.yggdrasil.authentication;
     opens io.github.lycoriscafe.yggdrasil.rest.student.attendance;
     opens io.github.lycoriscafe.yggdrasil.rest.teacher.attendance;
 }

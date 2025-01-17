@@ -76,23 +76,25 @@ public class TeacherSubjectJoinService {
                 }
             }
 
+            long generableValues;
+            List<TeacherSubjectJoin> teacherSubjectJoins = new ArrayList<>();
             try (var resultSet = statement.executeQuery()) {
                 connection.commit();
-                List<TeacherSubjectJoin> teacherSubjectJoins = new ArrayList<>();
                 while (resultSet.next()) {
                     teacherSubjectJoins.add(new TeacherSubjectJoin(
                             Long.parseLong(resultSet.getString("teacherId")),
                             Long.parseLong(resultSet.getString("subjectId"))
                     ));
                 }
-
-                return new Response<TeacherSubjectJoin>()
-                        .setSuccess(true)
-                        .setGenerableResults(Long.parseLong(resultSet.getString("generableValues")))
-                        .setResultsFrom(resultsFrom)
-                        .setResultsOffset(resultsOffset)
-                        .setData(teacherSubjectJoins);
+                generableValues = Long.parseLong(resultSet.getString("generableValues"));
             }
+
+            return new Response<TeacherSubjectJoin>()
+                    .setSuccess(true)
+                    .setGenerableResults(generableValues)
+                    .setResultsFrom(resultsFrom)
+                    .setResultsOffset(resultsOffset)
+                    .setData(teacherSubjectJoins);
         } catch (Exception e) {
             return new Response<TeacherSubjectJoin>().setError(e.getMessage());
         }

@@ -80,9 +80,10 @@ public class ReliefService {
                 }
             }
 
+            long generableValues;
+            List<Relief> reliefs = new ArrayList<>();
             try (var resultSet = statement.executeQuery()) {
                 connection.commit();
-                List<Relief> reliefs = new ArrayList<>();
                 while (resultSet.next()) {
                     reliefs.add(new Relief(
                             Long.parseLong(resultSet.getString("timetableId")),
@@ -90,14 +91,15 @@ public class ReliefService {
                             LocalDate.parse(resultSet.getString("date"))
                     ).setId(Long.parseLong(resultSet.getString("id"))));
                 }
-
-                return new Response<Relief>()
-                        .setSuccess(true)
-                        .setGenerableResults(Long.parseLong(resultSet.getString("generableValues")))
-                        .setResultsFrom(resultsFrom)
-                        .setResultsOffset(resultsOffset)
-                        .setData(reliefs);
+                generableValues = Long.parseLong(resultSet.getString("generableValues"));
             }
+
+            return new Response<Relief>()
+                    .setSuccess(true)
+                    .setGenerableResults(generableValues)
+                    .setResultsFrom(resultsFrom)
+                    .setResultsOffset(resultsOffset)
+                    .setData(reliefs);
         } catch (Exception e) {
             return new Response<Relief>().setError(e.getMessage());
         }
@@ -105,7 +107,8 @@ public class ReliefService {
 
     public static Response<Relief> getReliefById(Long id) {
         try {
-            return getReliefs(new Columns[]{Columns.id}, new String[]{Long.toUnsignedString(id)}, null, null, null, null, 1L);
+            return getReliefs(new Columns[]{Columns.id}, new String[]{Long.toUnsignedString(id)},
+                    null, null, null, null, 1L);
         } catch (Exception e) {
             return new Response<Relief>().setError(e.getMessage());
         }

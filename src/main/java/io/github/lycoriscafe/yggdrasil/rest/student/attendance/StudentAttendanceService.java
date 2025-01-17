@@ -79,23 +79,25 @@ public class StudentAttendanceService {
                 }
             }
 
+            long generableValues;
+            List<StudentAttendance> studentAttendances = new ArrayList<>();
             try (var resultSet = statement.executeQuery()) {
                 connection.commit();
-                List<StudentAttendance> studentAttendances = new ArrayList<>();
                 while (resultSet.next()) {
                     studentAttendances.add(new StudentAttendance(
                             Long.parseLong(resultSet.getString("studentId"))
                     ).setDate(LocalDate.parse(resultSet.getString("date")))
                             .setTime(LocalTime.parse(resultSet.getString("time"))));
                 }
-
-                return new Response<StudentAttendance>()
-                        .setSuccess(true)
-                        .setGenerableResults(Long.parseLong(resultSet.getString("generableValues")))
-                        .setResultsFrom(resultsFrom)
-                        .setResultsOffset(resultsOffset)
-                        .setData(studentAttendances);
+                generableValues = Long.parseLong(resultSet.getString("generableValues"));
             }
+
+            return new Response<StudentAttendance>()
+                    .setSuccess(true)
+                    .setGenerableResults(generableValues)
+                    .setResultsFrom(resultsFrom)
+                    .setResultsOffset(resultsOffset)
+                    .setData(studentAttendances);
         } catch (Exception e) {
             return new Response<StudentAttendance>().setError(e.getMessage());
         }

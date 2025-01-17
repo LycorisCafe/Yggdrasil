@@ -98,6 +98,6 @@ public class Response<T> {
     }
 
     public Content parse() {
-        return new Content("application/json", "");
+        return new Content("application/json", Utils.toJson(this));
     }
 }
