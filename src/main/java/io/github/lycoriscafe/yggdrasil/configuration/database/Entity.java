@@ -14,12 +14,7 @@
  * limitations under the License.
  */
 
-package io.github.lycoriscafe.yggdrasil.rest.guardian;
+package io.github.lycoriscafe.yggdrasil.configuration.database;
 
-import io.github.lycoriscafe.nexus.http.core.HttpEndpoint;
-import io.github.lycoriscafe.nexus.http.core.headers.auth.Authenticated;
-
-@HttpEndpoint("/guardian")
-@Authenticated
-public class GuardianEndpoint {
+public interface Entity {
 }

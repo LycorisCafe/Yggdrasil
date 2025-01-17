@@ -16,5 +16,10 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.notification;
 
+import io.github.lycoriscafe.nexus.http.core.HttpEndpoint;
+import io.github.lycoriscafe.nexus.http.core.headers.auth.Authenticated;
+
+@HttpEndpoint("/notification")
+@Authenticated
 public class NotificationEndpoint {
 }

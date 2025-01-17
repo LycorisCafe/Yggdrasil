@@ -21,14 +21,15 @@ import io.github.lycoriscafe.yggdrasil.authentication.AuthenticationService;
 import io.github.lycoriscafe.yggdrasil.authentication.Role;
 import io.github.lycoriscafe.yggdrasil.configuration.Response;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
-import io.github.lycoriscafe.yggdrasil.configuration.YggdrasilConfig;
+import io.github.lycoriscafe.yggdrasil.configuration.database.CommonCRUD;
+import io.github.lycoriscafe.yggdrasil.configuration.database.EntityColumn;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.Statement;
 import java.util.*;
 
 public class AdminService {
-    public enum Columns {
+    public enum Columns implements EntityColumn {
         id,
         name,
         accessLevel,
@@ -42,61 +43,23 @@ public class AdminService {
                                             Boolean isAscending,
                                             Long resultsFrom,
                                             Long resultsOffset) {
-        if (resultsFrom == null || resultsFrom < 0) resultsFrom = 0L;
-        if (resultsOffset == null || resultsOffset < 0) resultsOffset = YggdrasilConfig.getDefaultResultsOffset();
-        if (resultsFrom > resultsOffset) return new Response<Admin>().setError("Invalid boundaries");
+        try {
+            var results = CommonCRUD.get(Admin.class, searchBy, searchByValues, isCaseSensitive, orderBy, isAscending, resultsFrom, resultsOffset);
+            if (results.getResponse() != null) return results.getResponse();
 
-        StringBuilder query = new StringBuilder("SELECT * FROM admin");
-        if (searchBy != null) {
-            if (searchBy.length != searchByValues.length) new Response<Admin>().setError("searchBy != searchByValues (length)");
-            if (isCaseSensitive != null && searchBy.length != isCaseSensitive.length) {
-                return new Response<Admin>().setError("searchBy != isCaseSensitive (length)");
-            }
-            query.append(" WHERE ");
-            for (int i = 0; i < searchBy.length; i++) {
-                if (i > 0) query.append(" AND ");
-                query.append(searchBy[i]).append(" LIKE ");
-                if (isCaseSensitive != null) query.append(isCaseSensitive[i] ? " BINARY " : "");
-                query.append("?");
-            }
-        }
-        if (orderBy != null) {
-            query.append(" ORDER BY ");
-            for (int i = 0; i < orderBy.length; i++) {
-                if (i > 0) query.append(", ");
-                query.append(orderBy[i]);
-            }
-        }
-        if (isAscending != null) {
-            query.append(isAscending ? " ASC" : " DESC");
-        }
-        query.replace(7, 8, "*, (" + query.toString().replace("*", "COUNT(id)") + ") AS generableValues");
-        query.append(" LIMIT ").append(Long.toUnsignedString(resultsFrom)).append(", ").append(Long.toUnsignedString(resultsOffset));
-
-        try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement(query.toString())) {
-            if (searchByValues != null) {
-                for (int i = 0; i < searchByValues.length; i++) {
-                    statement.setString(i + 1, searchByValues[i]);
-                    statement.setString(i + searchByValues.length + 1, searchByValues[i]);
-                }
-            }
-
+            var resultSet = results.getResultSet();
             Long generableValues = null;
             List<Admin> admins = new ArrayList<>();
-            try (var resultSet = statement.executeQuery()) {
-                connection.commit();
-                while (resultSet.next()) {
-                    if (generableValues == null) generableValues = Long.parseLong(resultSet.getString("generableValues"));
-                    String[] accessLevelsSet = resultSet.getString("accessLevel").split(",", 0);
-                    Set<AccessLevel> accessLevels = new HashSet<>();
-                    for (String accessLevel : accessLevelsSet) {
-                        accessLevels.add(AccessLevel.valueOf(accessLevel));
-                    }
-                    admins.add(new Admin(resultSet.getString("name"), accessLevels)
-                            .setId(Long.parseLong(resultSet.getString("id")))
-                            .setDisabled(resultSet.getBoolean("disabled")));
+            while (resultSet.next()) {
+                if (generableValues == null) generableValues = Long.parseLong(resultSet.getString("generableValues"));
+                String[] accessLevelsSet = resultSet.getString("accessLevel").split(",", 0);
+                Set<AccessLevel> accessLevels = new HashSet<>();
+                for (String accessLevel : accessLevelsSet) {
+                    accessLevels.add(AccessLevel.valueOf(accessLevel));
                 }
+                admins.add(new Admin(resultSet.getString("name"), accessLevels)
+                        .setId(Long.parseLong(resultSet.getString("id")))
+                        .setDisabled(resultSet.getBoolean("disabled")));
             }
 
             return new Response<Admin>()
@@ -204,22 +167,9 @@ public class AdminService {
 
     public static Response<Admin> deleteAdminById(Long id) {
         Objects.requireNonNull(id);
-        try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement("DELETE FROM admin WHERE id = ?")) {
-            statement.setString(1, Long.toUnsignedString(id));
-            if (statement.executeUpdate() != 1) {
-                connection.rollback();
-                return new Response<Admin>().setError("Internal server error");
-            }
-            if (!AuthenticationService.deleteAuthentication(Role.ADMIN, id)) {
-                connection.rollback();
-                return new Response<Admin>().setError("Internal server error");
-            }
-            connection.commit();
-            return new Response<Admin>().setSuccess(true);
-        } catch (Exception e) {
-            return new Response<Admin>().setError(e.getMessage());
-        }
+        var result = CommonCRUD.delete(Admin.class, new Columns[]{Columns.id}, new String[]{Long.toUnsignedString(id)}, null);
+        if (result.isSuccess()) AuthenticationService.deleteAuthentication(Role.ADMIN, id);
+        return result;
     }
 
     public static Response<Admin> resetPassword(Long id,

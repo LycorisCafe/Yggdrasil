@@ -17,12 +17,13 @@
 package io.github.lycoriscafe.yggdrasil.rest.timetable;
 
 import io.github.lycoriscafe.nexus.http.core.headers.content.MultipartFormData;
+import io.github.lycoriscafe.yggdrasil.configuration.database.Entity;
 
 import java.time.DayOfWeek;
 import java.util.List;
 import java.util.Objects;
 
-public class Timetable {
+public class Timetable implements Entity {
     private Long id;
     private Long teacherId;
     private Long subjectId;

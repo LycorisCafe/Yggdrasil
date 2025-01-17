@@ -16,11 +16,13 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.teacher.attendance;
 
+import io.github.lycoriscafe.yggdrasil.configuration.database.Entity;
+
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Objects;
 
-public class TeacherAttendance {
+public class TeacherAttendance implements Entity {
     private Long teacherId;
     private LocalDate date;
     private LocalTime time;

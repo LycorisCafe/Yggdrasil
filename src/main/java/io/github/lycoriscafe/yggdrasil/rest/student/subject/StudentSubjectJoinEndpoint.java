@@ -16,5 +16,10 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.student.subject;
 
+import io.github.lycoriscafe.nexus.http.core.HttpEndpoint;
+import io.github.lycoriscafe.nexus.http.core.headers.auth.Authenticated;
+
+@HttpEndpoint("/student/subject")
+@Authenticated
 public class StudentSubjectJoinEndpoint {
 }

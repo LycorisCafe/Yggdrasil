@@ -17,11 +17,12 @@
 package io.github.lycoriscafe.yggdrasil.configuration;
 
 import io.github.lycoriscafe.nexus.http.core.headers.content.Content;
+import io.github.lycoriscafe.yggdrasil.configuration.database.Entity;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-public class Response<T> {
+public class Response<T extends Entity> {
     private boolean success;
     private LocalDateTime timestamp;
     private String error;

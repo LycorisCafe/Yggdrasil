@@ -17,12 +17,13 @@
 package io.github.lycoriscafe.yggdrasil.rest.teacher;
 
 import io.github.lycoriscafe.nexus.http.core.headers.content.MultipartFormData;
+import io.github.lycoriscafe.yggdrasil.configuration.database.Entity;
 import io.github.lycoriscafe.yggdrasil.rest.Gender;
 
 import java.util.List;
 import java.util.Objects;
 
-public class Teacher {
+public class Teacher implements Entity {
     private Long id;
     private String nic;
     private String initName;

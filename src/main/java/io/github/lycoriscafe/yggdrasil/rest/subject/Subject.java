@@ -17,11 +17,12 @@
 package io.github.lycoriscafe.yggdrasil.rest.subject;
 
 import io.github.lycoriscafe.nexus.http.core.headers.content.MultipartFormData;
+import io.github.lycoriscafe.yggdrasil.configuration.database.Entity;
 
 import java.util.List;
 import java.util.Objects;
 
-public class Subject {
+public class Subject implements Entity {
     private Long id;
     private Integer grade;
     private String shortName;

@@ -18,7 +18,8 @@ package io.github.lycoriscafe.yggdrasil.rest.student.attendance;
 
 import io.github.lycoriscafe.yggdrasil.configuration.Response;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
-import io.github.lycoriscafe.yggdrasil.configuration.YggdrasilConfig;
+import io.github.lycoriscafe.yggdrasil.configuration.database.CommonCRUD;
+import io.github.lycoriscafe.yggdrasil.configuration.database.EntityColumn;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -27,7 +28,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class StudentAttendanceService {
-    public enum Columns {
+    public enum Columns implements EntityColumn {
         studentId,
         date,
         time
@@ -40,56 +41,19 @@ public class StudentAttendanceService {
                                                                     Boolean isAscending,
                                                                     Long resultsFrom,
                                                                     Long resultsOffset) {
-        if (resultsFrom == null || resultsFrom < 0) resultsFrom = 0L;
-        if (resultsOffset == null || resultsOffset < 0) resultsOffset = YggdrasilConfig.getDefaultResultsOffset();
-        if (resultsFrom > resultsOffset) return new Response<StudentAttendance>().setError("Invalid boundaries");
+        try {
+            var results = CommonCRUD.get(StudentAttendance.class, searchBy, searchByValues, isCaseSensitive, orderBy, isAscending, resultsFrom, resultsOffset);
+            if (results.getResponse() != null) return results.getResponse();
 
-        StringBuilder query = new StringBuilder("SELECT * FROM studentAttendance");
-        if (searchBy != null) {
-            if (searchBy.length != searchByValues.length) return new Response<StudentAttendance>().setError("searchBy != searchByValues (length)");
-            if (isCaseSensitive != null && searchBy.length != isCaseSensitive.length) {
-                return new Response<StudentAttendance>().setError("searchBy != isCaseSensitive (length)");
-            }
-            query.append(" WHERE ");
-            for (int i = 0; i < searchBy.length; i++) {
-                if (i > 0) query.append(" AND ");
-                query.append(searchBy[i]).append(" LIKE ");
-                if (isCaseSensitive != null) query.append(isCaseSensitive[i] ? " BINARY " : "");
-                query.append("?");
-            }
-        }
-        if (orderBy != null) {
-            query.append(" ORDER BY ");
-            for (int i = 0; i < orderBy.length; i++) {
-                if (i > 0) query.append(", ");
-                query.append(orderBy[i]);
-            }
-        }
-        if (isAscending != null) {
-            query.append(isAscending ? " ASC" : " DESC");
-        }
-        query.replace(7, 8, "*, (" + query.toString().replace("*", "COUNT(id)") + ") AS generableValues");
-        query.append(" LIMIT ").append(Long.toUnsignedString(resultsFrom)).append(", ").append(Long.toUnsignedString(resultsOffset));
-
-        try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement(query.toString())) {
-            if (searchByValues != null) {
-                for (int i = 0; i < searchByValues.length; i++) {
-                    statement.setString(i + 1, searchByValues[i]);
-                }
-            }
-
+            var resultSet = results.getResultSet();
             Long generableValues = null;
             List<StudentAttendance> studentAttendances = new ArrayList<>();
-            try (var resultSet = statement.executeQuery()) {
-                connection.commit();
-                while (resultSet.next()) {
-                    if (generableValues == null) generableValues = Long.parseLong(resultSet.getString("generableValues"));
-                    studentAttendances.add(new StudentAttendance(
-                            Long.parseLong(resultSet.getString("studentId"))
-                    ).setDate(LocalDate.parse(resultSet.getString("date")))
-                            .setTime(LocalTime.parse(resultSet.getString("time"))));
-                }
+            while (resultSet.next()) {
+                if (generableValues == null) generableValues = Long.parseLong(resultSet.getString("generableValues"));
+                studentAttendances.add(new StudentAttendance(
+                        Long.parseLong(resultSet.getString("studentId"))
+                ).setDate(LocalDate.parse(resultSet.getString("date")))
+                        .setTime(LocalTime.parse(resultSet.getString("time"))));
             }
 
             return new Response<StudentAttendance>()
@@ -121,22 +85,11 @@ public class StudentAttendanceService {
         }
     }
 
-    public static Response<StudentAttendance> deleteStudentAttendanceByStudentIdAndDate(Long id,
+    public static Response<StudentAttendance> deleteStudentAttendanceByStudentIdAndDate(Long studentId,
                                                                                         LocalDate date) {
-        Objects.requireNonNull(id);
+        Objects.requireNonNull(studentId);
         Objects.requireNonNull(date);
-        try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement("DELETE FROM studentattendance WHERE studentId = ? AND date = ?")) {
-            statement.setString(1, Long.toUnsignedString(id));
-            statement.setString(2, date.toString());
-            if (statement.executeUpdate() != 1) {
-                connection.rollback();
-                return new Response<StudentAttendance>().setError("Internal server error");
-            }
-            connection.commit();
-            return new Response<StudentAttendance>().setSuccess(true);
-        } catch (Exception e) {
-            return new Response<StudentAttendance>().setError(e.getMessage());
-        }
+        return CommonCRUD.delete(StudentAttendance.class, new Columns[]{Columns.studentId, Columns.date},
+                new String[]{Long.toUnsignedString(studentId), date.toString()}, null);
     }
 }

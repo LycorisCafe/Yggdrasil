@@ -18,14 +18,15 @@ package io.github.lycoriscafe.yggdrasil.rest.student.subject;
 
 import io.github.lycoriscafe.yggdrasil.configuration.Response;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
-import io.github.lycoriscafe.yggdrasil.configuration.YggdrasilConfig;
+import io.github.lycoriscafe.yggdrasil.configuration.database.CommonCRUD;
+import io.github.lycoriscafe.yggdrasil.configuration.database.EntityColumn;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 public class StudentSubjectJoinService {
-    public enum Columns {
+    public enum Columns implements EntityColumn {
         studentId,
         subjectId
     }
@@ -37,56 +38,19 @@ public class StudentSubjectJoinService {
                                                                       Boolean isAscending,
                                                                       Long resultsFrom,
                                                                       Long resultsOffset) {
-        if (resultsFrom == null || resultsFrom < 0) resultsFrom = 0L;
-        if (resultsOffset == null || resultsOffset < 0) resultsOffset = YggdrasilConfig.getDefaultResultsOffset();
-        if (resultsFrom > resultsOffset) return new Response<StudentSubjectJoin>().setError("Invalid boundaries");
+        try {
+            var results = CommonCRUD.get(StudentSubjectJoin.class, searchBy, searchByValues, isCaseSensitive, orderBy, isAscending, resultsFrom, resultsOffset);
+            if (results.getResponse() != null) return results.getResponse();
 
-        StringBuilder query = new StringBuilder("SELECT * FROM studentSubjectJoin");
-        if (searchBy != null) {
-            if (searchBy.length != searchByValues.length) return new Response<StudentSubjectJoin>().setError("searchBy != searchByValues (length)");
-            if (isCaseSensitive != null && searchBy.length != isCaseSensitive.length) {
-                return new Response<StudentSubjectJoin>().setError("searchBy != isCaseSensitive (length)");
-            }
-            query.append(" WHERE ");
-            for (int i = 0; i < searchBy.length; i++) {
-                if (i > 0) query.append(" AND ");
-                query.append(searchBy[i]).append(" LIKE ");
-                if (isCaseSensitive != null) query.append(isCaseSensitive[i] ? " BINARY " : "");
-                query.append("?");
-            }
-        }
-        if (orderBy != null) {
-            query.append(" ORDER BY ");
-            for (int i = 0; i < orderBy.length; i++) {
-                if (i > 0) query.append(", ");
-                query.append(orderBy[i]);
-            }
-        }
-        if (isAscending != null) {
-            query.append(isAscending ? " ASC" : " DESC");
-        }
-        query.replace(7, 8, "*, (" + query.toString().replace("*", "COUNT(id)") + ") AS generableValues");
-        query.append(" LIMIT ").append(Long.toUnsignedString(resultsFrom)).append(", ").append(Long.toUnsignedString(resultsOffset));
-
-        try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement(query.toString())) {
-            if (searchByValues != null) {
-                for (int i = 0; i < searchByValues.length; i++) {
-                    statement.setString(i + 1, searchByValues[i]);
-                }
-            }
-
+            var resultSet = results.getResultSet();
             Long generableValues = null;
             List<StudentSubjectJoin> studentSubjectJoins = new ArrayList<>();
-            try (var resultSet = statement.executeQuery()) {
-                connection.commit();
-                while (resultSet.next()) {
-                    if (generableValues == null) generableValues = Long.parseLong(resultSet.getString("generableValues"));
-                    studentSubjectJoins.add(new StudentSubjectJoin(
-                            Long.parseLong(resultSet.getString("studentId")),
-                            Long.parseLong(resultSet.getString("subjectId"))
-                    ));
-                }
+            while (resultSet.next()) {
+                if (generableValues == null) generableValues = Long.parseLong(resultSet.getString("generableValues"));
+                studentSubjectJoins.add(new StudentSubjectJoin(
+                        Long.parseLong(resultSet.getString("studentId")),
+                        Long.parseLong(resultSet.getString("subjectId"))
+                ));
             }
 
             return new Response<StudentSubjectJoin>()
@@ -123,18 +87,7 @@ public class StudentSubjectJoinService {
                                                                                                Long subjectId) {
         Objects.requireNonNull(studentId);
         Objects.requireNonNull(subjectId);
-        try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement("DELETE FROM studentsubjectjoin WHERE studentId = ? AND subjectId = ?")) {
-            statement.setString(1, Long.toUnsignedString(studentId));
-            statement.setString(2, Long.toUnsignedString(subjectId));
-            if (statement.executeUpdate() != 1) {
-                connection.rollback();
-                return new Response<StudentSubjectJoin>().setError("Internal server error");
-            }
-            connection.commit();
-            return new Response<StudentSubjectJoin>().setSuccess(true);
-        } catch (Exception e) {
-            return new Response<StudentSubjectJoin>().setError(e.getMessage());
-        }
+        return CommonCRUD.delete(StudentSubjectJoin.class, new Columns[]{Columns.studentId, Columns.subjectId},
+                new String[]{Long.toUnsignedString(studentId), Long.toUnsignedString(subjectId)}, null);
     }
 }

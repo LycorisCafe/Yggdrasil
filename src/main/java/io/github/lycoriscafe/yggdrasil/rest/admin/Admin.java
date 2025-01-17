@@ -17,13 +17,14 @@
 package io.github.lycoriscafe.yggdrasil.rest.admin;
 
 import io.github.lycoriscafe.nexus.http.core.headers.content.MultipartFormData;
+import io.github.lycoriscafe.yggdrasil.configuration.database.Entity;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-public class Admin {
+public class Admin implements Entity {
     private Long id;
     private String name;
     private Set<AccessLevel> accessLevel;

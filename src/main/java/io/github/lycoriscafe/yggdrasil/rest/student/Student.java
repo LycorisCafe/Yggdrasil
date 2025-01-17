@@ -17,6 +17,7 @@
 package io.github.lycoriscafe.yggdrasil.rest.student;
 
 import io.github.lycoriscafe.nexus.http.core.headers.content.MultipartFormData;
+import io.github.lycoriscafe.yggdrasil.configuration.database.Entity;
 import io.github.lycoriscafe.yggdrasil.rest.Gender;
 
 import java.time.LocalDate;
@@ -24,7 +25,7 @@ import java.time.Year;
 import java.util.List;
 import java.util.Objects;
 
-public class Student {
+public class Student implements Entity {
     private Long id;
     private Long guardianId;
     private Long classroomId;

@@ -21,7 +21,8 @@ import io.github.lycoriscafe.yggdrasil.authentication.AuthenticationService;
 import io.github.lycoriscafe.yggdrasil.authentication.Role;
 import io.github.lycoriscafe.yggdrasil.configuration.Response;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
-import io.github.lycoriscafe.yggdrasil.configuration.YggdrasilConfig;
+import io.github.lycoriscafe.yggdrasil.configuration.database.CommonCRUD;
+import io.github.lycoriscafe.yggdrasil.configuration.database.EntityColumn;
 import io.github.lycoriscafe.yggdrasil.rest.Gender;
 
 import java.nio.charset.StandardCharsets;
@@ -33,7 +34,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class StudentService {
-    public enum Columns {
+    public enum Columns implements EntityColumn {
         id,
         guardianId,
         classroomId,
@@ -56,67 +57,30 @@ public class StudentService {
                                                 Boolean isAscending,
                                                 Long resultsFrom,
                                                 Long resultsOffset) {
-        if (resultsFrom == null || resultsFrom < 0) resultsFrom = 0L;
-        if (resultsOffset == null || resultsOffset < 0) resultsOffset = YggdrasilConfig.getDefaultResultsOffset();
-        if (resultsFrom > resultsOffset) return new Response<Student>().setError("Invalid boundaries");
+        try {
+            var results = CommonCRUD.get(Student.class, searchBy, searchByValues, isCaseSensitive, orderBy, isAscending, resultsFrom, resultsOffset);
+            if (results.getResponse() != null) return results.getResponse();
 
-        StringBuilder query = new StringBuilder("SELECT * FROM student");
-        if (searchBy != null) {
-            if (searchBy.length != searchByValues.length) return new Response<Student>().setError("searchBy != searchByValues (length)");
-            if (isCaseSensitive != null && searchBy.length != isCaseSensitive.length) {
-                return new Response<Student>().setError("searchBy != isCaseSensitive (length)");
-            }
-            query.append(" WHERE ");
-            for (int i = 0; i < searchBy.length; i++) {
-                if (i > 0) query.append(" AND ");
-                query.append(searchBy[i]).append(" LIKE ");
-                if (isCaseSensitive != null) query.append(isCaseSensitive[i] ? " BINARY " : "");
-                query.append("?");
-            }
-        }
-        if (orderBy != null) {
-            query.append(" ORDER BY ");
-            for (int i = 0; i < orderBy.length; i++) {
-                if (i > 0) query.append(", ");
-                query.append(orderBy[i]);
-            }
-        }
-        if (isAscending != null) {
-            query.append(isAscending ? " ASC" : " DESC");
-        }
-        query.replace(7, 8, "*, (" + query.toString().replace("*", "COUNT(id)") + ") AS generableValues");
-        query.append(" LIMIT ").append(Long.toUnsignedString(resultsFrom)).append(", ").append(Long.toUnsignedString(resultsOffset));
-
-        try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement(query.toString())) {
-            if (searchByValues != null) {
-                for (int i = 0; i < searchByValues.length; i++) {
-                    statement.setString(i + 1, searchByValues[i]);
-                }
-            }
-
+            var resultSet = results.getResultSet();
             Long generableValues = null;
             List<Student> students = new ArrayList<>();
-            try (var resultSet = statement.executeQuery()) {
-                connection.commit();
-                while (resultSet.next()) {
-                    if (generableValues == null) generableValues = Long.parseLong(resultSet.getString("generableValues"));
-                    students.add(new Student(
-                            Long.parseLong(resultSet.getString("guardianId")),
-                            resultSet.getString("initName"),
-                            resultSet.getString("fullName"),
-                            Gender.valueOf(resultSet.getString("gender")),
-                            LocalDate.parse(resultSet.getString("dateOfBirth")),
-                            resultSet.getString("address"),
-                            Year.parse(resultSet.getString("regYear"))
-                    ).setId(Long.parseLong(resultSet.getString("id")))
-                            .setClassroomId(resultSet.getString("classroomId") == null ?
-                                    null : Long.parseLong(resultSet.getString("classroomId")))
-                            .setNic(resultSet.getString("nic"))
-                            .setContactNo(resultSet.getString("contactNo"))
-                            .setEmail(resultSet.getString("email"))
-                            .setDisabled(resultSet.getBoolean("disabled")));
-                }
+            while (resultSet.next()) {
+                if (generableValues == null) generableValues = Long.parseLong(resultSet.getString("generableValues"));
+                students.add(new Student(
+                        Long.parseLong(resultSet.getString("guardianId")),
+                        resultSet.getString("initName"),
+                        resultSet.getString("fullName"),
+                        Gender.valueOf(resultSet.getString("gender")),
+                        LocalDate.parse(resultSet.getString("dateOfBirth")),
+                        resultSet.getString("address"),
+                        Year.parse(resultSet.getString("regYear"))
+                ).setId(Long.parseLong(resultSet.getString("id")))
+                        .setClassroomId(resultSet.getString("classroomId") == null ?
+                                null : Long.parseLong(resultSet.getString("classroomId")))
+                        .setNic(resultSet.getString("nic"))
+                        .setContactNo(resultSet.getString("contactNo"))
+                        .setEmail(resultSet.getString("email"))
+                        .setDisabled(resultSet.getBoolean("disabled")));
             }
 
             return new Response<Student>()
@@ -231,22 +195,9 @@ public class StudentService {
 
     public static Response<Student> deleteStudentById(Long id) {
         Objects.requireNonNull(id);
-        try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement("DELETE FROM student WHERE id = ?")) {
-            statement.setString(1, Long.toUnsignedString(id));
-            if (statement.executeUpdate() != 1) {
-                connection.rollback();
-                return new Response<Student>().setError("Internal server error");
-            }
-            if (!AuthenticationService.deleteAuthentication(Role.STUDENT, id)) {
-                connection.rollback();
-                return new Response<Student>().setError("Internal server error");
-            }
-            connection.commit();
-            return new Response<Student>().setSuccess(true);
-        } catch (Exception e) {
-            return new Response<Student>().setError(e.getMessage());
-        }
+        var result = CommonCRUD.delete(Student.class, new Columns[]{Columns.id}, new String[]{Long.toUnsignedString(id)}, null);
+        if (result.isSuccess()) AuthenticationService.deleteAuthentication(Role.STUDENT, id);
+        return result;
     }
 
     public static Response<Student> resetPassword(Long id,

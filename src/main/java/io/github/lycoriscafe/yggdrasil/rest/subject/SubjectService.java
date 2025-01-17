@@ -18,7 +18,8 @@ package io.github.lycoriscafe.yggdrasil.rest.subject;
 
 import io.github.lycoriscafe.yggdrasil.configuration.Response;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
-import io.github.lycoriscafe.yggdrasil.configuration.YggdrasilConfig;
+import io.github.lycoriscafe.yggdrasil.configuration.database.CommonCRUD;
+import io.github.lycoriscafe.yggdrasil.configuration.database.EntityColumn;
 
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -26,7 +27,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class SubjectService {
-    public enum Columns {
+    public enum Columns implements EntityColumn {
         id,
         grade,
         shortName,
@@ -41,59 +42,22 @@ public class SubjectService {
                                                 Boolean isAscending,
                                                 Long resultsFrom,
                                                 Long resultsOffset) {
-        if (resultsFrom == null || resultsFrom < 0) resultsFrom = 0L;
-        if (resultsOffset == null || resultsOffset < 0) resultsOffset = YggdrasilConfig.getDefaultResultsOffset();
-        if (resultsFrom > resultsOffset) return new Response<Subject>().setError("Invalid boundaries");
+        try {
+            var results = CommonCRUD.get(Subject.class, searchBy, searchByValues, isCaseSensitive, orderBy, isAscending, resultsFrom, resultsOffset);
+            if (results.getResponse() != null) return results.getResponse();
 
-        StringBuilder query = new StringBuilder("SELECT * FROM subject");
-        if (searchBy != null) {
-            if (searchBy.length != searchByValues.length) return new Response<Subject>().setError("searchBy != searchByValues (length)");
-            if (isCaseSensitive != null && searchBy.length != isCaseSensitive.length) {
-                return new Response<Subject>().setError("searchBy != isCaseSensitive (length)");
-            }
-            query.append(" WHERE ");
-            for (int i = 0; i < searchBy.length; i++) {
-                if (i > 0) query.append(" AND ");
-                query.append(searchBy[i]).append(" LIKE ");
-                if (isCaseSensitive != null) query.append(isCaseSensitive[i] ? " BINARY " : "");
-                query.append("?");
-            }
-        }
-        if (orderBy != null) {
-            query.append(" ORDER BY ");
-            for (int i = 0; i < orderBy.length; i++) {
-                if (i > 0) query.append(", ");
-                query.append(orderBy[i]);
-            }
-        }
-        if (isAscending != null) {
-            query.append(isAscending ? " ASC" : " DESC");
-        }
-        query.replace(7, 8, "*, (" + query.toString().replace("*", "COUNT(id)") + ") AS generableValues");
-        query.append(" LIMIT ").append(Long.toUnsignedString(resultsFrom)).append(", ").append(Long.toUnsignedString(resultsOffset));
-
-        try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement(query.toString())) {
-            if (searchByValues != null) {
-                for (int i = 0; i < searchByValues.length; i++) {
-                    statement.setString(i + 1, searchByValues[i]);
-                }
-            }
-
+            var resultSet = results.getResultSet();
             Long generableValues = null;
             List<Subject> subjects = new ArrayList<>();
-            try (var resultSet = statement.executeQuery()) {
-                connection.commit();
-                while (resultSet.next()) {
-                    if (generableValues == null) generableValues = Long.parseLong(resultSet.getString("generableValues"));
-                    subjects.add(new Subject(
-                            resultSet.getInt("grade"),
-                            resultSet.getString("shortName")
-                    ).setId(Long.parseLong(resultSet.getString("id")))
-                            .setLongName(resultSet.getString("longName"))
-                            .setTeacherId(resultSet.getString("teacherId") == null ?
-                                    null : Long.parseLong(resultSet.getString("teacherId"))));
-                }
+            while (resultSet.next()) {
+                if (generableValues == null) generableValues = Long.parseLong(resultSet.getString("generableValues"));
+                subjects.add(new Subject(
+                        resultSet.getInt("grade"),
+                        resultSet.getString("shortName")
+                ).setId(Long.parseLong(resultSet.getString("id")))
+                        .setLongName(resultSet.getString("longName"))
+                        .setTeacherId(resultSet.getString("teacherId") == null ?
+                                null : Long.parseLong(resultSet.getString("teacherId"))));
             }
 
             return new Response<Subject>()
@@ -174,17 +138,6 @@ public class SubjectService {
 
     public static Response<Subject> deleteSubjectById(Long id) {
         Objects.requireNonNull(id);
-        try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement("DELETE FROM subject WHERE id = ?")) {
-            statement.setString(1, Long.toUnsignedString(id));
-            if (statement.executeUpdate() != 1) {
-                connection.rollback();
-                return new Response<Subject>().setError("Internal server error");
-            }
-            connection.commit();
-            return new Response<Subject>().setSuccess(true);
-        } catch (Exception e) {
-            return new Response<Subject>().setError(e.getMessage());
-        }
+        return CommonCRUD.delete(Subject.class, new Columns[]{Columns.id}, new String[]{Long.toUnsignedString(id)}, null);
     }
 }

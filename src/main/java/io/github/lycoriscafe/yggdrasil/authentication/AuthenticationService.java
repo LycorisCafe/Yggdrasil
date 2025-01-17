@@ -190,8 +190,8 @@ public class AuthenticationService {
         return getAuthentication(authentication.getRole(), authentication.getUserId());
     }
 
-    public static boolean deleteAuthentication(Role role,
-                                               Long userId) throws SQLException {
+    public static void deleteAuthentication(Role role,
+                                            Long userId) {
         Objects.requireNonNull(role);
         Objects.requireNonNull(userId);
         try (var connection = Utils.getDatabaseConnection();
@@ -200,10 +200,10 @@ public class AuthenticationService {
             statement.setString(2, Long.toUnsignedString(userId));
             if (statement.executeUpdate() != 1) {
                 connection.rollback();
-                return false;
             }
             connection.commit();
-            return true;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 

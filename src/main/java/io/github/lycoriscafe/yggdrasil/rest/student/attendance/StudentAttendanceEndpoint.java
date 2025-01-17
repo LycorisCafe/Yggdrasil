@@ -16,5 +16,10 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.student.attendance;
 
+import io.github.lycoriscafe.nexus.http.core.HttpEndpoint;
+import io.github.lycoriscafe.nexus.http.core.headers.auth.Authenticated;
+
+@HttpEndpoint("/student/attendance")
+@Authenticated
 public class StudentAttendanceEndpoint {
 }

@@ -17,12 +17,13 @@
 package io.github.lycoriscafe.yggdrasil.rest.notification;
 
 import io.github.lycoriscafe.nexus.http.core.headers.content.MultipartFormData;
+import io.github.lycoriscafe.yggdrasil.configuration.database.Entity;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
-public class Notification {
+public class Notification implements Entity {
     private Long id;
     private LocalDateTime createTimestamp;
     private LocalDateTime updateTimestamp;
