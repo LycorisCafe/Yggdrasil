@@ -16,28 +16,138 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.teacher;
 
+import io.github.lycoriscafe.nexus.http.core.headers.content.MultipartFormData;
 import io.github.lycoriscafe.yggdrasil.rest.Gender;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
 
-@Data
-@NoArgsConstructor
+import java.util.List;
+import java.util.Objects;
+
 public class Teacher {
     private Long id;
-    @NonNull
     private String nic;
-    @NonNull
     private String initName;
-    @NonNull
     private String fullName;
-    @NonNull
     private Gender gender;
-    @NonNull
     private String address;
-    @NonNull
     private String email;
-    @NonNull
     private String contactNo;
     private Boolean disabled;
+
+    private Teacher() {}
+
+    public Teacher(String nic,
+                   String initName,
+                   String fullName,
+                   Gender gender,
+                   String address,
+                   String email,
+                   String contactNo) {
+        this.nic = Objects.requireNonNull(nic);
+        this.initName = Objects.requireNonNull(initName);
+        this.fullName = Objects.requireNonNull(fullName);
+        this.gender = Objects.requireNonNull(gender);
+        this.address = Objects.requireNonNull(address);
+        this.email = Objects.requireNonNull(email);
+        this.contactNo = Objects.requireNonNull(contactNo);
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public Teacher setId(Long id) {
+        this.id = id;
+        return this;
+    }
+
+    public String getNic() {
+        return nic;
+    }
+
+    public Teacher setNic(String nic) {
+        this.nic = nic;
+        return this;
+    }
+
+    public String getInitName() {
+        return initName;
+    }
+
+    public Teacher setInitName(String initName) {
+        this.initName = initName;
+        return this;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public Teacher setFullName(String fullName) {
+        this.fullName = fullName;
+        return this;
+    }
+
+    public Gender getGender() {
+        return gender;
+    }
+
+    public Teacher setGender(Gender gender) {
+        this.gender = gender;
+        return this;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public Teacher setAddress(String address) {
+        this.address = address;
+        return this;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public Teacher setEmail(String email) {
+        this.email = email;
+        return this;
+    }
+
+    public String getContactNo() {
+        return contactNo;
+    }
+
+    public Teacher setContactNo(String contactNo) {
+        this.contactNo = contactNo;
+        return this;
+    }
+
+    public Boolean getDisabled() {
+        return disabled;
+    }
+
+    public Teacher setDisabled(Boolean disabled) {
+        this.disabled = disabled;
+        return this;
+    }
+
+    public static Teacher toTeacher(List<MultipartFormData> multipartFormData) {
+        var teacher = new Teacher();
+        for (var formData : multipartFormData) {
+            switch (formData.getName()) {
+                case "id" -> teacher.setId(Long.parseLong(new String(formData.getData())));
+                case "nic" -> teacher.setNic(new String(formData.getData()));
+                case "initName" -> teacher.setInitName(new String(formData.getData()));
+                case "fullName" -> teacher.setFullName(new String(formData.getData()));
+                case "gender" -> teacher.setGender(Gender.valueOf(new String(formData.getData())));
+                case "address" -> teacher.setAddress(new String(formData.getData()));
+                case "email" -> teacher.setEmail(new String(formData.getData()));
+                case "contactNo" -> teacher.setContactNo(new String(formData.getData()));
+                case "disabled" -> teacher.setDisabled(Boolean.parseBoolean(new String(formData.getData())));
+                default -> throw new IllegalStateException("Unexpected value: " + formData.getName());
+            }
+        }
+        return teacher;
+    }
 }

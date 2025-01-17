@@ -24,7 +24,6 @@ import io.github.lycoriscafe.yggdrasil.configuration.Utils;
 import io.github.lycoriscafe.yggdrasil.configuration.YggdrasilConfig;
 
 import java.nio.charset.StandardCharsets;
-import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
 
@@ -42,7 +41,7 @@ public class AdminService {
                                             Columns[] orderBy,
                                             Boolean isAscending,
                                             Long resultsFrom,
-                                            Long resultsOffset) throws SQLException {
+                                            Long resultsOffset) {
         if (resultsFrom == null || resultsFrom < 0) resultsFrom = 0L;
         if (resultsOffset == null || resultsOffset < 0) resultsOffset = YggdrasilConfig.getDefaultResultsOffset();
         if (resultsFrom > resultsOffset) return new Response<Admin>().setError("Invalid boundaries");
@@ -104,6 +103,8 @@ public class AdminService {
                         .setResultsOffset(resultsOffset)
                         .setData(admins);
             }
+        } catch (Exception e) {
+            return new Response<Admin>().setError(e.getMessage());
         }
     }
 

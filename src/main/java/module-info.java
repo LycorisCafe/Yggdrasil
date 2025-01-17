@@ -16,4 +16,5 @@ module Yggdrasil {
 
     exports io.github.lycoriscafe.yggdrasil;
     opens io.github.lycoriscafe.yggdrasil.rest.student.attendance;
+    opens io.github.lycoriscafe.yggdrasil.rest.teacher.attendance;
 }

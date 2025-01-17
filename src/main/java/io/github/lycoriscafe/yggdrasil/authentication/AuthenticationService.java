@@ -28,6 +28,8 @@ import io.github.lycoriscafe.yggdrasil.configuration.Utils;
 import io.github.lycoriscafe.yggdrasil.rest.admin.AccessLevel;
 import io.github.lycoriscafe.yggdrasil.rest.admin.Admin;
 import io.github.lycoriscafe.yggdrasil.rest.admin.AdminService;
+import io.github.lycoriscafe.yggdrasil.rest.student.StudentService;
+import io.github.lycoriscafe.yggdrasil.rest.teacher.TeacherService;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -74,17 +76,18 @@ public class AuthenticationService {
                         new BearerAuthentication(BearerAuthorizationError.INSUFFICIENT_SCOPE).setScope(targetRole.toString())
                                 .setErrorDescription("Insufficient scope. Contact your system admin for more details."));
             }
-            // TODO implement
-            var person = switch (auth.getRole()) {
-                case ADMIN -> AdminService.getAdminById(auth.getUserId());
-                case TEACHER -> null;
-                case STUDENT -> null;
+
+            var disabled = switch (auth.getRole()) {
+                case ADMIN -> AdminService.getAdminById(auth.getUserId()).getData().getFirst().getDisabled();
+                case TEACHER -> TeacherService.getTeacherById(auth.getUserId()).getData().getFirst().getDisabled();
+                case STUDENT -> StudentService.getStudentById(auth.getUserId()).getData().getFirst().getDisabled();
             };
-            if (person.getData().getFirst().getDisabled()) {
+            if (disabled) {
                 return httpResponse.setStatusCode(HttpStatusCode.UNAUTHORIZED).addAuthentication(
                         new BearerAuthentication(BearerAuthorizationError.INVALID_TOKEN)
                                 .setErrorDescription("Target account is disabled. Contact your system admin for more details."));
             }
+
             if (targetRole == Role.ADMIN && accessLevels != null) {
                 var admin = AdminService.getAdminById(auth.getUserId());
                 var accessLevel = admin.getData().getFirst().getAccessLevel();

@@ -16,20 +16,75 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.relief;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
+import io.github.lycoriscafe.nexus.http.core.headers.content.MultipartFormData;
 
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Objects;
 
-@Data
-@NoArgsConstructor
 public class Relief {
     private Long id;
-    @NonNull
     private Long timetableId;
-    @NonNull
     private Long teacherId;
-    @NonNull
     private LocalDate date;
+
+    private Relief() {}
+
+    public Relief(Long timetableId,
+                  Long teacherId,
+                  LocalDate date) {
+        this.timetableId = Objects.requireNonNull(timetableId);
+        this.teacherId = Objects.requireNonNull(teacherId);
+        this.date = Objects.requireNonNull(date);
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public Relief setId(Long id) {
+        this.id = id;
+        return this;
+    }
+
+    public Long getTimetableId() {
+        return timetableId;
+    }
+
+    public Relief setTimetableId(Long timetableId) {
+        this.timetableId = timetableId;
+        return this;
+    }
+
+    public Long getTeacherId() {
+        return teacherId;
+    }
+
+    public Relief setTeacherId(Long teacherId) {
+        this.teacherId = teacherId;
+        return this;
+    }
+
+    public LocalDate getDate() {
+        return date;
+    }
+
+    public Relief setDate(LocalDate date) {
+        this.date = date;
+        return this;
+    }
+
+    public static Relief toRelief(List<MultipartFormData> multipartFormData) {
+        var relief = new Relief();
+        for (var formData : multipartFormData) {
+            switch (formData.getName()) {
+                case "id" -> relief.setId(Long.parseLong(new String(formData.getData())));
+                case "timetableId" -> relief.setTimetableId(Long.parseLong(new String(formData.getData())));
+                case "teacherId" -> relief.setTeacherId(Long.parseLong(new String(formData.getData())));
+                case "date" -> relief.setDate(LocalDate.parse(new String(formData.getData())));
+                default -> throw new IllegalStateException("Unexpected value: " + formData.getName());
+            }
+        }
+        return relief;
+    }
 }

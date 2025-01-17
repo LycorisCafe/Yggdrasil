@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.github.lycoriscafe.yggdrasil.rest.student.attendance;
+package io.github.lycoriscafe.yggdrasil.rest.teacher.attendance;
 
 import io.github.lycoriscafe.yggdrasil.configuration.Response;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
@@ -26,14 +26,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class StudentAttendanceService {
+public class TeacherAttendanceService {
     public enum Columns {
-        studentId,
+        teacherId,
         date,
         time
     }
 
-    public static Response<StudentAttendance> getStudentAttendances(Columns[] searchBy,
+    public static Response<TeacherAttendance> getTeacherAttendances(Columns[] searchBy,
                                                                     String[] searchByValues,
                                                                     boolean[] isCaseSensitive,
                                                                     Columns[] orderBy,
@@ -42,13 +42,13 @@ public class StudentAttendanceService {
                                                                     Long resultsOffset) {
         if (resultsFrom == null || resultsFrom < 0) resultsFrom = 0L;
         if (resultsOffset == null || resultsOffset < 0) resultsOffset = YggdrasilConfig.getDefaultResultsOffset();
-        if (resultsFrom > resultsOffset) return new Response<StudentAttendance>().setError("Invalid boundaries");
+        if (resultsFrom > resultsOffset) return new Response<TeacherAttendance>().setError("Invalid boundaries");
 
-        StringBuilder query = new StringBuilder("SELECT * FROM studentAttendance");
+        StringBuilder query = new StringBuilder("SELECT * FROM teacherAttendance");
         if (searchBy != null) {
-            if (searchBy.length != searchByValues.length) return new Response<StudentAttendance>().setError("searchBy != searchByValues (length)");
+            if (searchBy.length != searchByValues.length) return new Response<TeacherAttendance>().setError("searchBy != searchByValues (length)");
             if (isCaseSensitive != null && searchBy.length != isCaseSensitive.length) {
-                return new Response<StudentAttendance>().setError("searchBy != isCaseSensitive (length)");
+                return new Response<TeacherAttendance>().setError("searchBy != isCaseSensitive (length)");
             }
             query.append(" WHERE ");
             for (int i = 0; i < searchBy.length; i++) {
@@ -81,60 +81,60 @@ public class StudentAttendanceService {
 
             try (var resultSet = statement.executeQuery()) {
                 connection.commit();
-                List<StudentAttendance> studentAttendances = new ArrayList<>();
+                List<TeacherAttendance> teacherAttendances = new ArrayList<>();
                 while (resultSet.next()) {
-                    studentAttendances.add(new StudentAttendance(
-                            Long.parseLong(resultSet.getString("studentId"))
+                    teacherAttendances.add(new TeacherAttendance(
+                            Long.parseLong(resultSet.getString("teacherId"))
                     ).setDate(LocalDate.parse(resultSet.getString("date")))
                             .setTime(LocalTime.parse(resultSet.getString("time"))));
                 }
 
-                return new Response<StudentAttendance>()
+                return new Response<TeacherAttendance>()
                         .setSuccess(true)
                         .setGenerableResults(Long.parseLong(resultSet.getString("generableValues")))
                         .setResultsFrom(resultsFrom)
                         .setResultsOffset(resultsOffset)
-                        .setData(studentAttendances);
+                        .setData(teacherAttendances);
             }
         } catch (Exception e) {
-            return new Response<StudentAttendance>().setError(e.getMessage());
+            return new Response<TeacherAttendance>().setError(e.getMessage());
         }
     }
 
-    public static Response<StudentAttendance> createStudentAttendance(StudentAttendance studentAttendance) {
-        Objects.requireNonNull(studentAttendance);
+    public static Response<TeacherAttendance> createTeacherAttendance(TeacherAttendance teacherAttendance) {
+        Objects.requireNonNull(teacherAttendance);
         try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement("INSERT INTO studentattendance (studentId) VALUES (?)")) {
-            statement.setString(1, Long.toUnsignedString(studentAttendance.getStudentId()));
+             var statement = connection.prepareStatement("INSERT INTO teacherattendance (teacherId) VALUES (?)")) {
+            statement.setString(1, Long.toUnsignedString(teacherAttendance.getTeacherId()));
             if (statement.executeUpdate() != 1) {
                 connection.rollback();
-                return new Response<StudentAttendance>().setError("Internal server error");
+                return new Response<TeacherAttendance>().setError("Internal server error");
             }
             connection.commit();
-            return getStudentAttendances(new Columns[]{Columns.studentId, Columns.date},
-                    new String[]{Long.toUnsignedString(studentAttendance.getStudentId()), LocalDate.now().toString()},
+            return getTeacherAttendances(new Columns[]{Columns.teacherId, Columns.date},
+                    new String[]{Long.toUnsignedString(teacherAttendance.getTeacherId()), LocalDate.now().toString()},
                     null, null, null, null, 1L);
         } catch (Exception e) {
-            return new Response<StudentAttendance>().setError(e.getMessage());
+            return new Response<TeacherAttendance>().setError(e.getMessage());
         }
     }
 
-    public static Response<StudentAttendance> deleteStudentAttendanceByStudentIdAndDate(Long id,
+    public static Response<TeacherAttendance> deleteTeacherAttendanceByStudentIdAndDate(Long id,
                                                                                         LocalDate date) {
         Objects.requireNonNull(id);
         Objects.requireNonNull(date);
         try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement("DELETE FROM studentattendance WHERE studentId = ? AND date = ?")) {
+             var statement = connection.prepareStatement("DELETE FROM teacherattendance WHERE teacherId = ? AND date = ?")) {
             statement.setString(1, Long.toUnsignedString(id));
             statement.setString(2, date.toString());
             if (statement.executeUpdate() != 1) {
                 connection.rollback();
-                return new Response<StudentAttendance>().setError("Internal server error");
+                return new Response<TeacherAttendance>().setError("Internal server error");
             }
             connection.commit();
-            return new Response<StudentAttendance>().setSuccess(true);
+            return new Response<TeacherAttendance>().setSuccess(true);
         } catch (Exception e) {
-            return new Response<StudentAttendance>().setError(e.getMessage());
+            return new Response<TeacherAttendance>().setError(e.getMessage());
         }
     }
 }

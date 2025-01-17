@@ -14,27 +14,27 @@
  * limitations under the License.
  */
 
-package io.github.lycoriscafe.yggdrasil.rest.student.attendance;
+package io.github.lycoriscafe.yggdrasil.rest.teacher.attendance;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Objects;
 
-public class StudentAttendance {
-    private Long studentId;
+public class TeacherAttendance {
+    private Long teacherId;
     private LocalDate date;
     private LocalTime time;
 
-    public StudentAttendance(Long studentId) {
-        this.studentId = Objects.requireNonNull(studentId);
+    public TeacherAttendance(Long teacherId) {
+        this.teacherId = Objects.requireNonNull(teacherId);
     }
 
-    public Long getStudentId() {
-        return studentId;
+    public Long getTeacherId() {
+        return teacherId;
     }
 
-    public StudentAttendance setStudentId(Long studentId) {
-        this.studentId = studentId;
+    public TeacherAttendance setTeacherId(Long teacherId) {
+        this.teacherId = teacherId;
         return this;
     }
 
@@ -42,7 +42,7 @@ public class StudentAttendance {
         return date;
     }
 
-    public StudentAttendance setDate(LocalDate date) {
+    public TeacherAttendance setDate(LocalDate date) {
         this.date = date;
         return this;
     }
@@ -51,7 +51,7 @@ public class StudentAttendance {
         return time;
     }
 
-    public StudentAttendance setTime(LocalTime time) {
+    public TeacherAttendance setTime(LocalTime time) {
         this.time = time;
         return this;
     }

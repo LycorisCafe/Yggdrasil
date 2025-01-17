@@ -14,41 +14,38 @@
  * limitations under the License.
  */
 
-package io.github.lycoriscafe.yggdrasil.rest.student.attendance;
+package io.github.lycoriscafe.yggdrasil.rest.teacher.subject;
 
 import io.github.lycoriscafe.yggdrasil.configuration.Response;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
 import io.github.lycoriscafe.yggdrasil.configuration.YggdrasilConfig;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class StudentAttendanceService {
+public class TeacherSubjectJoinService {
     public enum Columns {
-        studentId,
-        date,
-        time
+        teacherId,
+        subjectId
     }
 
-    public static Response<StudentAttendance> getStudentAttendances(Columns[] searchBy,
-                                                                    String[] searchByValues,
-                                                                    boolean[] isCaseSensitive,
-                                                                    Columns[] orderBy,
-                                                                    Boolean isAscending,
-                                                                    Long resultsFrom,
-                                                                    Long resultsOffset) {
+    public static Response<TeacherSubjectJoin> getTeacherSubjectJoins(Columns[] searchBy,
+                                                                      String[] searchByValues,
+                                                                      boolean[] isCaseSensitive,
+                                                                      Columns[] orderBy,
+                                                                      Boolean isAscending,
+                                                                      Long resultsFrom,
+                                                                      Long resultsOffset) {
         if (resultsFrom == null || resultsFrom < 0) resultsFrom = 0L;
         if (resultsOffset == null || resultsOffset < 0) resultsOffset = YggdrasilConfig.getDefaultResultsOffset();
-        if (resultsFrom > resultsOffset) return new Response<StudentAttendance>().setError("Invalid boundaries");
+        if (resultsFrom > resultsOffset) return new Response<TeacherSubjectJoin>().setError("Invalid boundaries");
 
-        StringBuilder query = new StringBuilder("SELECT * FROM studentAttendance");
+        StringBuilder query = new StringBuilder("SELECT * FROM teacherSubjectJoin");
         if (searchBy != null) {
-            if (searchBy.length != searchByValues.length) return new Response<StudentAttendance>().setError("searchBy != searchByValues (length)");
+            if (searchBy.length != searchByValues.length) return new Response<TeacherSubjectJoin>().setError("searchBy != searchByValues (length)");
             if (isCaseSensitive != null && searchBy.length != isCaseSensitive.length) {
-                return new Response<StudentAttendance>().setError("searchBy != isCaseSensitive (length)");
+                return new Response<TeacherSubjectJoin>().setError("searchBy != isCaseSensitive (length)");
             }
             query.append(" WHERE ");
             for (int i = 0; i < searchBy.length; i++) {
@@ -81,60 +78,61 @@ public class StudentAttendanceService {
 
             try (var resultSet = statement.executeQuery()) {
                 connection.commit();
-                List<StudentAttendance> studentAttendances = new ArrayList<>();
+                List<TeacherSubjectJoin> teacherSubjectJoins = new ArrayList<>();
                 while (resultSet.next()) {
-                    studentAttendances.add(new StudentAttendance(
-                            Long.parseLong(resultSet.getString("studentId"))
-                    ).setDate(LocalDate.parse(resultSet.getString("date")))
-                            .setTime(LocalTime.parse(resultSet.getString("time"))));
+                    teacherSubjectJoins.add(new TeacherSubjectJoin(
+                            Long.parseLong(resultSet.getString("teacherId")),
+                            Long.parseLong(resultSet.getString("subjectId"))
+                    ));
                 }
 
-                return new Response<StudentAttendance>()
+                return new Response<TeacherSubjectJoin>()
                         .setSuccess(true)
                         .setGenerableResults(Long.parseLong(resultSet.getString("generableValues")))
                         .setResultsFrom(resultsFrom)
                         .setResultsOffset(resultsOffset)
-                        .setData(studentAttendances);
+                        .setData(teacherSubjectJoins);
             }
         } catch (Exception e) {
-            return new Response<StudentAttendance>().setError(e.getMessage());
+            return new Response<TeacherSubjectJoin>().setError(e.getMessage());
         }
     }
 
-    public static Response<StudentAttendance> createStudentAttendance(StudentAttendance studentAttendance) {
-        Objects.requireNonNull(studentAttendance);
+    public static Response<TeacherSubjectJoin> createTeacherSubjectJoin(TeacherSubjectJoin teacherSubjectJoin) {
+        Objects.requireNonNull(teacherSubjectJoin);
         try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement("INSERT INTO studentattendance (studentId) VALUES (?)")) {
-            statement.setString(1, Long.toUnsignedString(studentAttendance.getStudentId()));
+             var statement = connection.prepareStatement("INSERT INTO teachersubjectjoin (teacherId, subjectId) VALUES (?, ?)")) {
+            statement.setString(1, Long.toUnsignedString(teacherSubjectJoin.getTeacherId()));
+            statement.setString(2, Long.toUnsignedString(teacherSubjectJoin.getSubjectId()));
             if (statement.executeUpdate() != 1) {
                 connection.rollback();
-                return new Response<StudentAttendance>().setError("Internal server error");
+                return new Response<TeacherSubjectJoin>().setError("Internal server error");
             }
             connection.commit();
-            return getStudentAttendances(new Columns[]{Columns.studentId, Columns.date},
-                    new String[]{Long.toUnsignedString(studentAttendance.getStudentId()), LocalDate.now().toString()},
+            return getTeacherSubjectJoins(new Columns[]{Columns.teacherId, Columns.subjectId},
+                    new String[]{Long.toUnsignedString(teacherSubjectJoin.getTeacherId()), Long.toUnsignedString(teacherSubjectJoin.getSubjectId())},
                     null, null, null, null, 1L);
         } catch (Exception e) {
-            return new Response<StudentAttendance>().setError(e.getMessage());
+            return new Response<TeacherSubjectJoin>().setError(e.getMessage());
         }
     }
 
-    public static Response<StudentAttendance> deleteStudentAttendanceByStudentIdAndDate(Long id,
-                                                                                        LocalDate date) {
-        Objects.requireNonNull(id);
-        Objects.requireNonNull(date);
+    public static Response<TeacherSubjectJoin> deleteTeacherSubjectJoinByStudentIdAndSubjectId(Long teacherId,
+                                                                                               Long subjectId) {
+        Objects.requireNonNull(teacherId);
+        Objects.requireNonNull(subjectId);
         try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement("DELETE FROM studentattendance WHERE studentId = ? AND date = ?")) {
-            statement.setString(1, Long.toUnsignedString(id));
-            statement.setString(2, date.toString());
+             var statement = connection.prepareStatement("DELETE FROM teachersubjectjoin WHERE teacherId = ? AND subjectId = ?")) {
+            statement.setString(1, Long.toUnsignedString(teacherId));
+            statement.setString(2, Long.toUnsignedString(subjectId));
             if (statement.executeUpdate() != 1) {
                 connection.rollback();
-                return new Response<StudentAttendance>().setError("Internal server error");
+                return new Response<TeacherSubjectJoin>().setError("Internal server error");
             }
             connection.commit();
-            return new Response<StudentAttendance>().setSuccess(true);
+            return new Response<TeacherSubjectJoin>().setSuccess(true);
         } catch (Exception e) {
-            return new Response<StudentAttendance>().setError(e.getMessage());
+            return new Response<TeacherSubjectJoin>().setError(e.getMessage());
         }
     }
 }

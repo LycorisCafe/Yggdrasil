@@ -25,7 +25,6 @@ import io.github.lycoriscafe.yggdrasil.configuration.YggdrasilConfig;
 import io.github.lycoriscafe.yggdrasil.rest.Gender;
 
 import java.nio.charset.StandardCharsets;
-import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
 import java.time.Year;
@@ -56,7 +55,7 @@ public class StudentService {
                                                 Columns[] orderBy,
                                                 Boolean isAscending,
                                                 Long resultsFrom,
-                                                Long resultsOffset) throws SQLException {
+                                                Long resultsOffset) {
         if (resultsFrom == null || resultsFrom < 0) resultsFrom = 0L;
         if (resultsOffset == null || resultsOffset < 0) resultsOffset = YggdrasilConfig.getDefaultResultsOffset();
         if (resultsFrom > resultsOffset) return new Response<Student>().setError("Invalid boundaries");
@@ -123,10 +122,12 @@ public class StudentService {
                         .setResultsOffset(resultsOffset)
                         .setData(students);
             }
+        } catch (Exception e) {
+            return new Response<Student>().setError(e.getMessage());
         }
     }
 
-    public static Response<Student> getStudentById(Long id) throws SQLException {
+    public static Response<Student> getStudentById(Long id) {
         try {
             return getStudents(new Columns[]{Columns.id}, new String[]{Long.toUnsignedString(id)}, null, null, null, null, 1L);
         } catch (Exception e) {
@@ -134,7 +135,7 @@ public class StudentService {
         }
     }
 
-    public static Response<Student> createStudent(Student student) throws SQLException {
+    public static Response<Student> createStudent(Student student) {
         Objects.requireNonNull(student);
         try (var connection = Utils.getDatabaseConnection();
              var statement = connection.prepareStatement("INSERT INTO student (id, guardianId, classroomId, initName, fullName, gender, " +
@@ -179,7 +180,7 @@ public class StudentService {
         }
     }
 
-    public static Response<Student> updateStudent(Student student) throws SQLException {
+    public static Response<Student> updateStudent(Student student) {
         Objects.requireNonNull(student);
 
         var oldStudent = getStudentById(student.getId());

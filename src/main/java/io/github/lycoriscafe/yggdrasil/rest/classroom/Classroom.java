@@ -16,17 +16,72 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.classroom;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
+import io.github.lycoriscafe.nexus.http.core.headers.content.MultipartFormData;
 
-@Data
-@NoArgsConstructor
+import java.util.List;
+import java.util.Objects;
+
 public class Classroom {
     private Long id;
     private Long teacherId;
-    @NonNull
     private Integer grade;
-    @NonNull
     private String name;
+
+    private Classroom() {}
+
+    public Classroom(Integer grade,
+                     String name) {
+        this.grade = Objects.requireNonNull(grade);
+        this.name = Objects.requireNonNull(name);
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public Classroom setId(Long id) {
+        this.id = id;
+        return this;
+    }
+
+    public Long getTeacherId() {
+        return teacherId;
+    }
+
+    public Classroom setTeacherId(Long teacherId) {
+        this.teacherId = teacherId;
+        return this;
+    }
+
+    public Integer getGrade() {
+        return grade;
+    }
+
+    public Classroom setGrade(Integer grade) {
+        this.grade = grade;
+        return this;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public Classroom setName(String name) {
+        this.name = name;
+        return this;
+    }
+
+    public static Classroom toClassroom(List<MultipartFormData> multipartFormData) {
+        var classroom = new Classroom();
+        for (var formData : multipartFormData) {
+            switch (formData.getName()) {
+                case "id" -> classroom.setId(Long.parseLong(new String(formData.getData())));
+                case "teacherId" -> classroom.setTeacherId(Long.parseLong(new String(formData.getData())));
+                case "grade" -> classroom.setGrade(Integer.parseInt(new String(formData.getData())));
+                case "name" -> classroom.setName(new String(formData.getData()));
+                default -> throw new IllegalStateException("Unexpected value: " + formData.getName());
+            }
+        }
+        return classroom;
+    }
 }

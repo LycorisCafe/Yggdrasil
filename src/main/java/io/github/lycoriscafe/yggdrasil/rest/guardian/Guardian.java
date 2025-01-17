@@ -16,25 +16,125 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.guardian;
 
+import io.github.lycoriscafe.nexus.http.core.headers.content.MultipartFormData;
 import io.github.lycoriscafe.yggdrasil.rest.Gender;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
 
-@Data
-@NoArgsConstructor
+import java.util.List;
+import java.util.Objects;
+
 public class Guardian {
     private Long id;
     private String nic;
-    @NonNull
     private String initName;
-    @NonNull
     private String fullName;
-    @NonNull
     private Gender gender;
-    @NonNull
     private String address;
     private String email;
-    @NonNull
     private String contactNo;
+
+    private Guardian() {}
+
+    public Guardian(String nic,
+                    String initName,
+                    String fullName,
+                    Gender gender,
+                    String address,
+                    String contactNo) {
+        this.nic = Objects.requireNonNull(nic);
+        this.initName = Objects.requireNonNull(initName);
+        this.fullName = Objects.requireNonNull(fullName);
+        this.gender = Objects.requireNonNull(gender);
+        this.address = Objects.requireNonNull(address);
+        this.contactNo = Objects.requireNonNull(contactNo);
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public Guardian setId(Long id) {
+        this.id = id;
+        return this;
+    }
+
+    public String getNic() {
+        return nic;
+    }
+
+    public Guardian setNic(String nic) {
+        this.nic = nic;
+        return this;
+    }
+
+    public String getInitName() {
+        return initName;
+    }
+
+    public Guardian setInitName(String initName) {
+        this.initName = initName;
+        return this;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public Guardian setFullName(String fullName) {
+        this.fullName = fullName;
+        return this;
+    }
+
+    public Gender getGender() {
+        return gender;
+    }
+
+    public Guardian setGender(Gender gender) {
+        this.gender = gender;
+        return this;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public Guardian setAddress(String address) {
+        this.address = address;
+        return this;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public Guardian setEmail(String email) {
+        this.email = email;
+        return this;
+    }
+
+    public String getContactNo() {
+        return contactNo;
+    }
+
+    public Guardian setContactNo(String contactNo) {
+        this.contactNo = contactNo;
+        return this;
+    }
+
+    public static Guardian toGuardian(List<MultipartFormData> multipartFormData) {
+        var guardian = new Guardian();
+        for (var formData : multipartFormData) {
+            switch (formData.getName()) {
+                case "id" -> guardian.setId(Long.parseLong(new String(formData.getData())));
+                case "nic" -> guardian.setNic(new String(formData.getData()));
+                case "initName" -> guardian.setInitName(new String(formData.getData()));
+                case "fullName" -> guardian.setFullName(new String(formData.getData()));
+                case "gender" -> guardian.setGender(Gender.valueOf(new String(formData.getData())));
+                case "address" -> guardian.setAddress(new String(formData.getData()));
+                case "email" -> guardian.setEmail(new String(formData.getData()));
+                case "contactNo" -> guardian.setContactNo(new String(formData.getData()));
+                default -> throw new IllegalStateException("Unexpected value: " + formData.getName());
+            }
+        }
+        return guardian;
+    }
 }

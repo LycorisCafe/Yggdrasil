@@ -16,18 +16,83 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.subject;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
+import io.github.lycoriscafe.nexus.http.core.headers.content.MultipartFormData;
 
-@Data
-@NoArgsConstructor
+import java.util.List;
+import java.util.Objects;
+
 public class Subject {
     private Long id;
-    @NonNull
     private Integer grade;
-    @NonNull
     private String shortName;
-    private String longGame;
+    private String longName;
     private Long teacherId;
+
+    private Subject() {}
+
+    public Subject(Integer grade,
+                   String shortName) {
+        this.grade = Objects.requireNonNull(grade);
+        this.shortName = Objects.requireNonNull(shortName);
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public Subject setId(Long id) {
+        this.id = id;
+        return this;
+    }
+
+    public Integer getGrade() {
+        return grade;
+    }
+
+    public Subject setGrade(Integer grade) {
+        this.grade = grade;
+        return this;
+    }
+
+    public String getShortName() {
+        return shortName;
+    }
+
+    public Subject setShortName(String shortName) {
+        this.shortName = shortName;
+        return this;
+    }
+
+    public String getLongName() {
+        return longName;
+    }
+
+    public Subject setLongName(String longName) {
+        this.longName = longName;
+        return this;
+    }
+
+    public Long getTeacherId() {
+        return teacherId;
+    }
+
+    public Subject setTeacherId(Long teacherId) {
+        this.teacherId = teacherId;
+        return this;
+    }
+
+    public static Subject toSubject(List<MultipartFormData> multipartFormData) {
+        var subject = new Subject();
+        for (var formData : multipartFormData) {
+            switch (formData.getName()) {
+                case "id" -> subject.setId(Long.parseLong(new String(formData.getData())));
+                case "grade" -> subject.setGrade(Integer.parseInt(new String(formData.getData())));
+                case "shortName" -> subject.setShortName(new String(formData.getData()));
+                case "longName" -> subject.setLongName(new String(formData.getData()));
+                case "teacherId" -> subject.setTeacherId(Long.parseLong(new String(formData.getData())));
+                default -> throw new IllegalStateException("Unexpected value: " + formData.getName());
+            }
+        }
+        return subject;
+    }
 }

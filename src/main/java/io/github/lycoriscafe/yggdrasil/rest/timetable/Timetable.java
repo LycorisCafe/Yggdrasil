@@ -16,24 +16,101 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.timetable;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
+import io.github.lycoriscafe.nexus.http.core.headers.content.MultipartFormData;
 
 import java.time.DayOfWeek;
+import java.util.List;
+import java.util.Objects;
 
-@Data
-@NoArgsConstructor
 public class Timetable {
     private Long id;
-    @NonNull
     private Long teacherId;
-    @NonNull
     private Long subjectId;
-    @NonNull
     private Long classroomId;
-    @NonNull
     private DayOfWeek day;
-    @NonNull
     private Integer timeslot;
+
+    private Timetable() {}
+
+    public Timetable(Long teacherId,
+                     Long subjectId,
+                     Long classroomId,
+                     DayOfWeek day,
+                     Integer timeslot) {
+        this.teacherId = Objects.requireNonNull(teacherId);
+        this.subjectId = Objects.requireNonNull(subjectId);
+        this.classroomId = Objects.requireNonNull(classroomId);
+        this.day = Objects.requireNonNull(day);
+        this.timeslot = Objects.requireNonNull(timeslot);
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public Timetable setId(Long id) {
+        this.id = id;
+        return this;
+    }
+
+    public Long getTeacherId() {
+        return teacherId;
+    }
+
+    public Timetable setTeacherId(Long teacherId) {
+        this.teacherId = teacherId;
+        return this;
+    }
+
+    public Long getSubjectId() {
+        return subjectId;
+    }
+
+    public Timetable setSubjectId(Long subjectId) {
+        this.subjectId = subjectId;
+        return this;
+    }
+
+    public Long getClassroomId() {
+        return classroomId;
+    }
+
+    public Timetable setClassroomId(Long classroomId) {
+        this.classroomId = classroomId;
+        return this;
+    }
+
+    public DayOfWeek getDay() {
+        return day;
+    }
+
+    public Timetable setDay(DayOfWeek day) {
+        this.day = day;
+        return this;
+    }
+
+    public Integer getTimeslot() {
+        return timeslot;
+    }
+
+    public Timetable setTimeslot(Integer timeslot) {
+        this.timeslot = timeslot;
+        return this;
+    }
+
+    public static Timetable toTimetable(List<MultipartFormData> multipartFormData) {
+        var timetable = new Timetable();
+        for (var formData : multipartFormData) {
+            switch (formData.getName()) {
+                case "id" -> timetable.setId(Long.parseLong(new String(formData.getData())));
+                case "teacherId" -> timetable.setTeacherId(Long.parseLong(new String(formData.getData())));
+                case "subjectId" -> timetable.setSubjectId(Long.parseLong(new String(formData.getData())));
+                case "classroomId" -> timetable.setClassroomId(Long.parseLong(new String(formData.getData())));
+                case "day" -> timetable.setDay(DayOfWeek.of(Integer.parseInt(new String(formData.getData()))));
+                case "timeslot" -> timetable.setTimeslot(Integer.parseInt(new String(formData.getData())));
+                default -> throw new IllegalStateException("Unexpected value: " + formData.getName());
+            }
+        }
+        return timetable;
+    }
 }

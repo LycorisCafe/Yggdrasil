@@ -20,6 +20,8 @@ import io.github.lycoriscafe.nexus.http.core.HttpEndpoint;
 import io.github.lycoriscafe.nexus.http.core.headers.auth.scheme.bearer.*;
 import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.POST;
 import io.github.lycoriscafe.yggdrasil.rest.admin.AdminService;
+import io.github.lycoriscafe.yggdrasil.rest.student.StudentService;
+import io.github.lycoriscafe.yggdrasil.rest.teacher.TeacherService;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -69,13 +71,13 @@ public class AuthenticationEndpoint {
                     return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_CLIENT)
                             .setErrorDescription("Invalid password. Try again.");
                 }
-                // TODO implement
-                var person = switch (auth.getRole()) {
-                    case ADMIN -> AdminService.getAdminById(auth.getUserId());
-                    case TEACHER -> null;
-                    case STUDENT -> null;
+
+                var disabled = switch (auth.getRole()) {
+                    case ADMIN -> AdminService.getAdminById(auth.getUserId()).getData().getFirst().getDisabled();
+                    case TEACHER -> TeacherService.getTeacherById(auth.getUserId()).getData().getFirst().getDisabled();
+                    case STUDENT -> StudentService.getStudentById(auth.getUserId()).getData().getFirst().getDisabled();
                 };
-                if (person.getData().getFirst().getDisabled()) {
+                if (disabled) {
                     return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_CLIENT)
                             .setErrorDescription("Target account is disabled. Contact your system admin for more details.");
                 }
@@ -113,13 +115,13 @@ public class AuthenticationEndpoint {
                     return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_CLIENT)
                             .setErrorDescription("Invalid refresh token. Use credentials or try again.");
                 }
-                // TODO implement
-                var person = switch (auth.getRole()) {
-                    case ADMIN -> AdminService.getAdminById(auth.getUserId());
-                    case TEACHER -> null;
-                    case STUDENT -> null;
+
+                var disabled = switch (auth.getRole()) {
+                    case ADMIN -> AdminService.getAdminById(auth.getUserId()).getData().getFirst().getDisabled();
+                    case TEACHER -> TeacherService.getTeacherById(auth.getUserId()).getData().getFirst().getDisabled();
+                    case STUDENT -> StudentService.getStudentById(auth.getUserId()).getData().getFirst().getDisabled();
                 };
-                if (person.getData().getFirst().getDisabled()) {
+                if (disabled) {
                     return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_CLIENT)
                             .setErrorDescription("Target account is disabled. Contact your system admin for more details.");
                 }

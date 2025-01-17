@@ -14,18 +14,7 @@
  * limitations under the License.
  */
 
-package io.github.lycoriscafe.yggdrasil.rest.teacher;
+package io.github.lycoriscafe.yggdrasil.rest.classroom;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-import java.time.LocalDate;
-import java.time.LocalTime;
-
-@Data
-@NoArgsConstructor
-public class TeacherAttendance {
-    private Long teacherId;
-    private LocalDate date;
-    private LocalTime time;
+public class ClassroomEndpoint {
 }
