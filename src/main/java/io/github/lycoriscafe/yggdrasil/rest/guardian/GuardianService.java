@@ -23,6 +23,7 @@ import io.github.lycoriscafe.yggdrasil.configuration.database.EntityColumn;
 import io.github.lycoriscafe.yggdrasil.rest.Gender;
 
 import java.sql.Statement;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -34,6 +35,7 @@ public class GuardianService {
         initName,
         fullName,
         gender,
+        dateOfBirth,
         address,
         email,
         contactNo
@@ -50,27 +52,27 @@ public class GuardianService {
             var results = CommonCRUD.get(Guardian.class, searchBy, searchByValues, isCaseSensitive, orderBy, isAscending, resultsFrom, resultsOffset);
             if (results.getResponse() != null) return results.getResponse();
 
-            var resultSet = results.getResultSet();
-            Long generableValues = null;
             List<Guardian> guardians = new ArrayList<>();
-            while (resultSet.next()) {
-                if (generableValues == null) generableValues = Long.parseLong(resultSet.getString("generableValues"));
-                guardians.add(new Guardian(
-                        resultSet.getString("nic"),
-                        resultSet.getString("initName"),
-                        resultSet.getString("fullName"),
-                        Gender.valueOf(resultSet.getString("gender")),
-                        resultSet.getString("address"),
-                        resultSet.getString("contactNo")
-                ).setId(Long.parseLong(resultSet.getString("id")))
-                        .setEmail(resultSet.getString("email")));
+            try (var resultSet = results.getResultSet()) {
+                while (resultSet.next()) {
+                    guardians.add(new Guardian(
+                            resultSet.getString("nic"),
+                            resultSet.getString("initName"),
+                            resultSet.getString("fullName"),
+                            Gender.valueOf(resultSet.getString("gender")),
+                            LocalDate.parse(resultSet.getString("dateOfBirth"), Utils.getDateFormatter()),
+                            resultSet.getString("address"),
+                            resultSet.getString("contactNo")
+                    ).setId(Long.parseLong(resultSet.getString("id")))
+                            .setEmail(resultSet.getString("email")));
+                }
             }
 
             return new Response<Guardian>()
                     .setSuccess(true)
-                    .setGenerableResults(generableValues)
-                    .setResultsFrom(resultsFrom)
-                    .setResultsOffset(resultsOffset)
+                    .setGenerableResults(results.getGenerableResults())
+                    .setResultsFrom(results.getResultsFrom())
+                    .setResultsOffset(results.getResultsOffset())
                     .setData(guardians);
         } catch (Exception e) {
             return new Response<Guardian>().setError(e.getMessage());
@@ -89,16 +91,17 @@ public class GuardianService {
     public static Response<Guardian> createGuardian(Guardian guardian) {
         Objects.requireNonNull(guardian);
         try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement("INSERT INTO guardian (id, nic, initName, fullName, gender, address, email, contactNo) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+             var statement = connection.prepareStatement("INSERT INTO guardian (id, nic, initName, fullName, gender, dateOfBirth, address, email, contactNo) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
             statement.setString(1, guardian.getId() == null ? null : Long.toUnsignedString(guardian.getId()));
             statement.setString(2, guardian.getNic());
             statement.setString(3, guardian.getInitName());
             statement.setString(4, guardian.getFullName());
             statement.setString(5, guardian.getGender().toString());
-            statement.setString(6, guardian.getAddress());
-            statement.setString(7, guardian.getEmail());
-            statement.setString(8, guardian.getContactNo());
+            statement.setString(6, guardian.getDateOfBirth().format(Utils.getDateFormatter()));
+            statement.setString(7, guardian.getAddress());
+            statement.setString(8, guardian.getEmail());
+            statement.setString(9, guardian.getContactNo());
             if (statement.executeUpdate() != 1) {
                 connection.rollback();
                 return new Response<Guardian>().setError("Internal server error");
@@ -126,21 +129,23 @@ public class GuardianService {
         if (guardian.getInitName() == null) guardian.setInitName(data.getInitName());
         if (guardian.getFullName() == null) guardian.setFullName(data.getFullName());
         if (guardian.getGender() == null) guardian.setGender(data.getGender());
+        if (guardian.getDateOfBirth() == null) guardian.setDateOfBirth(data.getDateOfBirth());
         if (guardian.getAddress() == null) guardian.setAddress(data.getAddress());
         if (guardian.getEmail() == null) guardian.setEmail(data.getEmail());
         if (guardian.getContactNo() == null) guardian.setContactNo(data.getContactNo());
 
         try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement("UPDATE guardian SET nic = ?, initName = ?, fullName = ?, gender = ?, address = ?, " +
-                     "email = ?, contactNo = ? WHERE id = ?")) {
+             var statement = connection.prepareStatement("UPDATE guardian SET nic = ?, initName = ?, fullName = ?, gender = ?, dateOfBirth = ?, " +
+                     "address = ?, email = ?, contactNo = ? WHERE id = ?")) {
             statement.setString(1, guardian.getNic());
             statement.setString(2, guardian.getInitName());
             statement.setString(3, guardian.getFullName());
             statement.setString(4, guardian.getGender().toString());
-            statement.setString(5, guardian.getAddress());
-            statement.setString(6, guardian.getEmail());
-            statement.setString(7, guardian.getContactNo());
-            statement.setString(8, Long.toUnsignedString(guardian.getId()));
+            statement.setString(5, guardian.getDateOfBirth().format(Utils.getDateFormatter()));
+            statement.setString(6, guardian.getAddress());
+            statement.setString(7, guardian.getEmail());
+            statement.setString(8, guardian.getContactNo());
+            statement.setString(9, Long.toUnsignedString(guardian.getId()));
             if (statement.executeUpdate() != 1) {
                 connection.rollback();
                 return new Response<Guardian>().setError("Internal server error");

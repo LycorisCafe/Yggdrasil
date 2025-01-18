@@ -49,27 +49,26 @@ public class NotificationService {
             var results = CommonCRUD.get(Notification.class, searchBy, searchByValues, isCaseSensitive, orderBy, isAscending, resultsFrom, resultsOffset);
             if (results.getResponse() != null) return results.getResponse();
 
-            var resultSet = results.getResultSet();
-            Long generableValues = null;
             List<Notification> notifications = new ArrayList<>();
-            while (resultSet.next()) {
-                if (generableValues == null) generableValues = Long.parseLong(resultSet.getString("generableValues"));
-                notifications.add(new Notification(
-                        Scope.valueOf(resultSet.getString("scope")),
-                        resultSet.getString("message")
-                ).setId(Long.parseLong(resultSet.getString("id")))
-                        .setCreateTimestamp(resultSet.getString("createTimestamp") == null ?
-                                null : LocalDateTime.parse(resultSet.getString("createTimestamp"), Utils.getDateTimeFormatter()))
-                        .setUpdateTimestamp(resultSet.getString("updateTimestamp") == null ?
-                                null : LocalDateTime.parse(resultSet.getString("updateTimestamp"), Utils.getDateTimeFormatter()))
-                        .setDraft(resultSet.getBoolean("draft")));
+            try (var resultSet = results.getResultSet()) {
+                while (resultSet.next()) {
+                    notifications.add(new Notification(
+                            Scope.valueOf(resultSet.getString("scope")),
+                            resultSet.getString("message")
+                    ).setId(Long.parseLong(resultSet.getString("id")))
+                            .setCreateTimestamp(resultSet.getString("createTimestamp") == null ?
+                                    null : LocalDateTime.parse(resultSet.getString("createTimestamp"), Utils.getDateTimeFormatter()))
+                            .setUpdateTimestamp(resultSet.getString("updateTimestamp") == null ?
+                                    null : LocalDateTime.parse(resultSet.getString("updateTimestamp"), Utils.getDateTimeFormatter()))
+                            .setDraft(resultSet.getBoolean("draft")));
+                }
             }
 
             return new Response<Notification>()
                     .setSuccess(true)
-                    .setGenerableResults(generableValues)
-                    .setResultsFrom(resultsFrom)
-                    .setResultsOffset(resultsOffset)
+                    .setGenerableResults(results.getGenerableResults())
+                    .setResultsFrom(results.getResultsFrom())
+                    .setResultsOffset(results.getResultsOffset())
                     .setData(notifications);
         } catch (Exception e) {
             return new Response<Notification>().setError(e.getMessage());

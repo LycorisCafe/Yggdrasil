@@ -48,25 +48,24 @@ public class TimetableService {
             var results = CommonCRUD.get(Timetable.class, searchBy, searchByValues, isCaseSensitive, orderBy, isAscending, resultsFrom, resultsOffset);
             if (results.getResponse() != null) return results.getResponse();
 
-            var resultSet = results.getResultSet();
-            Long generableValues = null;
             List<Timetable> timetables = new ArrayList<>();
-            while (resultSet.next()) {
-                if (generableValues == null) generableValues = Long.parseLong(resultSet.getString("generableValues"));
-                timetables.add(new Timetable(
-                        Long.parseLong(resultSet.getString("teacherId")),
-                        Long.parseLong(resultSet.getString("subjectId")),
-                        Long.parseLong(resultSet.getString("classroomId")),
-                        DayOfWeek.of(resultSet.getInt("day")),
-                        resultSet.getInt("timeslot")
-                ).setId(Long.parseLong(resultSet.getString("id"))));
+            try (var resultSet = results.getResultSet()) {
+                while (resultSet.next()) {
+                    timetables.add(new Timetable(
+                            Long.parseLong(resultSet.getString("teacherId")),
+                            Long.parseLong(resultSet.getString("subjectId")),
+                            Long.parseLong(resultSet.getString("classroomId")),
+                            DayOfWeek.of(resultSet.getInt("day")),
+                            resultSet.getInt("timeslot")
+                    ).setId(Long.parseLong(resultSet.getString("id"))));
+                }
             }
 
             return new Response<Timetable>()
                     .setSuccess(true)
-                    .setGenerableResults(generableValues)
-                    .setResultsFrom(resultsFrom)
-                    .setResultsOffset(resultsOffset)
+                    .setGenerableResults(results.getGenerableResults())
+                    .setResultsFrom(results.getResultsFrom())
+                    .setResultsOffset(results.getResultsOffset())
                     .setData(timetables);
         } catch (Exception e) {
             return new Response<Timetable>().setError(e.getMessage());

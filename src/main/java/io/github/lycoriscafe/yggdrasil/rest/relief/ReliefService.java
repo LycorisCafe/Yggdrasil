@@ -46,23 +46,22 @@ public class ReliefService {
             var results = CommonCRUD.get(Relief.class, searchBy, searchByValues, isCaseSensitive, orderBy, isAscending, resultsFrom, resultsOffset);
             if (results.getResponse() != null) return results.getResponse();
 
-            var resultSet = results.getResultSet();
-            Long generableValues = null;
             List<Relief> reliefs = new ArrayList<>();
-            while (resultSet.next()) {
-                if (generableValues == null) generableValues = Long.parseLong(resultSet.getString("generableValues"));
-                reliefs.add(new Relief(
-                        Long.parseLong(resultSet.getString("timetableId")),
-                        Long.parseLong(resultSet.getString("teacherId")),
-                        LocalDate.parse(resultSet.getString("date"))
-                ).setId(Long.parseLong(resultSet.getString("id"))));
+            try (var resultSet = results.getResultSet()) {
+                while (resultSet.next()) {
+                    reliefs.add(new Relief(
+                            Long.parseLong(resultSet.getString("timetableId")),
+                            Long.parseLong(resultSet.getString("teacherId")),
+                            LocalDate.parse(resultSet.getString("date"), Utils.getDateFormatter())
+                    ).setId(Long.parseLong(resultSet.getString("id"))));
+                }
             }
 
             return new Response<Relief>()
                     .setSuccess(true)
-                    .setGenerableResults(generableValues)
-                    .setResultsFrom(resultsFrom)
-                    .setResultsOffset(resultsOffset)
+                    .setGenerableResults(results.getGenerableResults())
+                    .setResultsFrom(results.getResultsFrom())
+                    .setResultsOffset(results.getResultsOffset())
                     .setData(reliefs);
         } catch (Exception e) {
             return new Response<Relief>().setError(e.getMessage());
@@ -86,7 +85,7 @@ public class ReliefService {
             statement.setString(1, relief.getId() == null ? null : Long.toUnsignedString(relief.getId()));
             statement.setString(2, Long.toUnsignedString(relief.getTimetableId()));
             statement.setString(3, Long.toUnsignedString(relief.getTeacherId()));
-            statement.setString(4, relief.getDate().toString());
+            statement.setString(4, relief.getDate().format(Utils.getDateFormatter()));
             if (statement.executeUpdate() != 1) {
                 connection.rollback();
                 return new Response<Relief>().setError("Internal server error");
@@ -118,7 +117,7 @@ public class ReliefService {
              var statement = connection.prepareStatement("UPDATE relief SET timetableId = ?, teacherId = ?, date = ? WHERE id = ?")) {
             statement.setString(1, Long.toUnsignedString(relief.getTimetableId()));
             statement.setString(2, Long.toUnsignedString(relief.getTeacherId()));
-            statement.setString(3, relief.getDate().toString());
+            statement.setString(3, relief.getDate().format(Utils.getDateFormatter()));
             statement.setString(4, Long.toUnsignedString(relief.getId()));
             if (statement.executeUpdate() != 1) {
                 connection.rollback();

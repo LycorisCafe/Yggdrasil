@@ -72,14 +72,17 @@ public class AdminEndpoint {
         if (auth != null) return auth;
 
         try {
-            var id = request.getParameters().get("id");
-            if (id == null) {
-                var resultsFrom = request.getParameters().get("resultsFrom");
-                var resultsOffset = request.getParameters().get("resultsOffset");
-                return response.setContent(AdminService.getAllAdmins(resultsFrom == null ? null : Long.parseLong(resultsFrom),
-                        resultsOffset == null ? null : Long.parseLong(resultsOffset)).parse());
+            if (request.getParameters() != null) {
+                var id = request.getParameters().get("id");
+                if (id == null) {
+                    var resultsFrom = request.getParameters().get("resultsFrom");
+                    var resultsOffset = request.getParameters().get("resultsOffset");
+                    return response.setContent(AdminService.getAllAdmins(resultsFrom == null ? null : Long.parseLong(resultsFrom),
+                            resultsOffset == null ? null : Long.parseLong(resultsOffset)).parse());
+                }
+                return response.setContent(AdminService.getAdminById(Long.parseLong(id)).parse());
             }
-            return response.setContent(AdminService.getAdminById(Long.parseLong(id)).parse());
+            return response.setContent(AdminService.getAllAdmins(null, null).parse());
         } catch (NumberFormatException e) {
             return response.setContent(new Response<Admin>().setError("Invalid parameters").parse());
         }

@@ -17,9 +17,11 @@
 package io.github.lycoriscafe.yggdrasil.rest.guardian;
 
 import io.github.lycoriscafe.nexus.http.core.headers.content.MultipartFormData;
+import io.github.lycoriscafe.yggdrasil.configuration.Utils;
 import io.github.lycoriscafe.yggdrasil.configuration.database.Entity;
 import io.github.lycoriscafe.yggdrasil.rest.Gender;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
@@ -29,6 +31,7 @@ public class Guardian implements Entity {
     private String initName;
     private String fullName;
     private Gender gender;
+    private LocalDate dateOfBirth;
     private String address;
     private String email;
     private String contactNo;
@@ -39,12 +42,14 @@ public class Guardian implements Entity {
                     String initName,
                     String fullName,
                     Gender gender,
+                    LocalDate dateOfBirth,
                     String address,
                     String contactNo) {
         this.nic = Objects.requireNonNull(nic);
         this.initName = Objects.requireNonNull(initName);
         this.fullName = Objects.requireNonNull(fullName);
         this.gender = Objects.requireNonNull(gender);
+        this.dateOfBirth = Objects.requireNonNull(dateOfBirth);
         this.address = Objects.requireNonNull(address);
         this.contactNo = Objects.requireNonNull(contactNo);
     }
@@ -94,6 +99,14 @@ public class Guardian implements Entity {
         return this;
     }
 
+    public LocalDate getDateOfBirth() {
+        return dateOfBirth;
+    }
+
+    public void setDateOfBirth(LocalDate dateOfBirth) {
+        this.dateOfBirth = dateOfBirth;
+    }
+
     public String getAddress() {
         return address;
     }
@@ -130,6 +143,7 @@ public class Guardian implements Entity {
                 case "initName" -> guardian.setInitName(new String(formData.getData()));
                 case "fullName" -> guardian.setFullName(new String(formData.getData()));
                 case "gender" -> guardian.setGender(Gender.valueOf(new String(formData.getData())));
+                case "dateOfBirth" -> guardian.setDateOfBirth(LocalDate.parse(new String(formData.getData()), Utils.getDateFormatter()));
                 case "address" -> guardian.setAddress(new String(formData.getData()));
                 case "email" -> guardian.setEmail(new String(formData.getData()));
                 case "contactNo" -> guardian.setContactNo(new String(formData.getData()));

@@ -46,25 +46,24 @@ public class SubjectService {
             var results = CommonCRUD.get(Subject.class, searchBy, searchByValues, isCaseSensitive, orderBy, isAscending, resultsFrom, resultsOffset);
             if (results.getResponse() != null) return results.getResponse();
 
-            var resultSet = results.getResultSet();
-            Long generableValues = null;
             List<Subject> subjects = new ArrayList<>();
-            while (resultSet.next()) {
-                if (generableValues == null) generableValues = Long.parseLong(resultSet.getString("generableValues"));
-                subjects.add(new Subject(
-                        resultSet.getInt("grade"),
-                        resultSet.getString("shortName")
-                ).setId(Long.parseLong(resultSet.getString("id")))
-                        .setLongName(resultSet.getString("longName"))
-                        .setTeacherId(resultSet.getString("teacherId") == null ?
-                                null : Long.parseLong(resultSet.getString("teacherId"))));
+            try (var resultSet = results.getResultSet()) {
+                while (resultSet.next()) {
+                    subjects.add(new Subject(
+                            resultSet.getInt("grade"),
+                            resultSet.getString("shortName")
+                    ).setId(Long.parseLong(resultSet.getString("id")))
+                            .setLongName(resultSet.getString("longName"))
+                            .setTeacherId(resultSet.getString("teacherId") == null ?
+                                    null : Long.parseLong(resultSet.getString("teacherId"))));
+                }
             }
 
             return new Response<Subject>()
                     .setSuccess(true)
-                    .setGenerableResults(generableValues)
-                    .setResultsFrom(resultsFrom)
-                    .setResultsOffset(resultsOffset)
+                    .setGenerableResults(results.getGenerableResults())
+                    .setResultsFrom(results.getResultsFrom())
+                    .setResultsOffset(results.getResultsOffset())
                     .setData(subjects);
         } catch (Exception e) {
             return new Response<Subject>().setError(e.getMessage());

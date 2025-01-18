@@ -76,7 +76,7 @@ public class AuthenticationService {
                         new BearerAuthentication(BearerAuthorizationError.INSUFFICIENT_SCOPE).setScope(targetRole.toString())
                                 .setErrorDescription("Insufficient scope. Contact your system admin for more details."));
             }
-
+            System.out.println(AdminService.getAdminById(auth.getUserId()).getError());
             var disabled = switch (auth.getRole()) {
                 case ADMIN -> AdminService.getAdminById(auth.getUserId()).getData().getFirst().getDisabled();
                 case TEACHER -> TeacherService.getTeacherById(auth.getUserId()).getData().getFirst().getDisabled();
@@ -120,7 +120,7 @@ public class AuthenticationService {
                             resultSet.getString("password"))
                             .setAccessToken(resultSet.getString("accessToken"))
                             .setExpires(resultSet.getString("expires") == null ?
-                                    null : LocalDateTime.parse(resultSet.getString("expires")))
+                                    null : LocalDateTime.parse(resultSet.getString("expires"), Utils.getDateTimeFormatter()))
                             .setRefreshToken(resultSet.getString("refreshToken"));
                 }
                 return null;

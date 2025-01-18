@@ -27,6 +27,7 @@ import io.github.lycoriscafe.yggdrasil.rest.Gender;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.Statement;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -38,6 +39,7 @@ public class TeacherService {
         initName,
         fullName,
         gender,
+        dateOfBirth,
         address,
         email,
         contactNo,
@@ -55,28 +57,28 @@ public class TeacherService {
             var results = CommonCRUD.get(Teacher.class, searchBy, searchByValues, isCaseSensitive, orderBy, isAscending, resultsFrom, resultsOffset);
             if (results.getResponse() != null) return results.getResponse();
 
-            var resultSet = results.getResultSet();
-            Long generableValues = null;
             List<Teacher> teachers = new ArrayList<>();
-            while (resultSet.next()) {
-                if (generableValues == null) generableValues = Long.parseLong(resultSet.getString("generableValues"));
-                teachers.add(new Teacher(
-                        resultSet.getString("nic"),
-                        resultSet.getString("initName"),
-                        resultSet.getString("fullName"),
-                        Gender.valueOf(resultSet.getString("gender")),
-                        resultSet.getString("address"),
-                        resultSet.getString("email"),
-                        resultSet.getString("contactNo")
-                ).setId(Long.parseLong(resultSet.getString("id")))
-                        .setDisabled(resultSet.getBoolean("disabled")));
+            try (var resultSet = results.getResultSet()) {
+                while (resultSet.next()) {
+                    teachers.add(new Teacher(
+                            resultSet.getString("nic"),
+                            resultSet.getString("initName"),
+                            resultSet.getString("fullName"),
+                            Gender.valueOf(resultSet.getString("gender")),
+                            LocalDate.parse(resultSet.getString("dateOfBirth"), Utils.getDateFormatter()),
+                            resultSet.getString("address"),
+                            resultSet.getString("email"),
+                            resultSet.getString("contactNo")
+                    ).setId(Long.parseLong(resultSet.getString("id")))
+                            .setDisabled(resultSet.getBoolean("disabled")));
+                }
             }
 
             return new Response<Teacher>()
                     .setSuccess(true)
-                    .setGenerableResults(generableValues)
-                    .setResultsFrom(resultsFrom)
-                    .setResultsOffset(resultsOffset)
+                    .setGenerableResults(results.getGenerableResults())
+                    .setResultsFrom(results.getResultsFrom())
+                    .setResultsOffset(results.getResultsOffset())
                     .setData(teachers);
         } catch (Exception e) {
             return new Response<Teacher>().setError(e.getMessage());
@@ -95,17 +97,18 @@ public class TeacherService {
     public static Response<Teacher> createTeacher(Teacher teacher) {
         Objects.requireNonNull(teacher);
         try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement("INSERT INTO teacher (id, nic, initName, fullName, gender, address, email, contactNo, disabled) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, DEFAULT(disabled)))", Statement.RETURN_GENERATED_KEYS)) {
+             var statement = connection.prepareStatement("INSERT INTO teacher (id, nic, initName, fullName, gender, dateOfBirth, address, email, " +
+                     "contactNo, disabled) VALUES (?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, DEFAULT(disabled)))", Statement.RETURN_GENERATED_KEYS)) {
             statement.setString(1, teacher.getId() == null ? null : Long.toUnsignedString(teacher.getId()));
             statement.setString(2, teacher.getNic());
             statement.setString(3, teacher.getInitName());
             statement.setString(4, teacher.getFullName());
             statement.setString(5, teacher.getGender().toString());
-            statement.setString(6, teacher.getAddress());
-            statement.setString(7, teacher.getEmail());
-            statement.setString(8, teacher.getContactNo());
-            statement.setBoolean(9, teacher.getDisabled());
+            statement.setString(6, teacher.getDateOfBirth().format(Utils.getDateFormatter()));
+            statement.setString(7, teacher.getAddress());
+            statement.setString(8, teacher.getEmail());
+            statement.setString(9, teacher.getContactNo());
+            statement.setBoolean(10, teacher.getDisabled());
             if (statement.executeUpdate() != 1) {
                 connection.rollback();
                 return new Response<Teacher>().setError("Internal server error");
@@ -141,18 +144,20 @@ public class TeacherService {
         if (teacher.getInitName() == null) teacher.setInitName(data.getInitName());
         if (teacher.getFullName() == null) teacher.setFullName(data.getFullName());
         if (teacher.getGender() == null) teacher.setGender(data.getGender());
+        if (teacher.getDateOfBirth() == null) teacher.setDateOfBirth(data.getDateOfBirth());
         if (teacher.getAddress() == null) teacher.setAddress(data.getAddress());
         if (teacher.getEmail() == null) teacher.setEmail(data.getEmail());
         if (teacher.getContactNo() == null) teacher.setContactNo(data.getContactNo());
         if (teacher.getDisabled() == null) teacher.setDisabled(data.getDisabled());
 
         try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement("UPDATE teacher SET nic = ?, initName = ?, fullName = ?, gender = ?, address = ?, " +
-                     "email = ?, contactNo = ?, disabled = ? WHERE id = ?")) {
+             var statement = connection.prepareStatement("UPDATE teacher SET nic = ?, initName = ?, fullName = ?, gender = ?, dateOfBirth = ?, " +
+                     "address = ?, email = ?, contactNo = ?, disabled = ? WHERE id = ?")) {
             statement.setString(1, teacher.getNic());
             statement.setString(2, teacher.getInitName());
             statement.setString(3, teacher.getFullName());
             statement.setString(4, teacher.getGender().toString());
+            statement.setString(5, teacher.getDateOfBirth().format(Utils.getDateFormatter()));
             statement.setString(5, teacher.getAddress());
             statement.setString(6, teacher.getEmail());
             statement.setString(7, teacher.getContactNo());

@@ -42,22 +42,21 @@ public class StudentSubjectJoinService {
             var results = CommonCRUD.get(StudentSubjectJoin.class, searchBy, searchByValues, isCaseSensitive, orderBy, isAscending, resultsFrom, resultsOffset);
             if (results.getResponse() != null) return results.getResponse();
 
-            var resultSet = results.getResultSet();
-            Long generableValues = null;
             List<StudentSubjectJoin> studentSubjectJoins = new ArrayList<>();
-            while (resultSet.next()) {
-                if (generableValues == null) generableValues = Long.parseLong(resultSet.getString("generableValues"));
-                studentSubjectJoins.add(new StudentSubjectJoin(
-                        Long.parseLong(resultSet.getString("studentId")),
-                        Long.parseLong(resultSet.getString("subjectId"))
-                ));
+            try (var resultSet = results.getResultSet()) {
+                while (resultSet.next()) {
+                    studentSubjectJoins.add(new StudentSubjectJoin(
+                            Long.parseLong(resultSet.getString("studentId")),
+                            Long.parseLong(resultSet.getString("subjectId"))
+                    ));
+                }
             }
 
             return new Response<StudentSubjectJoin>()
                     .setSuccess(true)
-                    .setGenerableResults(generableValues)
-                    .setResultsFrom(resultsFrom)
-                    .setResultsOffset(resultsOffset)
+                    .setGenerableResults(results.getGenerableResults())
+                    .setResultsFrom(results.getResultsFrom())
+                    .setResultsOffset(results.getResultsOffset())
                     .setData(studentSubjectJoins);
         } catch (Exception e) {
             return new Response<StudentSubjectJoin>().setError(e.getMessage());

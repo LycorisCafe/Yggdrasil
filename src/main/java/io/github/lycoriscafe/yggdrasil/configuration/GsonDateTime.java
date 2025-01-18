@@ -19,22 +19,58 @@ package io.github.lycoriscafe.yggdrasil.configuration;
 import com.google.gson.*;
 
 import java.lang.reflect.Type;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
-public class GsonDateTime implements JsonDeserializer<LocalDateTime>, JsonSerializer<LocalDateTime> {
-    @Override
-    public LocalDateTime deserialize(JsonElement jsonElement,
+public class GsonDateTime {
+    public static class Date implements JsonSerializer<LocalDate>, JsonDeserializer<LocalDate> {
+
+        @Override
+        public LocalDate deserialize(JsonElement jsonElement,
                                      Type type,
                                      JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
-        return LocalDateTime.parse(jsonElement.getAsString(), Utils.getDateTimeFormatter());
+            return jsonElement == null ? null : LocalDate.parse(jsonElement.getAsString(), Utils.getDateFormatter());
+        }
+
+        @Override
+        public JsonElement serialize(LocalDate localDate,
+                                     Type type,
+                                     JsonSerializationContext jsonSerializationContext) {
+            return localDate == null ? null : new JsonPrimitive(localDate.toString());
+        }
     }
 
-    @Override
-    public JsonElement serialize(LocalDateTime localDateTime,
-                                 Type type,
-                                 JsonSerializationContext jsonSerializationContext) {
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("timestamp", Utils.getDateTimeFormatter().format(localDateTime));
-        return jsonObject;
+    public static class Time implements JsonSerializer<LocalTime>, JsonDeserializer<LocalTime> {
+
+        @Override
+        public LocalTime deserialize(JsonElement jsonElement,
+                                     Type type,
+                                     JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
+            return jsonElement == null ? null : LocalTime.parse(jsonElement.getAsString(), Utils.getDateTimeFormatter());
+        }
+
+        @Override
+        public JsonElement serialize(LocalTime localTime,
+                                     Type type,
+                                     JsonSerializationContext jsonSerializationContext) {
+            return localTime == null ? null : new JsonPrimitive(localTime.toString());
+        }
+    }
+
+    public static class DateTime implements JsonSerializer<LocalDateTime>, JsonDeserializer<LocalDateTime> {
+        @Override
+        public LocalDateTime deserialize(JsonElement jsonElement,
+                                         Type type,
+                                         JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
+            return jsonElement == null ? null : LocalDateTime.parse(jsonElement.getAsString(), Utils.getDateTimeFormatter());
+        }
+
+        @Override
+        public JsonElement serialize(LocalDateTime localDateTime,
+                                     Type type,
+                                     JsonSerializationContext jsonSerializationContext) {
+            return localDateTime == null ? null : new JsonPrimitive(Utils.getDateTimeFormatter().format(localDateTime));
+        }
     }
 }

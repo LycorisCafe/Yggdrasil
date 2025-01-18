@@ -45,24 +45,23 @@ public class ClassroomService {
             var results = CommonCRUD.get(Classroom.class, searchBy, searchByValues, isCaseSensitive, orderBy, isAscending, resultsFrom, resultsOffset);
             if (results.getResponse() != null) return results.getResponse();
 
-            var resultSet = results.getResultSet();
-            Long generableValues = null;
             List<Classroom> classrooms = new ArrayList<>();
-            while (resultSet.next()) {
-                if (generableValues == null) generableValues = Long.parseLong(resultSet.getString("generableValues"));
-                classrooms.add(new Classroom(
-                        resultSet.getInt("grade"),
-                        resultSet.getString("name")
-                ).setId(Long.parseLong(resultSet.getString("id")))
-                        .setTeacherId(resultSet.getString("teacherId") == null ?
-                                null : Long.parseLong(resultSet.getString("teacherId"))));
+            try (var resultSet = results.getResultSet()) {
+                while (resultSet.next()) {
+                    classrooms.add(new Classroom(
+                            resultSet.getInt("grade"),
+                            resultSet.getString("name")
+                    ).setId(Long.parseLong(resultSet.getString("id")))
+                            .setTeacherId(resultSet.getString("teacherId") == null ?
+                                    null : Long.parseLong(resultSet.getString("teacherId"))));
+                }
             }
 
             return new Response<Classroom>()
                     .setSuccess(true)
-                    .setGenerableResults(generableValues)
-                    .setResultsFrom(resultsFrom)
-                    .setResultsOffset(resultsOffset)
+                    .setGenerableResults(results.getGenerableResults())
+                    .setResultsFrom(results.getResultsFrom())
+                    .setResultsOffset(results.getResultsOffset())
                     .setData(classrooms);
         } catch (Exception e) {
             return new Response<Classroom>().setError(e.getMessage());

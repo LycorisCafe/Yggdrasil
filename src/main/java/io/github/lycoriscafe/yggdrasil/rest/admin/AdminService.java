@@ -47,26 +47,25 @@ public class AdminService {
             var results = CommonCRUD.get(Admin.class, searchBy, searchByValues, isCaseSensitive, orderBy, isAscending, resultsFrom, resultsOffset);
             if (results.getResponse() != null) return results.getResponse();
 
-            var resultSet = results.getResultSet();
-            Long generableValues = null;
             List<Admin> admins = new ArrayList<>();
-            while (resultSet.next()) {
-                if (generableValues == null) generableValues = Long.parseLong(resultSet.getString("generableValues"));
-                String[] accessLevelsSet = resultSet.getString("accessLevel").split(",", 0);
-                Set<AccessLevel> accessLevels = new HashSet<>();
-                for (String accessLevel : accessLevelsSet) {
-                    accessLevels.add(AccessLevel.valueOf(accessLevel));
+            try (var resultSet = results.getResultSet()) {
+                while (resultSet.next()) {
+                    String[] accessLevelsSet = resultSet.getString("accessLevel").split(",", 0);
+                    Set<AccessLevel> accessLevels = new HashSet<>();
+                    for (String accessLevel : accessLevelsSet) {
+                        accessLevels.add(AccessLevel.valueOf(accessLevel));
+                    }
+                    admins.add(new Admin(resultSet.getString("name"), accessLevels)
+                            .setId(Long.parseLong(resultSet.getString("id")))
+                            .setDisabled(resultSet.getBoolean("disabled")));
                 }
-                admins.add(new Admin(resultSet.getString("name"), accessLevels)
-                        .setId(Long.parseLong(resultSet.getString("id")))
-                        .setDisabled(resultSet.getBoolean("disabled")));
             }
 
             return new Response<Admin>()
                     .setSuccess(true)
-                    .setGenerableResults(generableValues)
-                    .setResultsFrom(resultsFrom)
-                    .setResultsOffset(resultsOffset)
+                    .setGenerableResults(results.getGenerableResults())
+                    .setResultsFrom(results.getResultsFrom())
+                    .setResultsOffset(results.getResultsOffset())
                     .setData(admins);
         } catch (Exception e) {
             return new Response<Admin>().setError(e.getMessage());

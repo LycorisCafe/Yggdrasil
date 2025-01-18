@@ -20,19 +20,39 @@ import com.google.gson.GsonBuilder;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
 public class Utils {
+    private static final String DATE_FORMAT = "yyyy-MM-dd";
+    private static final String TIME_FORMAT = "HH:mm:ss";
+    private static final String DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
+
     public static Connection getDatabaseConnection() throws SQLException {
         return YggdrasilConfig.getDatabase().getConnection();
     }
 
     public static String toJson(Object obj) {
-        return new GsonBuilder().registerTypeAdapter(LocalDateTime.class, new GsonDateTime()).create().toJson(obj);
+        return new GsonBuilder()
+                .serializeNulls()
+                .setDateFormat(DATE_TIME_FORMAT)
+                .registerTypeAdapter(LocalDate.class, new GsonDateTime.Date())
+                .registerTypeAdapter(LocalTime.class, new GsonDateTime.Time())
+                .registerTypeAdapter(LocalDateTime.class, new GsonDateTime.DateTime())
+                .create().toJson(obj);
     }
 
     public static DateTimeFormatter getDateTimeFormatter() {
-        return DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        return DateTimeFormatter.ofPattern(DATE_TIME_FORMAT);
+    }
+
+    public static DateTimeFormatter getDateFormatter() {
+        return DateTimeFormatter.ofPattern(DATE_FORMAT);
+    }
+
+    public static DateTimeFormatter getTimeFormatter() {
+        return DateTimeFormatter.ofPattern(TIME_FORMAT);
     }
 }

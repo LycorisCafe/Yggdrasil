@@ -61,33 +61,32 @@ public class StudentService {
             var results = CommonCRUD.get(Student.class, searchBy, searchByValues, isCaseSensitive, orderBy, isAscending, resultsFrom, resultsOffset);
             if (results.getResponse() != null) return results.getResponse();
 
-            var resultSet = results.getResultSet();
-            Long generableValues = null;
             List<Student> students = new ArrayList<>();
-            while (resultSet.next()) {
-                if (generableValues == null) generableValues = Long.parseLong(resultSet.getString("generableValues"));
-                students.add(new Student(
-                        Long.parseLong(resultSet.getString("guardianId")),
-                        resultSet.getString("initName"),
-                        resultSet.getString("fullName"),
-                        Gender.valueOf(resultSet.getString("gender")),
-                        LocalDate.parse(resultSet.getString("dateOfBirth")),
-                        resultSet.getString("address"),
-                        Year.parse(resultSet.getString("regYear"))
-                ).setId(Long.parseLong(resultSet.getString("id")))
-                        .setClassroomId(resultSet.getString("classroomId") == null ?
-                                null : Long.parseLong(resultSet.getString("classroomId")))
-                        .setNic(resultSet.getString("nic"))
-                        .setContactNo(resultSet.getString("contactNo"))
-                        .setEmail(resultSet.getString("email"))
-                        .setDisabled(resultSet.getBoolean("disabled")));
+            try (var resultSet = results.getResultSet()) {
+                while (resultSet.next()) {
+                    students.add(new Student(
+                            Long.parseLong(resultSet.getString("guardianId")),
+                            resultSet.getString("initName"),
+                            resultSet.getString("fullName"),
+                            Gender.valueOf(resultSet.getString("gender")),
+                            LocalDate.parse(resultSet.getString("dateOfBirth"), Utils.getDateFormatter()),
+                            resultSet.getString("address"),
+                            Year.parse(resultSet.getString("regYear"))
+                    ).setId(Long.parseLong(resultSet.getString("id")))
+                            .setClassroomId(resultSet.getString("classroomId") == null ?
+                                    null : Long.parseLong(resultSet.getString("classroomId")))
+                            .setNic(resultSet.getString("nic"))
+                            .setContactNo(resultSet.getString("contactNo"))
+                            .setEmail(resultSet.getString("email"))
+                            .setDisabled(resultSet.getBoolean("disabled")));
+                }
             }
 
             return new Response<Student>()
                     .setSuccess(true)
-                    .setGenerableResults(generableValues)
-                    .setResultsFrom(resultsFrom)
-                    .setResultsOffset(resultsOffset)
+                    .setGenerableResults(results.getGenerableResults())
+                    .setResultsFrom(results.getResultsFrom())
+                    .setResultsOffset(results.getResultsOffset())
                     .setData(students);
         } catch (Exception e) {
             return new Response<Student>().setError(e.getMessage());
@@ -115,7 +114,7 @@ public class StudentService {
             statement.setString(4, student.getInitName());
             statement.setString(5, student.getFullName());
             statement.setString(6, student.getGender().toString());
-            statement.setString(7, Utils.getDateTimeFormatter().format(student.getDateOfBirth()));
+            statement.setString(7, student.getDateOfBirth().format(Utils.getDateFormatter()));
             statement.setString(8, student.getNic());
             statement.setString(9, student.getAddress());
             statement.setString(10, student.getRegYear().toString());
@@ -174,7 +173,7 @@ public class StudentService {
             statement.setString(3, student.getInitName());
             statement.setString(4, student.getFullName());
             statement.setString(5, student.getGender().toString());
-            statement.setString(6, Utils.getDateTimeFormatter().format(student.getDateOfBirth()));
+            statement.setString(6, student.getDateOfBirth().format(Utils.getDateFormatter()));
             statement.setString(7, student.getNic());
             statement.setString(8, student.getAddress());
             statement.setString(9, student.getRegYear().toString());
@@ -208,7 +207,7 @@ public class StudentService {
         Objects.requireNonNull(newPassword);
         if (newPassword.length() < 8 || newPassword.length() > 50) return new Response<Student>().setError("Password length must between 8 and 50");
         try {
-            var auth = AuthenticationService.getAuthentication(Role.ADMIN, id);
+            var auth = AuthenticationService.getAuthentication(Role.STUDENT, id);
             if (auth == null) return new Response<Student>().setError("Invalid ID");
             if (auth.getPassword().equals(AuthenticationService.encryptData(oldPassword.getBytes(StandardCharsets.UTF_8)))) {
                 auth.setPassword(newPassword);

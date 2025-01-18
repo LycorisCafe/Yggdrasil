@@ -42,22 +42,21 @@ public class TeacherSubjectJoinService {
             var results = CommonCRUD.get(TeacherSubjectJoin.class, searchBy, searchByValues, isCaseSensitive, orderBy, isAscending, resultsFrom, resultsOffset);
             if (results.getResponse() != null) return results.getResponse();
 
-            var resultSet = results.getResultSet();
-            Long generableValues = null;
             List<TeacherSubjectJoin> teacherSubjectJoins = new ArrayList<>();
-            while (resultSet.next()) {
-                if (generableValues == null) generableValues = Long.parseLong(resultSet.getString("generableValues"));
-                teacherSubjectJoins.add(new TeacherSubjectJoin(
-                        Long.parseLong(resultSet.getString("teacherId")),
-                        Long.parseLong(resultSet.getString("subjectId"))
-                ));
+            try (var resultSet = results.getResultSet()) {
+                while (resultSet.next()) {
+                    teacherSubjectJoins.add(new TeacherSubjectJoin(
+                            Long.parseLong(resultSet.getString("teacherId")),
+                            Long.parseLong(resultSet.getString("subjectId"))
+                    ));
+                }
             }
 
             return new Response<TeacherSubjectJoin>()
                     .setSuccess(true)
-                    .setGenerableResults(generableValues)
-                    .setResultsFrom(resultsFrom)
-                    .setResultsOffset(resultsOffset)
+                    .setGenerableResults(results.getGenerableResults())
+                    .setResultsFrom(results.getResultsFrom())
+                    .setResultsOffset(results.getResultsOffset())
                     .setData(teacherSubjectJoins);
         } catch (Exception e) {
             return new Response<TeacherSubjectJoin>().setError(e.getMessage());

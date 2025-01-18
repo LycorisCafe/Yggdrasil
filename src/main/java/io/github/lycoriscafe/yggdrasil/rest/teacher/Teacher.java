@@ -20,6 +20,7 @@ import io.github.lycoriscafe.nexus.http.core.headers.content.MultipartFormData;
 import io.github.lycoriscafe.yggdrasil.configuration.database.Entity;
 import io.github.lycoriscafe.yggdrasil.rest.Gender;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
@@ -29,6 +30,7 @@ public class Teacher implements Entity {
     private String initName;
     private String fullName;
     private Gender gender;
+    private LocalDate dateOfBirth;
     private String address;
     private String email;
     private String contactNo;
@@ -40,6 +42,7 @@ public class Teacher implements Entity {
                    String initName,
                    String fullName,
                    Gender gender,
+                   LocalDate dateOfBirth,
                    String address,
                    String email,
                    String contactNo) {
@@ -47,6 +50,7 @@ public class Teacher implements Entity {
         this.initName = Objects.requireNonNull(initName);
         this.fullName = Objects.requireNonNull(fullName);
         this.gender = Objects.requireNonNull(gender);
+        this.dateOfBirth = Objects.requireNonNull(dateOfBirth);
         this.address = Objects.requireNonNull(address);
         this.email = Objects.requireNonNull(email);
         this.contactNo = Objects.requireNonNull(contactNo);
@@ -95,6 +99,14 @@ public class Teacher implements Entity {
     public Teacher setGender(Gender gender) {
         this.gender = gender;
         return this;
+    }
+
+    public LocalDate getDateOfBirth() {
+        return dateOfBirth;
+    }
+
+    public void setDateOfBirth(LocalDate dateOfBirth) {
+        this.dateOfBirth = dateOfBirth;
     }
 
     public String getAddress() {

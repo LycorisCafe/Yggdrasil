@@ -45,22 +45,21 @@ public class StudentAttendanceService {
             var results = CommonCRUD.get(StudentAttendance.class, searchBy, searchByValues, isCaseSensitive, orderBy, isAscending, resultsFrom, resultsOffset);
             if (results.getResponse() != null) return results.getResponse();
 
-            var resultSet = results.getResultSet();
-            Long generableValues = null;
             List<StudentAttendance> studentAttendances = new ArrayList<>();
-            while (resultSet.next()) {
-                if (generableValues == null) generableValues = Long.parseLong(resultSet.getString("generableValues"));
-                studentAttendances.add(new StudentAttendance(
-                        Long.parseLong(resultSet.getString("studentId"))
-                ).setDate(LocalDate.parse(resultSet.getString("date")))
-                        .setTime(LocalTime.parse(resultSet.getString("time"))));
+            try (var resultSet = results.getResultSet()) {
+                while (resultSet.next()) {
+                    studentAttendances.add(new StudentAttendance(
+                            Long.parseLong(resultSet.getString("studentId"))
+                    ).setDate(LocalDate.parse(resultSet.getString("date"), Utils.getDateFormatter()))
+                            .setTime(LocalTime.parse(resultSet.getString("time"), Utils.getTimeFormatter())));
+                }
             }
 
             return new Response<StudentAttendance>()
                     .setSuccess(true)
-                    .setGenerableResults(generableValues)
-                    .setResultsFrom(resultsFrom)
-                    .setResultsOffset(resultsOffset)
+                    .setGenerableResults(results.getGenerableResults())
+                    .setResultsFrom(results.getResultsFrom())
+                    .setResultsOffset(results.getResultsOffset())
                     .setData(studentAttendances);
         } catch (Exception e) {
             return new Response<StudentAttendance>().setError(e.getMessage());

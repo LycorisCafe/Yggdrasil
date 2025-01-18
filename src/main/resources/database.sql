@@ -44,14 +44,15 @@ CREATE TABLE classroom
 ## GUARDIAN
 CREATE TABLE guardian
 (
-    id        SERIAL PRIMARY KEY,
-    nic       VARCHAR(12)             NOT NULL UNIQUE,
-    initName  VARCHAR(50)             NOT NULL,
-    fullName  VARCHAR(200)            NOT NULL,
-    gender    ENUM ('MALE', 'FEMALE') NOT NULL,
-    address   VARCHAR(300)            NOT NULL,
-    email     VARCHAR(300),
-    contactNo VARCHAR(10) NOT NULL
+    id          SERIAL PRIMARY KEY,
+    nic         VARCHAR(12)             NOT NULL UNIQUE,
+    initName    VARCHAR(50)             NOT NULL,
+    fullName    VARCHAR(200)            NOT NULL,
+    gender      ENUM ('MALE', 'FEMALE') NOT NULL,
+    dateOfBirth DATE                    NOT NULL,
+    address     VARCHAR(300)            NOT NULL,
+    email       VARCHAR(300),
+    contactNo   VARCHAR(10)             NOT NULL
 );
 
 ## NOTIFICATION
@@ -124,15 +125,16 @@ CREATE TABLE subject
 ## TEACHER
 CREATE TABLE teacher
 (
-    id        SERIAL PRIMARY KEY,
-    nic       VARCHAR(12)             NOT NULL UNIQUE,
-    initName  VARCHAR(50)             NOT NULL,
-    fullName  VARCHAR(200)            NOT NULL,
-    gender    ENUM ('MALE', 'FEMALE') NOT NULL,
-    address   VARCHAR(300)            NOT NULL,
-    email     VARCHAR(300)            NOT NULL UNIQUE,
-    contactNo VARCHAR(10)             NOT NULL UNIQUE,
-    disabled  BOOLEAN DEFAULT FALSE # Used for disabling without deleting
+    id          SERIAL PRIMARY KEY,
+    nic         VARCHAR(12)             NOT NULL UNIQUE,
+    initName    VARCHAR(50)             NOT NULL,
+    fullName    VARCHAR(200)            NOT NULL,
+    gender      ENUM ('MALE', 'FEMALE') NOT NULL,
+    dateOfBirth DATE                    NOT NULL,
+    address     VARCHAR(300)            NOT NULL,
+    email       VARCHAR(300)            NOT NULL UNIQUE,
+    contactNo   VARCHAR(10)             NOT NULL UNIQUE,
+    disabled    BOOLEAN DEFAULT FALSE # Used for disabling without deleting
 );
 
 ## TEACHER ATTENDANCE

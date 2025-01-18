@@ -27,6 +27,9 @@ public class CommonCRUD {
     public static class ResultSetHolder<T extends Entity> {
         private Response<T> response;
         private ResultSet resultSet;
+        private Long generableResults;
+        private Long resultsFrom;
+        private Long resultsOffset;
 
         public Response<T> getResponse() {
             return response;
@@ -45,6 +48,33 @@ public class CommonCRUD {
             this.resultSet = resultSet;
             return this;
         }
+
+        public Long getGenerableResults() {
+            return generableResults;
+        }
+
+        public ResultSetHolder<T> setGenerableResults(Long generableResults) {
+            this.generableResults = generableResults;
+            return this;
+        }
+
+        public Long getResultsFrom() {
+            return resultsFrom;
+        }
+
+        public ResultSetHolder<T> setResultsFrom(Long resultsFrom) {
+            this.resultsFrom = resultsFrom;
+            return this;
+        }
+
+        public Long getResultsOffset() {
+            return resultsOffset;
+        }
+
+        public ResultSetHolder<T> setResultsOffset(Long resultsOffset) {
+            this.resultsOffset = resultsOffset;
+            return this;
+        }
     }
 
     public static <T extends Entity, U extends EntityColumn> ResultSetHolder<T> get(Class<T> entity,
@@ -59,7 +89,7 @@ public class CommonCRUD {
         if (resultsOffset == null || resultsOffset < 0) resultsOffset = YggdrasilConfig.getDefaultResultsOffset();
         if (resultsFrom > resultsOffset) return new ResultSetHolder<T>().setResponse(new Response<T>().setError("Invalid boundaries"));
 
-        StringBuilder query = new StringBuilder("SELECT * FROM " + entity.getName().toLowerCase());
+        StringBuilder query = new StringBuilder("SELECT * FROM " + entity.getSimpleName().toLowerCase());
         if (searchBy != null) {
             if (searchBy.length != searchByValues.length) {
                 return new ResultSetHolder<T>().setResponse(new Response<T>().setError("searchBy != searchByValues (length)"));
@@ -85,26 +115,48 @@ public class CommonCRUD {
         if (isAscending != null) {
             query.append(isAscending ? " ASC" : " DESC");
         }
-        query.replace(7, 8, "*, (" + query.toString().replace("*", "COUNT(id)") + ") AS generableValues");
-        query.append(" LIMIT ").append("?").append(", ").append("?");
+        String subQuery = query.toString().replaceFirst("\\*", "COUNT(*) AS resultsOffset, (" +
+                query.toString().replaceFirst("\\*", "COUNT(*)") + ") AS generableValues");
+        String limit = " LIMIT ?, ?";
+        query.append(limit);
+        subQuery += limit;
 
         try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement(query.toString())) {
-            int nextParamIndex = 1;
+             var statement = connection.prepareStatement(query.toString());
+             var subStatement = connection.prepareStatement(subQuery)) {
+            int statementNextParamIndex = 1;
+            int subStatementNextParamIndex = 1;
             if (searchByValues != null) {
-                for (int i = 0; i < searchByValues.length; i++) {
-                    statement.setString(i + 1, searchByValues[i]);
-                    statement.setString(i + searchByValues.length + 1, searchByValues[i]);
-                    nextParamIndex = i + searchByValues.length + 2;
+                subStatementNextParamIndex = searchByValues.length + 1;
+                for (int i = 1; i <= searchByValues.length; i++) {
+                    statement.setString(i, searchByValues[i - 1]);
+                    subStatement.setString(i, searchByValues[i - 1]);
+                    subStatement.setString(i + searchByValues.length, searchByValues[i - 1]);
+                    statementNextParamIndex++;
+                    subStatementNextParamIndex++;
                 }
             }
-            statement.setString(nextParamIndex++, Long.toUnsignedString(resultsFrom));
-            statement.setString(nextParamIndex, Long.toUnsignedString(resultsOffset));
+            statement.setString(statementNextParamIndex++, Long.toUnsignedString(resultsFrom));
+            statement.setString(statementNextParamIndex, Long.toUnsignedString(resultsOffset));
 
-            try (var resultSet = statement.executeQuery()) {
-                connection.commit();
-                return new ResultSetHolder<T>().setResultSet(resultSet);
+            subStatement.setString(subStatementNextParamIndex++, Long.toUnsignedString(resultsFrom));
+            subStatement.setString(subStatementNextParamIndex, Long.toUnsignedString(resultsOffset));
+
+            Long generableResults = null;
+            resultsOffset = null;
+            try (var resultSet = subStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    generableResults = Long.parseLong(resultSet.getString("generableValues"));
+                    resultsOffset = Long.parseLong(resultSet.getString("resultsOffset"));
+                }
             }
+
+            connection.commit();
+            return new ResultSetHolder<T>()
+                    .setResultSet(statement.executeQuery())
+                    .setGenerableResults(generableResults)
+                    .setResultsFrom(resultsFrom)
+                    .setResultsOffset(resultsOffset);
         } catch (Exception e) {
             return new ResultSetHolder<T>().setResponse(new Response<T>().setError(e.getMessage()));
         }
