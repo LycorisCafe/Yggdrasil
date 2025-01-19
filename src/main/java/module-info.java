@@ -4,6 +4,7 @@ module Yggdrasil {
     requires java.sql;
     requires nexus.http;
     requires jdk.jshell;
+    requires org.slf4j;
 
     opens io.github.lycoriscafe.yggdrasil.authentication;
     opens io.github.lycoriscafe.yggdrasil.configuration;

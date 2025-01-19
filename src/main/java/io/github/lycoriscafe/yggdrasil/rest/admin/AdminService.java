@@ -23,12 +23,16 @@ import io.github.lycoriscafe.yggdrasil.configuration.Response;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
 import io.github.lycoriscafe.yggdrasil.configuration.database.CommonCRUD;
 import io.github.lycoriscafe.yggdrasil.configuration.database.EntityColumn;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.Statement;
 import java.util.*;
 
 public class AdminService {
+    private static final Logger log = LoggerFactory.getLogger(AdminService.class);
+
     public enum Columns implements EntityColumn {
         id,
         name,
@@ -92,6 +96,13 @@ public class AdminService {
 
     public static Response<Admin> createAdmin(Admin admin) {
         Objects.requireNonNull(admin);
+        if (admin.getName() == null || admin.getName().isEmpty()) {
+            return new Response<Admin>().setError("name is null/empty");
+        }
+        if (admin.getAccessLevel() == null || admin.getAccessLevel().isEmpty()) {
+            return new Response<Admin>().setError("accessLevel is null/empty");
+        }
+
         try (var connection = Utils.getDatabaseConnection();
              var statement = connection.prepareStatement("INSERT INTO admin (id, name, accessLevel, disabled) " +
                              "VALUES (?, ?, ?, COALESCE(?, DEFAULT(disabled)))",
@@ -105,7 +116,7 @@ public class AdminService {
                 accessLevels.append(accessLevelList.get(i).toString());
             }
             statement.setString(3, accessLevels.toString());
-            statement.setBoolean(4, admin.getDisabled());
+            statement.setString(4, admin.getDisabled() == null ? null : admin.getDisabled().toString());
             if (statement.executeUpdate() != 1) {
                 connection.rollback();
                 return new Response<Admin>().setError("Internal server error");
@@ -128,12 +139,14 @@ public class AdminService {
                 return getAdminById(Long.parseLong(resultSet.getString(1)));
             }
         } catch (Exception e) {
+            log.error("e: ", e);
             return new Response<Admin>().setError(e.getMessage());
         }
     }
 
-    public static Response<Admin> updateAdminById(Admin admin) {
+    public static Response<Admin> updateAdmin(Admin admin) {
         Objects.requireNonNull(admin);
+        if (admin.getId() == null) return new Response<Admin>().setError("id is null");
 
         var oldAdmin = getAdminById(admin.getId());
         if (oldAdmin.getError() != null) return oldAdmin;

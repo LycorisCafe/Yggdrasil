@@ -50,63 +50,25 @@ import java.util.List;
 @HttpEndpoint("/admin")
 @Authenticated
 public class AdminEndpoint {
-    /**
-     * Get admins.
-     * <p>
-     * AccessLevel - {@code SUPERUSER}
-     * <ul>
-     *     <li>{@code GET [no content] @ /admin?id=#} - Get admin by ID</li>
-     *     <li>{@code GET [no content] @ /admin[?resultsFrom=#,resultsOffset=#]} - Get all admins</li>
-     * </ul>
-     *
-     * @param request  Nexus-HTTP HTTP Request
-     * @param response Nexus-HTTP HTTP Response
-     * @return {@code Response<Admin>}
-     * @see AdminEndpoint
-     * @since v1.0
-     */
     @GET("/")
     public static HttpResponse getAdmins(HttpGetRequest request,
                                          HttpResponse response) {
         var auth = AuthenticationService.authenticate(request, Role.ADMIN, AccessLevel.SUPERUSER);
         if (auth != null) return auth;
 
-        try {
-            if (request.getParameters() != null) {
-                var id = request.getParameters().get("id");
-                if (id == null) {
-                    var resultsFrom = request.getParameters().get("resultsFrom");
-                    var resultsOffset = request.getParameters().get("resultsOffset");
-                    return response.setContent(AdminService.getAllAdmins(resultsFrom == null ? null : Long.parseLong(resultsFrom),
-                            resultsOffset == null ? null : Long.parseLong(resultsOffset)).parse());
-                }
-                return response.setContent(AdminService.getAdminById(Long.parseLong(id)).parse());
-            }
+        if (request.getParameters() == null) {
             return response.setContent(AdminService.getAllAdmins(null, null).parse());
+        }
+        try {
+            return response.setContent(AdminService.getAdmins(null, null, null, null, null,
+                            request.getParameters().get("resultsFrom") == null ? null : Long.parseLong(request.getParameters().get("resultsFrom")),
+                            request.getParameters().get("resultsOffset") == null ? null : Long.parseLong(request.getParameters().get("resultsOffset")))
+                    .parse());
         } catch (NumberFormatException e) {
-            return response.setContent(new Response<Admin>().setError("Invalid parameters").parse());
+            return response.setContent(new Response<Admin>().setError(e.getMessage()).parse());
         }
     }
 
-    /**
-     * Insert/update admin.
-     * <p>
-     * AccessLevel - {@code SUPERUSER}
-     * <ul>
-     *     <li>{@code POST [multipart/form-data] @ /admin[?update=false]} - Insert admin</li>
-     *     Required content parameters - {@code name}, {@code accessLevel}
-     *     <li>{@code POST [multipart/form-data] @ /admin?update=true} - Update admin</li>
-     *     Required content parameters - {@code id}
-     * </ul>
-     * Required content parameters -
-     * <b>When inset admin, the ID (A#) will be the password.</b>
-     *
-     * @param request  Nexus-HTTP HTTP Request
-     * @param response Nexus-HTTP HTTP Response
-     * @return {@code Response<Admin>}
-     * @see AdminEndpoint
-     * @since v1.0
-     */
     @POST("/")
     @ExpectContent("multipart/form-data")
     @SuppressWarnings("unchecked")
@@ -115,68 +77,34 @@ public class AdminEndpoint {
         var auth = AuthenticationService.authenticate(request, Role.ADMIN, AccessLevel.SUPERUSER);
         if (auth != null) return auth;
 
+        var update = request.getParameters() == null ? null : request.getParameters().get("update") == null ?
+                null : Boolean.parseBoolean(request.getParameters().get("update"));
         try {
-            var admin = Admin.toAdmin((List<MultipartFormData>) request.getContent().getData());
-            var update = request.getParameters().get("update");
-            if (Boolean.parseBoolean(update)) {
-                if (admin.getId() == null) return response.setContent(new Response<Admin>().setError("Invalid ID").parse());
-                return response.setContent(AdminService.updateAdminById(admin).parse());
+            if (update == null || !update) {
+                return response.setContent(AdminService.createAdmin(Admin.toAdmin((List<MultipartFormData>) request.getContent().getData())).parse());
             }
-            if (admin.getName() == null || admin.getAccessLevel() == null) {
-                return response.setContent(new Response<Admin>().setError("Missing content parameters").parse());
-            }
-            return response.setContent(AdminService.createAdmin(admin).parse());
+            return response.setContent(AdminService.updateAdmin(Admin.toAdmin((List<MultipartFormData>) request.getContent().getData())).parse());
         } catch (Exception e) {
-            return response.setContent(new Response<Admin>().setError("Invalid form-data").parse());
+            return response.setContent(new Response<Admin>().setError(e.getMessage()).parse());
         }
     }
 
-    /**
-     * Delete admin.
-     * <p>
-     * AccessLevel - {@code SUPERUSER}
-     * <ul>
-     *     <li>{@code DELETE [no content] @ /admin?id=#} - Delete admin</li>
-     * </ul>
-     *
-     * @param request  Nexus-HTTP HTTP Request
-     * @param response Nexus-HTTP HTTP Response
-     * @return {@code Response<Admin>}
-     * @see AdminEndpoint
-     * @since v1.0
-     */
     @DELETE("/")
     public static HttpResponse deleteAdmin(HttpDeleteRequest request,
                                            HttpResponse response) {
         var auth = AuthenticationService.authenticate(request, Role.ADMIN, AccessLevel.SUPERUSER);
         if (auth != null) return auth;
 
+        if (request.getParameters() == null) {
+            return response.setContent(new Response<Admin>().setError("id parameter not found").parse());
+        }
         try {
-            var id = request.getParameters().get("id");
-            if (id == null) {
-                return response.setContent(new Response<Admin>().setError("ID not found").parse());
-            }
-            return response.setContent(AdminService.deleteAdminById(Long.parseLong(id)).parse());
+            return response.setContent(AdminService.deleteAdminById(Long.parseLong(request.getParameters().get("id"))).parse());
         } catch (Exception e) {
-            return response.setContent(new Response<Admin>().setError("Invalid parameters").parse());
+            return response.setContent(new Response<Admin>().setError(e.getMessage()).parse());
         }
     }
 
-    /**
-     * Reset admin password.
-     * <p>
-     * AccessLevel - {@code SUPERUSER}
-     * <ul>
-     *     <li>{@code PATCH [application/x-www-form-urlencoded] @ /admin} - Reset password</li>
-     *     Required content parameters - {@code id}, {@code oldPassword}, {@code newPassword}
-     * </ul>
-     *
-     * @param request  Nexus-HTTP HTTP Request
-     * @param response Nexus-HTTP HTTP Response
-     * @return {@code Response<Admin>}
-     * @see AdminEndpoint
-     * @since v1.0
-     */
     @PATCH("/")
     @ExpectContent("application/x-www-form-urlencoded")
     public static HttpResponse resetPassword(HttpPatchRequest request,
@@ -189,7 +117,7 @@ public class AdminEndpoint {
             return response.setContent(AdminService.resetPassword(Long.parseLong(data.get("id")), data.get("oldPassword"), data.get("newPassword"))
                     .parse());
         } catch (Exception e) {
-            return response.setContent(new Response<Admin>().setError("Invalid/missing parameters").parse());
+            return response.setContent(new Response<Admin>().setError(e.getMessage()).parse());
         }
     }
 }

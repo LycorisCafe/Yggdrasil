@@ -17,6 +17,7 @@
 package io.github.lycoriscafe.yggdrasil.rest.teacher;
 
 import io.github.lycoriscafe.nexus.http.core.headers.content.MultipartFormData;
+import io.github.lycoriscafe.yggdrasil.configuration.Utils;
 import io.github.lycoriscafe.yggdrasil.configuration.database.Entity;
 import io.github.lycoriscafe.yggdrasil.rest.Gender;
 
@@ -154,6 +155,7 @@ public class Teacher implements Entity {
                 case "initName" -> teacher.setInitName(new String(formData.getData()));
                 case "fullName" -> teacher.setFullName(new String(formData.getData()));
                 case "gender" -> teacher.setGender(Gender.valueOf(new String(formData.getData())));
+                case "dateOfBirth" -> teacher.setDateOfBirth(LocalDate.parse(new String(formData.getData()), Utils.getDateFormatter()));
                 case "address" -> teacher.setAddress(new String(formData.getData()));
                 case "email" -> teacher.setEmail(new String(formData.getData()));
                 case "contactNo" -> teacher.setContactNo(new String(formData.getData()));
