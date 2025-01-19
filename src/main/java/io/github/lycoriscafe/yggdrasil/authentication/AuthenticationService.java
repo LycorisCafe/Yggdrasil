@@ -69,7 +69,7 @@ public class AuthenticationService {
                         new BearerAuthentication(BearerAuthorizationError.INVALID_TOKEN)
                                 .setErrorDescription("Invalid access token. Token expired."));
             }
-            if (roles.contains(auth.getRole())) {
+            if (!roles.contains(auth.getRole())) {
                 StringBuilder scope = new StringBuilder("[");
                 roles.forEach(role -> scope.append(role.toString()).append(","));
                 scope.deleteCharAt(scope.length() - 1).append("]");

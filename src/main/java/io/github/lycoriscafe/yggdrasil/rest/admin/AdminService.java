@@ -78,6 +78,36 @@ public class AdminService {
         }
     }
 
+    public static Response<Admin> getAdmins(CommonService.SearchQueryBuilder<Admin, Columns> searchQueryBuilder) {
+        try {
+            var results = CommonService.get(searchQueryBuilder);
+            if (results.getResponse() != null) return results.getResponse();
+
+            List<Admin> admins = new ArrayList<>();
+            try (var resultSet = results.getResultSet()) {
+                while (resultSet.next()) {
+                    String[] accessLevelsSet = resultSet.getString("accessLevel").split(",", 0);
+                    Set<AccessLevel> accessLevels = new HashSet<>();
+                    for (String accessLevel : accessLevelsSet) {
+                        accessLevels.add(AccessLevel.valueOf(accessLevel));
+                    }
+                    admins.add(new Admin(resultSet.getString("name"), accessLevels)
+                            .setId(Long.parseLong(resultSet.getString("id")))
+                            .setDisabled(resultSet.getBoolean("disabled")));
+                }
+            }
+
+            return new Response<Admin>()
+                    .setSuccess(true)
+                    .setGenerableResults(results.getGenerableResults())
+                    .setResultsFrom(results.getResultsFrom())
+                    .setResultsOffset(results.getResultsOffset())
+                    .setData(admins);
+        } catch (Exception e) {
+            return new Response<Admin>().setError(e.getMessage());
+        }
+    }
+
     public static Response<Admin> getAdminById(Long id) {
         try {
             return getAdmins(List.of(Columns.id), List.of(Long.toUnsignedString(id)),

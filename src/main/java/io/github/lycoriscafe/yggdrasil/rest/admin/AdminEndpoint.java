@@ -33,6 +33,7 @@ import io.github.lycoriscafe.nexus.http.engine.ReqResManager.httpRes.HttpRespons
 import io.github.lycoriscafe.yggdrasil.authentication.AuthenticationService;
 import io.github.lycoriscafe.yggdrasil.authentication.Role;
 import io.github.lycoriscafe.yggdrasil.configuration.Response;
+import io.github.lycoriscafe.yggdrasil.configuration.commons.CommonService;
 
 import java.util.List;
 
@@ -60,9 +61,7 @@ public class AdminEndpoint {
             return response.setContent(AdminService.getAllAdmins(null, null).parse());
         }
         try {
-            return response.setContent(AdminService.getAdmins(null, null, null, null, null,
-                            request.getParameters().get("resultsFrom") == null ? null : Long.parseLong(request.getParameters().get("resultsFrom")),
-                            request.getParameters().get("resultsOffset") == null ? null : Long.parseLong(request.getParameters().get("resultsOffset")))
+            return response.setContent(AdminService.getAdmins(CommonService.SearchQueryBuilder.build(Admin.class, AdminService.Columns.class, request.getParameters()))
                     .parse());
         } catch (NumberFormatException e) {
             return response.setContent(new Response<Admin>().setError(e.getMessage()).parse());

@@ -131,17 +131,18 @@ public class CommonService {
                     isCaseSensitive.add(values.length == 2 && Boolean.parseBoolean(values[1]));
                 } catch (Exception ignored) {}
             }
-            searchQuery.setSearchBy(searchBy).setSearchByValues(searchByValues).setIsCaseSensitive(isCaseSensitive);
-            List<U> orderBy = null;
+            searchQuery.setSearchBy(searchBy.isEmpty() ? null : searchBy)
+                    .setSearchByValues(searchByValues.isEmpty() ? null : searchByValues)
+                    .setIsCaseSensitive(isCaseSensitive.isEmpty() ? null : isCaseSensitive);
+            List<U> orderBy = new ArrayList<>();
             if (parameters.containsKey("orderBy")) {
-                orderBy = new ArrayList<>();
                 String[] values = parameters.get("orderBy").split(",", 0);
                 for (String value : values) {
                     U col = Enum.valueOf(columns, value);
                     orderBy.add(col);
                 }
             }
-            searchQuery.setOrderBy(orderBy);
+            searchQuery.setOrderBy(orderBy.isEmpty() ? null : orderBy);
             if (parameters.containsKey("isAscending")) {
                 searchQuery.setAscending(Boolean.parseBoolean(parameters.get("isAscending")));
             }
@@ -244,39 +245,35 @@ public class CommonService {
         if (queryBuilder.getAscending() != null) {
             query.append(queryBuilder.getAscending() ? " ASC" : " DESC");
         }
-        String subQuery = query.toString().replaceFirst("\\*", "COUNT(*) AS resultsOffset, (" +
-                query.toString().replaceFirst("\\*", "COUNT(*)") + ") AS generableValues");
-        String limit = " LIMIT ?, ?";
-        query.append(limit);
-        subQuery += limit;
+        String generableResultQuery = query.toString().replaceFirst("\\*", "COUNT(1)");
+        query.append(" LIMIT ?, ?");
+        String resultsOffsetQuery = "SELECT COUNT(1) FROM (" + query + ") AS resultsOffset";
 
         try (var connection = Utils.getDatabaseConnection();
              var statement = connection.prepareStatement(query.toString());
-             var subStatement = connection.prepareStatement(subQuery)) {
+             var generableResultsStatement = connection.prepareStatement(generableResultQuery);
+             var resultsOffsetStatement = connection.prepareStatement(resultsOffsetQuery)) {
             int statementNextParamIndex = 1;
-            int subStatementNextParamIndex = 1;
             if (queryBuilder.getSearchByValues() != null) {
-                subStatementNextParamIndex = queryBuilder.getSearchByValues().size() + 1;
                 for (int i = 1; i <= queryBuilder.getSearchByValues().size(); i++) {
                     statement.setString(i, queryBuilder.getSearchByValues().get(i - 1));
-                    subStatement.setString(i, queryBuilder.getSearchByValues().get(i - 1));
-                    subStatement.setString(i + queryBuilder.getSearchByValues().size(), queryBuilder.getSearchByValues().get(i - 1));
+                    generableResultsStatement.setString(i, queryBuilder.getSearchByValues().get(i - 1));
+                    resultsOffsetStatement.setString(i, queryBuilder.getSearchByValues().get(i - 1));
                     statementNextParamIndex++;
-                    subStatementNextParamIndex++;
                 }
             }
-            statement.setString(statementNextParamIndex++, Long.toUnsignedString(queryBuilder.getResultsFrom()));
+            statement.setString(statementNextParamIndex, Long.toUnsignedString(queryBuilder.getResultsFrom()));
+            resultsOffsetStatement.setString(statementNextParamIndex++, Long.toUnsignedString(queryBuilder.getResultsFrom()));
             statement.setString(statementNextParamIndex, Long.toUnsignedString(queryBuilder.getResultsOffset()));
-
-            subStatement.setString(subStatementNextParamIndex++, Long.toUnsignedString(queryBuilder.getResultsFrom()));
-            subStatement.setString(subStatementNextParamIndex, Long.toUnsignedString(queryBuilder.getResultsOffset()));
+            resultsOffsetStatement.setString(statementNextParamIndex, Long.toUnsignedString(queryBuilder.getResultsOffset()));
 
             Long generableResults = null;
             queryBuilder.setResultsOffset(null);
-            try (var resultSet = subStatement.executeQuery()) {
-                if (resultSet.next()) {
-                    generableResults = Long.parseLong(resultSet.getString("generableValues"));
-                    queryBuilder.setResultsOffset(Long.parseLong(resultSet.getString("resultsOffset")));
+            try (var generableResultsResultSet = generableResultsStatement.executeQuery();
+                 var resultsOffsetResultSet = resultsOffsetStatement.executeQuery()) {
+                if (generableResultsResultSet.next() && resultsOffsetResultSet.next()) {
+                    generableResults = Long.parseLong(generableResultsResultSet.getString(1));
+                    queryBuilder.setResultsOffset(Long.parseLong(resultsOffsetResultSet.getString(1)));
                 }
             }
 
