@@ -8,7 +8,7 @@ module Yggdrasil {
 
     opens io.github.lycoriscafe.yggdrasil.authentication;
     opens io.github.lycoriscafe.yggdrasil.configuration;
-    opens io.github.lycoriscafe.yggdrasil.configuration.database;
+    opens io.github.lycoriscafe.yggdrasil.configuration.commons;
     opens io.github.lycoriscafe.yggdrasil.rest.admin;
     opens io.github.lycoriscafe.yggdrasil.rest.classroom;
     opens io.github.lycoriscafe.yggdrasil.rest.guardian;

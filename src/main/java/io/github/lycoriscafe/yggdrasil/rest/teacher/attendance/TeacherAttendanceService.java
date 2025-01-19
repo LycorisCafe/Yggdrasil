@@ -18,8 +18,8 @@ package io.github.lycoriscafe.yggdrasil.rest.teacher.attendance;
 
 import io.github.lycoriscafe.yggdrasil.configuration.Response;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
-import io.github.lycoriscafe.yggdrasil.configuration.database.CommonCRUD;
-import io.github.lycoriscafe.yggdrasil.configuration.database.EntityColumn;
+import io.github.lycoriscafe.yggdrasil.configuration.commons.CommonService;
+import io.github.lycoriscafe.yggdrasil.configuration.commons.EntityColumn;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -34,15 +34,17 @@ public class TeacherAttendanceService {
         time
     }
 
-    public static Response<TeacherAttendance> getTeacherAttendances(Columns[] searchBy,
-                                                                    String[] searchByValues,
-                                                                    boolean[] isCaseSensitive,
-                                                                    Columns[] orderBy,
+    public static Response<TeacherAttendance> getTeacherAttendances(List<Columns> searchBy,
+                                                                    List<String> searchByValues,
+                                                                    List<Boolean> isCaseSensitive,
+                                                                    List<Columns> orderBy,
                                                                     Boolean isAscending,
                                                                     Long resultsFrom,
                                                                     Long resultsOffset) {
         try {
-            var results = CommonCRUD.get(TeacherAttendance.class, searchBy, searchByValues, isCaseSensitive, orderBy, isAscending, resultsFrom, resultsOffset);
+            var results = CommonService.get(new CommonService.SearchQueryBuilder<TeacherAttendance, Columns>(TeacherAttendance.class)
+                    .setSearchBy(searchBy).setSearchByValues(searchByValues).setIsCaseSensitive(isCaseSensitive).setOrderBy(orderBy)
+                    .setAscending(isAscending).setResultsFrom(resultsFrom).setResultsOffset(resultsOffset));
             if (results.getResponse() != null) return results.getResponse();
 
             List<TeacherAttendance> teacherAttendances = new ArrayList<>();
@@ -76,19 +78,20 @@ public class TeacherAttendanceService {
                 return new Response<TeacherAttendance>().setError("Internal server error");
             }
             connection.commit();
-            return getTeacherAttendances(new Columns[]{Columns.teacherId, Columns.date},
-                    new String[]{Long.toUnsignedString(teacherAttendance.getTeacherId()), LocalDate.now().toString()},
+            return getTeacherAttendances(List.of(Columns.teacherId, Columns.date),
+                    List.of(Long.toUnsignedString(teacherAttendance.getTeacherId()), teacherAttendance.getDate().format(Utils.getDateFormatter())),
                     null, null, null, null, 1L);
         } catch (Exception e) {
             return new Response<TeacherAttendance>().setError(e.getMessage());
         }
     }
 
-    public static Response<TeacherAttendance> deleteTeacherAttendanceByTeacherIdAndDate(Long id,
+    public static Response<TeacherAttendance> deleteTeacherAttendanceByTeacherIdAndDate(Long teacherId,
                                                                                         LocalDate date) {
-        Objects.requireNonNull(id);
+        Objects.requireNonNull(teacherId);
         Objects.requireNonNull(date);
-        return CommonCRUD.delete(TeacherAttendance.class, new Columns[]{Columns.teacherId, Columns.date},
-                new String[]{Long.toUnsignedString(id), date.toString()}, null);
+        return CommonService.delete(new CommonService.SearchQueryBuilder<TeacherAttendance, Columns>(TeacherAttendance.class)
+                .setSearchBy(List.of(Columns.teacherId, Columns.date))
+                .setSearchByValues(List.of(Long.toUnsignedString(teacherId), date.format(Utils.getDateFormatter()))));
     }
 }

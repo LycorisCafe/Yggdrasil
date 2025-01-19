@@ -18,7 +18,7 @@ package io.github.lycoriscafe.yggdrasil.rest.guardian;
 
 import io.github.lycoriscafe.nexus.http.core.headers.content.MultipartFormData;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
-import io.github.lycoriscafe.yggdrasil.configuration.database.Entity;
+import io.github.lycoriscafe.yggdrasil.configuration.commons.Entity;
 import io.github.lycoriscafe.yggdrasil.rest.Gender;
 
 import java.time.LocalDate;

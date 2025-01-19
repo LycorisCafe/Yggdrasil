@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.github.lycoriscafe.yggdrasil.configuration.database;
+package io.github.lycoriscafe.yggdrasil.configuration.commons;
 
 public interface EntityColumn {
 }

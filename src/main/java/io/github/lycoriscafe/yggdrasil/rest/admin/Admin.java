@@ -17,7 +17,7 @@
 package io.github.lycoriscafe.yggdrasil.rest.admin;
 
 import io.github.lycoriscafe.nexus.http.core.headers.content.MultipartFormData;
-import io.github.lycoriscafe.yggdrasil.configuration.database.Entity;
+import io.github.lycoriscafe.yggdrasil.configuration.commons.Entity;
 
 import java.util.HashSet;
 import java.util.List;

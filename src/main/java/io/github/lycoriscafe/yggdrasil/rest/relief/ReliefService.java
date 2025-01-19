@@ -18,8 +18,8 @@ package io.github.lycoriscafe.yggdrasil.rest.relief;
 
 import io.github.lycoriscafe.yggdrasil.configuration.Response;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
-import io.github.lycoriscafe.yggdrasil.configuration.database.CommonCRUD;
-import io.github.lycoriscafe.yggdrasil.configuration.database.EntityColumn;
+import io.github.lycoriscafe.yggdrasil.configuration.commons.CommonService;
+import io.github.lycoriscafe.yggdrasil.configuration.commons.EntityColumn;
 
 import java.sql.Statement;
 import java.time.LocalDate;
@@ -35,15 +35,17 @@ public class ReliefService {
         date
     }
 
-    public static Response<Relief> getReliefs(Columns[] searchBy,
-                                              String[] searchByValues,
-                                              boolean[] isCaseSensitive,
-                                              Columns[] orderBy,
+    public static Response<Relief> getReliefs(List<Columns> searchBy,
+                                              List<String> searchByValues,
+                                              List<Boolean> isCaseSensitive,
+                                              List<Columns> orderBy,
                                               Boolean isAscending,
                                               Long resultsFrom,
                                               Long resultsOffset) {
         try {
-            var results = CommonCRUD.get(Relief.class, searchBy, searchByValues, isCaseSensitive, orderBy, isAscending, resultsFrom, resultsOffset);
+            var results = CommonService.get(new CommonService.SearchQueryBuilder<Relief, Columns>(Relief.class)
+                    .setSearchBy(searchBy).setSearchByValues(searchByValues).setIsCaseSensitive(isCaseSensitive).setOrderBy(orderBy)
+                    .setAscending(isAscending).setResultsFrom(resultsFrom).setResultsOffset(resultsOffset));
             if (results.getResponse() != null) return results.getResponse();
 
             List<Relief> reliefs = new ArrayList<>();
@@ -70,7 +72,7 @@ public class ReliefService {
 
     public static Response<Relief> getReliefById(Long id) {
         try {
-            return getReliefs(new Columns[]{Columns.id}, new String[]{Long.toUnsignedString(id)},
+            return getReliefs(List.of(Columns.id), List.of(Long.toUnsignedString(id)),
                     null, null, null, null, 1L);
         } catch (Exception e) {
             return new Response<Relief>().setError(e.getMessage());
@@ -132,6 +134,7 @@ public class ReliefService {
 
     public static Response<Relief> deleteReliefById(Long id) {
         Objects.requireNonNull(id);
-        return CommonCRUD.delete(Relief.class, new Columns[]{Columns.id}, new String[]{Long.toUnsignedString(id)}, null);
+        return CommonService.delete(new CommonService.SearchQueryBuilder<Relief, Columns>(Relief.class).setSearchBy(List.of(Columns.id))
+                .setSearchByValues(List.of(Long.toUnsignedString(id))));
     }
 }

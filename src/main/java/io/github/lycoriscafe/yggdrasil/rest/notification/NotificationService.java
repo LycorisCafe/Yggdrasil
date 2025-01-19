@@ -18,8 +18,8 @@ package io.github.lycoriscafe.yggdrasil.rest.notification;
 
 import io.github.lycoriscafe.yggdrasil.configuration.Response;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
-import io.github.lycoriscafe.yggdrasil.configuration.database.CommonCRUD;
-import io.github.lycoriscafe.yggdrasil.configuration.database.EntityColumn;
+import io.github.lycoriscafe.yggdrasil.configuration.commons.CommonService;
+import io.github.lycoriscafe.yggdrasil.configuration.commons.EntityColumn;
 
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -38,16 +38,17 @@ public class NotificationService {
         draft
     }
 
-    public static Response<Notification> getNotifications(Columns[] searchBy,
-                                                          String[] searchByValues,
-                                                          boolean[] isCaseSensitive,
-                                                          Columns[] orderBy,
+    public static Response<Notification> getNotifications(List<Columns> searchBy,
+                                                          List<String> searchByValues,
+                                                          List<Boolean> isCaseSensitive,
+                                                          List<Columns> orderBy,
                                                           Boolean isAscending,
                                                           Long resultsFrom,
                                                           Long resultsOffset) {
         try {
-            var results = CommonCRUD.get(Notification.class, searchBy, searchByValues, isCaseSensitive, orderBy, isAscending, resultsFrom, resultsOffset);
-            if (results.getResponse() != null) return results.getResponse();
+            var results = CommonService.get(new CommonService.SearchQueryBuilder<Notification, Columns>(Notification.class)
+                    .setSearchBy(searchBy).setSearchByValues(searchByValues).setIsCaseSensitive(isCaseSensitive).setOrderBy(orderBy)
+                    .setAscending(isAscending).setResultsFrom(resultsFrom).setResultsOffset(resultsOffset));
 
             List<Notification> notifications = new ArrayList<>();
             try (var resultSet = results.getResultSet()) {
@@ -77,7 +78,7 @@ public class NotificationService {
 
     public static Response<Notification> getNotificationById(Long id) {
         try {
-            return getNotifications(new Columns[]{Columns.id}, new String[]{Long.toUnsignedString(id)},
+            return getNotifications(List.of(Columns.id), List.of(Long.toUnsignedString(id)),
                     null, null, null, null, 1L);
         } catch (Exception e) {
             return new Response<Notification>().setError(e.getMessage());
@@ -139,6 +140,7 @@ public class NotificationService {
 
     public static Response<Notification> deleteNotificationById(Long id) {
         Objects.requireNonNull(id);
-        return CommonCRUD.delete(Notification.class, new Columns[]{Columns.id}, new String[]{Long.toUnsignedString(id)}, null);
+        return CommonService.delete(new CommonService.SearchQueryBuilder<Notification, Columns>(Notification.class).setSearchBy(List.of(Columns.id))
+                .setSearchByValues(List.of(Long.toUnsignedString(id))));
     }
 }

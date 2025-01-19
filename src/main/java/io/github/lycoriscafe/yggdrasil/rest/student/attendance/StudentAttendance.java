@@ -16,7 +16,7 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.student.attendance;
 
-import io.github.lycoriscafe.yggdrasil.configuration.database.Entity;
+import io.github.lycoriscafe.yggdrasil.configuration.commons.Entity;
 
 import java.time.LocalDate;
 import java.time.LocalTime;

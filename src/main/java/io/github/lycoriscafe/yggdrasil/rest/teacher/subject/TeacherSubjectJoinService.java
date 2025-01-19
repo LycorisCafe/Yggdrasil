@@ -18,8 +18,8 @@ package io.github.lycoriscafe.yggdrasil.rest.teacher.subject;
 
 import io.github.lycoriscafe.yggdrasil.configuration.Response;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
-import io.github.lycoriscafe.yggdrasil.configuration.database.CommonCRUD;
-import io.github.lycoriscafe.yggdrasil.configuration.database.EntityColumn;
+import io.github.lycoriscafe.yggdrasil.configuration.commons.CommonService;
+import io.github.lycoriscafe.yggdrasil.configuration.commons.EntityColumn;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,15 +31,17 @@ public class TeacherSubjectJoinService {
         subjectId
     }
 
-    public static Response<TeacherSubjectJoin> getTeacherSubjectJoins(Columns[] searchBy,
-                                                                      String[] searchByValues,
-                                                                      boolean[] isCaseSensitive,
-                                                                      Columns[] orderBy,
+    public static Response<TeacherSubjectJoin> getTeacherSubjectJoins(List<Columns> searchBy,
+                                                                      List<String> searchByValues,
+                                                                      List<Boolean> isCaseSensitive,
+                                                                      List<Columns> orderBy,
                                                                       Boolean isAscending,
                                                                       Long resultsFrom,
                                                                       Long resultsOffset) {
         try {
-            var results = CommonCRUD.get(TeacherSubjectJoin.class, searchBy, searchByValues, isCaseSensitive, orderBy, isAscending, resultsFrom, resultsOffset);
+            var results = CommonService.get(new CommonService.SearchQueryBuilder<TeacherSubjectJoin, Columns>(TeacherSubjectJoin.class)
+                    .setSearchBy(searchBy).setSearchByValues(searchByValues).setIsCaseSensitive(isCaseSensitive).setOrderBy(orderBy)
+                    .setAscending(isAscending).setResultsFrom(resultsFrom).setResultsOffset(resultsOffset));
             if (results.getResponse() != null) return results.getResponse();
 
             List<TeacherSubjectJoin> teacherSubjectJoins = new ArrayList<>();
@@ -74,8 +76,8 @@ public class TeacherSubjectJoinService {
                 return new Response<TeacherSubjectJoin>().setError("Internal server error");
             }
             connection.commit();
-            return getTeacherSubjectJoins(new Columns[]{Columns.teacherId, Columns.subjectId},
-                    new String[]{Long.toUnsignedString(teacherSubjectJoin.getTeacherId()), Long.toUnsignedString(teacherSubjectJoin.getSubjectId())},
+            return getTeacherSubjectJoins(List.of(Columns.teacherId, Columns.subjectId),
+                    List.of(Long.toUnsignedString(teacherSubjectJoin.getTeacherId()), Long.toUnsignedString(teacherSubjectJoin.getSubjectId())),
                     null, null, null, null, 1L);
         } catch (Exception e) {
             return new Response<TeacherSubjectJoin>().setError(e.getMessage());
@@ -86,7 +88,8 @@ public class TeacherSubjectJoinService {
                                                                                                Long subjectId) {
         Objects.requireNonNull(teacherId);
         Objects.requireNonNull(subjectId);
-        return CommonCRUD.delete(TeacherSubjectJoin.class, new Columns[]{Columns.teacherId, Columns.subjectId},
-                new String[]{Long.toUnsignedString(teacherId), Long.toUnsignedString(subjectId)}, null);
+        return CommonService.delete(new CommonService.SearchQueryBuilder<TeacherSubjectJoin, Columns>(TeacherSubjectJoin.class)
+                .setSearchBy(List.of(Columns.teacherId, Columns.subjectId))
+                .setSearchByValues(List.of(Long.toUnsignedString(teacherId), Long.toUnsignedString(subjectId))));
     }
 }

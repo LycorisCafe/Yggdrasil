@@ -21,8 +21,8 @@ import io.github.lycoriscafe.yggdrasil.authentication.AuthenticationService;
 import io.github.lycoriscafe.yggdrasil.authentication.Role;
 import io.github.lycoriscafe.yggdrasil.configuration.Response;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
-import io.github.lycoriscafe.yggdrasil.configuration.database.CommonCRUD;
-import io.github.lycoriscafe.yggdrasil.configuration.database.EntityColumn;
+import io.github.lycoriscafe.yggdrasil.configuration.commons.CommonService;
+import io.github.lycoriscafe.yggdrasil.configuration.commons.EntityColumn;
 import io.github.lycoriscafe.yggdrasil.rest.Gender;
 
 import java.nio.charset.StandardCharsets;
@@ -50,15 +50,17 @@ public class StudentService {
         disabled
     }
 
-    public static Response<Student> getStudents(Columns[] searchBy,
-                                                String[] searchByValues,
-                                                boolean[] isCaseSensitive,
-                                                Columns[] orderBy,
+    public static Response<Student> getStudents(List<Columns> searchBy,
+                                                List<String> searchByValues,
+                                                List<Boolean> isCaseSensitive,
+                                                List<Columns> orderBy,
                                                 Boolean isAscending,
                                                 Long resultsFrom,
                                                 Long resultsOffset) {
         try {
-            var results = CommonCRUD.get(Student.class, searchBy, searchByValues, isCaseSensitive, orderBy, isAscending, resultsFrom, resultsOffset);
+            var results = CommonService.get(new CommonService.SearchQueryBuilder<Student, Columns>(Student.class)
+                    .setSearchBy(searchBy).setSearchByValues(searchByValues).setIsCaseSensitive(isCaseSensitive).setOrderBy(orderBy)
+                    .setAscending(isAscending).setResultsFrom(resultsFrom).setResultsOffset(resultsOffset));
             if (results.getResponse() != null) return results.getResponse();
 
             List<Student> students = new ArrayList<>();
@@ -95,7 +97,7 @@ public class StudentService {
 
     public static Response<Student> getStudentById(Long id) {
         try {
-            return getStudents(new Columns[]{Columns.id}, new String[]{Long.toUnsignedString(id)},
+            return getStudents(List.of(Columns.id), List.of(Long.toUnsignedString(id)),
                     null, null, null, null, 1L);
         } catch (Exception e) {
             return new Response<Student>().setError(e.getMessage());
@@ -194,7 +196,8 @@ public class StudentService {
 
     public static Response<Student> deleteStudentById(Long id) {
         Objects.requireNonNull(id);
-        var result = CommonCRUD.delete(Student.class, new Columns[]{Columns.id}, new String[]{Long.toUnsignedString(id)}, null);
+        var result = CommonService.delete(new CommonService.SearchQueryBuilder<Student, Columns>(Student.class).setSearchBy(List.of(Columns.id))
+                .setSearchByValues(List.of(Long.toUnsignedString(id))));
         if (result.isSuccess()) AuthenticationService.deleteAuthentication(Role.STUDENT, id);
         return result;
     }

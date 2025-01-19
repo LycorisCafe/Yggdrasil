@@ -18,8 +18,8 @@ package io.github.lycoriscafe.yggdrasil.rest.classroom;
 
 import io.github.lycoriscafe.yggdrasil.configuration.Response;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
-import io.github.lycoriscafe.yggdrasil.configuration.database.CommonCRUD;
-import io.github.lycoriscafe.yggdrasil.configuration.database.EntityColumn;
+import io.github.lycoriscafe.yggdrasil.configuration.commons.CommonService;
+import io.github.lycoriscafe.yggdrasil.configuration.commons.EntityColumn;
 
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -34,15 +34,17 @@ public class ClassroomService {
         name
     }
 
-    public static Response<Classroom> getClassrooms(Columns[] searchBy,
-                                                    String[] searchByValues,
-                                                    boolean[] isCaseSensitive,
-                                                    Columns[] orderBy,
+    public static Response<Classroom> getClassrooms(List<Columns> searchBy,
+                                                    List<String> searchByValues,
+                                                    List<Boolean> isCaseSensitive,
+                                                    List<Columns> orderBy,
                                                     Boolean isAscending,
                                                     Long resultsFrom,
                                                     Long resultsOffset) {
         try {
-            var results = CommonCRUD.get(Classroom.class, searchBy, searchByValues, isCaseSensitive, orderBy, isAscending, resultsFrom, resultsOffset);
+            var results = CommonService.get(new CommonService.SearchQueryBuilder<Classroom, Columns>(Classroom.class)
+                    .setSearchBy(searchBy).setSearchByValues(searchByValues).setIsCaseSensitive(isCaseSensitive).setOrderBy(orderBy)
+                    .setAscending(isAscending).setResultsFrom(resultsFrom).setResultsOffset(resultsOffset));
             if (results.getResponse() != null) return results.getResponse();
 
             List<Classroom> classrooms = new ArrayList<>();
@@ -70,7 +72,7 @@ public class ClassroomService {
 
     public static Response<Classroom> getClassroomById(Long id) {
         try {
-            return getClassrooms(new Columns[]{Columns.id}, new String[]{Long.toUnsignedString(id)},
+            return getClassrooms(List.of(Columns.id), List.of(Long.toUnsignedString(id)),
                     null, null, null, null, 1L);
         } catch (Exception e) {
             return new Response<Classroom>().setError(e.getMessage());
@@ -132,6 +134,7 @@ public class ClassroomService {
 
     public static Response<Classroom> deleteClassroomById(Long id) {
         Objects.requireNonNull(id);
-        return CommonCRUD.delete(Classroom.class, new Columns[]{Columns.id}, new String[]{Long.toUnsignedString(id)}, null);
+        return CommonService.delete(new CommonService.SearchQueryBuilder<Classroom, Columns>(Classroom.class).setSearchBy(List.of(Columns.id))
+                .setSearchByValues(List.of(Long.toUnsignedString(id))));
     }
 }

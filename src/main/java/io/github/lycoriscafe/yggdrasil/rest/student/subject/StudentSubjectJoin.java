@@ -17,7 +17,7 @@
 package io.github.lycoriscafe.yggdrasil.rest.student.subject;
 
 import io.github.lycoriscafe.nexus.http.core.headers.content.MultipartFormData;
-import io.github.lycoriscafe.yggdrasil.configuration.database.Entity;
+import io.github.lycoriscafe.yggdrasil.configuration.commons.Entity;
 
 import java.util.List;
 import java.util.Objects;

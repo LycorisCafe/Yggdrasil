@@ -18,8 +18,8 @@ package io.github.lycoriscafe.yggdrasil.rest.guardian;
 
 import io.github.lycoriscafe.yggdrasil.configuration.Response;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
-import io.github.lycoriscafe.yggdrasil.configuration.database.CommonCRUD;
-import io.github.lycoriscafe.yggdrasil.configuration.database.EntityColumn;
+import io.github.lycoriscafe.yggdrasil.configuration.commons.CommonService;
+import io.github.lycoriscafe.yggdrasil.configuration.commons.EntityColumn;
 import io.github.lycoriscafe.yggdrasil.rest.Gender;
 
 import java.sql.Statement;
@@ -41,15 +41,17 @@ public class GuardianService {
         contactNo
     }
 
-    public static Response<Guardian> getGuardians(Columns[] searchBy,
-                                                  String[] searchByValues,
-                                                  boolean[] isCaseSensitive,
-                                                  Columns[] orderBy,
+    public static Response<Guardian> getGuardians(List<Columns> searchBy,
+                                                  List<String> searchByValues,
+                                                  List<Boolean> isCaseSensitive,
+                                                  List<Columns> orderBy,
                                                   Boolean isAscending,
                                                   Long resultsFrom,
                                                   Long resultsOffset) {
         try {
-            var results = CommonCRUD.get(Guardian.class, searchBy, searchByValues, isCaseSensitive, orderBy, isAscending, resultsFrom, resultsOffset);
+            var results = CommonService.get(new CommonService.SearchQueryBuilder<Guardian, Columns>(Guardian.class)
+                    .setSearchBy(searchBy).setSearchByValues(searchByValues).setIsCaseSensitive(isCaseSensitive).setOrderBy(orderBy)
+                    .setAscending(isAscending).setResultsFrom(resultsFrom).setResultsOffset(resultsOffset));
             if (results.getResponse() != null) return results.getResponse();
 
             List<Guardian> guardians = new ArrayList<>();
@@ -81,7 +83,7 @@ public class GuardianService {
 
     public static Response<Guardian> getGuardianById(Long id) {
         try {
-            return getGuardians(new Columns[]{Columns.id}, new String[]{Long.toUnsignedString(id)},
+            return getGuardians(List.of(Columns.id), List.of(Long.toUnsignedString(id)),
                     null, null, null, null, 1L);
         } catch (Exception e) {
             return new Response<Guardian>().setError(e.getMessage());
@@ -159,6 +161,7 @@ public class GuardianService {
 
     public static Response<Guardian> deleteGuardianById(Long id) {
         Objects.requireNonNull(id);
-        return CommonCRUD.delete(Guardian.class, new Columns[]{Columns.id}, new String[]{Long.toUnsignedString(id)}, null);
+        return CommonService.delete(new CommonService.SearchQueryBuilder<Guardian, Columns>(Guardian.class).setSearchBy(List.of(Columns.id))
+                .setSearchByValues(List.of(Long.toUnsignedString(id))));
     }
 }

@@ -21,8 +21,8 @@ import io.github.lycoriscafe.yggdrasil.authentication.AuthenticationService;
 import io.github.lycoriscafe.yggdrasil.authentication.Role;
 import io.github.lycoriscafe.yggdrasil.configuration.Response;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
-import io.github.lycoriscafe.yggdrasil.configuration.database.CommonCRUD;
-import io.github.lycoriscafe.yggdrasil.configuration.database.EntityColumn;
+import io.github.lycoriscafe.yggdrasil.configuration.commons.CommonService;
+import io.github.lycoriscafe.yggdrasil.configuration.commons.EntityColumn;
 import io.github.lycoriscafe.yggdrasil.rest.Gender;
 
 import java.nio.charset.StandardCharsets;
@@ -46,15 +46,17 @@ public class TeacherService {
         disabled
     }
 
-    public static Response<Teacher> getTeachers(Columns[] searchBy,
-                                                String[] searchByValues,
-                                                boolean[] isCaseSensitive,
-                                                Columns[] orderBy,
+    public static Response<Teacher> getTeachers(List<Columns> searchBy,
+                                                List<String> searchByValues,
+                                                List<Boolean> isCaseSensitive,
+                                                List<Columns> orderBy,
                                                 Boolean isAscending,
                                                 Long resultsFrom,
                                                 Long resultsOffset) {
         try {
-            var results = CommonCRUD.get(Teacher.class, searchBy, searchByValues, isCaseSensitive, orderBy, isAscending, resultsFrom, resultsOffset);
+            var results = CommonService.get(new CommonService.SearchQueryBuilder<Teacher, Columns>(Teacher.class)
+                    .setSearchBy(searchBy).setSearchByValues(searchByValues).setIsCaseSensitive(isCaseSensitive).setOrderBy(orderBy)
+                    .setAscending(isAscending).setResultsFrom(resultsFrom).setResultsOffset(resultsOffset));
             if (results.getResponse() != null) return results.getResponse();
 
             List<Teacher> teachers = new ArrayList<>();
@@ -87,7 +89,7 @@ public class TeacherService {
 
     public static Response<Teacher> getTeacherById(Long id) {
         try {
-            return getTeachers(new Columns[]{Columns.id}, new String[]{Long.toUnsignedString(id)},
+            return getTeachers(List.of(Columns.id), List.of(Long.toUnsignedString(id)),
                     null, null, null, null, 1L);
         } catch (Exception e) {
             return new Response<Teacher>().setError(e.getMessage());
@@ -176,7 +178,8 @@ public class TeacherService {
 
     public static Response<Teacher> deleteTeacherById(Long id) {
         Objects.requireNonNull(id);
-        var result = CommonCRUD.delete(Teacher.class, new Columns[]{Columns.id}, new String[]{Long.toUnsignedString(id)}, null);
+        var result = CommonService.delete(new CommonService.SearchQueryBuilder<Teacher, Columns>(Teacher.class).setSearchBy(List.of(Columns.id))
+                .setSearchByValues(List.of(Long.toUnsignedString(id))));
         if (result.isSuccess()) AuthenticationService.deleteAuthentication(Role.TEACHER, id);
         return result;
     }

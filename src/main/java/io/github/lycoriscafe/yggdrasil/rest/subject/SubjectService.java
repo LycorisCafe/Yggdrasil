@@ -18,8 +18,8 @@ package io.github.lycoriscafe.yggdrasil.rest.subject;
 
 import io.github.lycoriscafe.yggdrasil.configuration.Response;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
-import io.github.lycoriscafe.yggdrasil.configuration.database.CommonCRUD;
-import io.github.lycoriscafe.yggdrasil.configuration.database.EntityColumn;
+import io.github.lycoriscafe.yggdrasil.configuration.commons.CommonService;
+import io.github.lycoriscafe.yggdrasil.configuration.commons.EntityColumn;
 
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -35,15 +35,17 @@ public class SubjectService {
         teacherId
     }
 
-    public static Response<Subject> getSubjects(Columns[] searchBy,
-                                                String[] searchByValues,
-                                                boolean[] isCaseSensitive,
-                                                Columns[] orderBy,
+    public static Response<Subject> getSubjects(List<Columns> searchBy,
+                                                List<String> searchByValues,
+                                                List<Boolean> isCaseSensitive,
+                                                List<Columns> orderBy,
                                                 Boolean isAscending,
                                                 Long resultsFrom,
                                                 Long resultsOffset) {
         try {
-            var results = CommonCRUD.get(Subject.class, searchBy, searchByValues, isCaseSensitive, orderBy, isAscending, resultsFrom, resultsOffset);
+            var results = CommonService.get(new CommonService.SearchQueryBuilder<Subject, Columns>(Subject.class)
+                    .setSearchBy(searchBy).setSearchByValues(searchByValues).setIsCaseSensitive(isCaseSensitive).setOrderBy(orderBy)
+                    .setAscending(isAscending).setResultsFrom(resultsFrom).setResultsOffset(resultsOffset));
             if (results.getResponse() != null) return results.getResponse();
 
             List<Subject> subjects = new ArrayList<>();
@@ -72,7 +74,7 @@ public class SubjectService {
 
     public static Response<Subject> getSubjectById(Long id) {
         try {
-            return getSubjects(new Columns[]{Columns.id}, new String[]{Long.toUnsignedString(id)},
+            return getSubjects(List.of(Columns.id), List.of(Long.toUnsignedString(id)),
                     null, null, null, null, 1L);
         } catch (Exception e) {
             return new Response<Subject>().setError(e.getMessage());
@@ -137,6 +139,7 @@ public class SubjectService {
 
     public static Response<Subject> deleteSubjectById(Long id) {
         Objects.requireNonNull(id);
-        return CommonCRUD.delete(Subject.class, new Columns[]{Columns.id}, new String[]{Long.toUnsignedString(id)}, null);
+        return CommonService.delete(new CommonService.SearchQueryBuilder<Subject, Columns>(Subject.class).setSearchBy(List.of(Columns.id))
+                .setSearchByValues(List.of(Long.toUnsignedString(id))));
     }
 }

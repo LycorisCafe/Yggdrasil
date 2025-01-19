@@ -21,8 +21,8 @@ import io.github.lycoriscafe.yggdrasil.authentication.AuthenticationService;
 import io.github.lycoriscafe.yggdrasil.authentication.Role;
 import io.github.lycoriscafe.yggdrasil.configuration.Response;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
-import io.github.lycoriscafe.yggdrasil.configuration.database.CommonCRUD;
-import io.github.lycoriscafe.yggdrasil.configuration.database.EntityColumn;
+import io.github.lycoriscafe.yggdrasil.configuration.commons.CommonService;
+import io.github.lycoriscafe.yggdrasil.configuration.commons.EntityColumn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,15 +40,17 @@ public class AdminService {
         disabled
     }
 
-    public static Response<Admin> getAdmins(Columns[] searchBy,
-                                            String[] searchByValues,
-                                            boolean[] isCaseSensitive,
-                                            Columns[] orderBy,
+    public static Response<Admin> getAdmins(List<Columns> searchBy,
+                                            List<String> searchByValues,
+                                            List<Boolean> isCaseSensitive,
+                                            List<Columns> orderBy,
                                             Boolean isAscending,
                                             Long resultsFrom,
                                             Long resultsOffset) {
         try {
-            var results = CommonCRUD.get(Admin.class, searchBy, searchByValues, isCaseSensitive, orderBy, isAscending, resultsFrom, resultsOffset);
+            var results = CommonService.get(new CommonService.SearchQueryBuilder<Admin, Columns>(Admin.class)
+                    .setSearchBy(searchBy).setSearchByValues(searchByValues).setIsCaseSensitive(isCaseSensitive).setOrderBy(orderBy)
+                    .setAscending(isAscending).setResultsFrom(resultsFrom).setResultsOffset(resultsOffset));
             if (results.getResponse() != null) return results.getResponse();
 
             List<Admin> admins = new ArrayList<>();
@@ -78,7 +80,7 @@ public class AdminService {
 
     public static Response<Admin> getAdminById(Long id) {
         try {
-            return getAdmins(new Columns[]{Columns.id}, new String[]{Long.toUnsignedString(id)},
+            return getAdmins(List.of(Columns.id), List.of(Long.toUnsignedString(id)),
                     null, null, null, null, 1L);
         } catch (Exception e) {
             return new Response<Admin>().setError(e.getMessage());
@@ -179,7 +181,8 @@ public class AdminService {
 
     public static Response<Admin> deleteAdminById(Long id) {
         Objects.requireNonNull(id);
-        var result = CommonCRUD.delete(Admin.class, new Columns[]{Columns.id}, new String[]{Long.toUnsignedString(id)}, null);
+        var result = CommonService.delete(new CommonService.SearchQueryBuilder<Admin, Columns>(Admin.class).setSearchBy(List.of(Columns.id))
+                .setSearchByValues(List.of(Long.toUnsignedString(id))));
         if (result.isSuccess()) AuthenticationService.deleteAuthentication(Role.ADMIN, id);
         return result;
     }

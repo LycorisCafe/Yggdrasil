@@ -18,8 +18,8 @@ package io.github.lycoriscafe.yggdrasil.rest.student.attendance;
 
 import io.github.lycoriscafe.yggdrasil.configuration.Response;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
-import io.github.lycoriscafe.yggdrasil.configuration.database.CommonCRUD;
-import io.github.lycoriscafe.yggdrasil.configuration.database.EntityColumn;
+import io.github.lycoriscafe.yggdrasil.configuration.commons.CommonService;
+import io.github.lycoriscafe.yggdrasil.configuration.commons.EntityColumn;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -34,15 +34,17 @@ public class StudentAttendanceService {
         time
     }
 
-    public static Response<StudentAttendance> getStudentAttendances(Columns[] searchBy,
-                                                                    String[] searchByValues,
-                                                                    boolean[] isCaseSensitive,
-                                                                    Columns[] orderBy,
+    public static Response<StudentAttendance> getStudentAttendances(List<Columns> searchBy,
+                                                                    List<String> searchByValues,
+                                                                    List<Boolean> isCaseSensitive,
+                                                                    List<Columns> orderBy,
                                                                     Boolean isAscending,
                                                                     Long resultsFrom,
                                                                     Long resultsOffset) {
         try {
-            var results = CommonCRUD.get(StudentAttendance.class, searchBy, searchByValues, isCaseSensitive, orderBy, isAscending, resultsFrom, resultsOffset);
+            var results = CommonService.get(new CommonService.SearchQueryBuilder<StudentAttendance, Columns>(StudentAttendance.class)
+                    .setSearchBy(searchBy).setSearchByValues(searchByValues).setIsCaseSensitive(isCaseSensitive).setOrderBy(orderBy)
+                    .setAscending(isAscending).setResultsFrom(resultsFrom).setResultsOffset(resultsOffset));
             if (results.getResponse() != null) return results.getResponse();
 
             List<StudentAttendance> studentAttendances = new ArrayList<>();
@@ -76,8 +78,8 @@ public class StudentAttendanceService {
                 return new Response<StudentAttendance>().setError("Internal server error");
             }
             connection.commit();
-            return getStudentAttendances(new Columns[]{Columns.studentId, Columns.date},
-                    new String[]{Long.toUnsignedString(studentAttendance.getStudentId()), LocalDate.now().toString()},
+            return getStudentAttendances(List.of(Columns.studentId, Columns.date),
+                    List.of(Long.toUnsignedString(studentAttendance.getStudentId()), LocalDate.now().format(Utils.getDateFormatter())),
                     null, null, null, null, 1L);
         } catch (Exception e) {
             return new Response<StudentAttendance>().setError(e.getMessage());
@@ -88,7 +90,8 @@ public class StudentAttendanceService {
                                                                                         LocalDate date) {
         Objects.requireNonNull(studentId);
         Objects.requireNonNull(date);
-        return CommonCRUD.delete(StudentAttendance.class, new Columns[]{Columns.studentId, Columns.date},
-                new String[]{Long.toUnsignedString(studentId), date.toString()}, null);
+        return CommonService.delete(new CommonService.SearchQueryBuilder<StudentAttendance, Columns>(StudentAttendance.class)
+                .setSearchBy(List.of(Columns.studentId, Columns.date))
+                .setSearchByValues(List.of(Long.toUnsignedString(studentId), date.format(Utils.getDateFormatter()))));
     }
 }

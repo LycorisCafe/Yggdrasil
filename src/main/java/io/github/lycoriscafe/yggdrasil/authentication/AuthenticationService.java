@@ -41,17 +41,15 @@ import java.sql.SQLException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Base64;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 public class AuthenticationService {
     public static HttpResponse authenticate(HttpRequest httpRequest,
-                                            Role targetRole,
+                                            Role[] targetRoles,
                                             AccessLevel... accessLevels) {
         Objects.requireNonNull(httpRequest);
-        Objects.requireNonNull(targetRole);
+        Objects.requireNonNull(targetRoles);
+        Set<Role> roles = new HashSet<>(Arrays.asList(targetRoles));
         var httpResponse = new HttpResponse(httpRequest.getRequestId(), httpRequest.getRequestConsumer());
         if (httpRequest.getAuthorization() == null || httpRequest.getAuthorization().getAuthScheme() != AuthScheme.BEARER) {
             return httpResponse.setStatusCode(HttpStatusCode.BAD_REQUEST).addAuthentication(
@@ -71,9 +69,12 @@ public class AuthenticationService {
                         new BearerAuthentication(BearerAuthorizationError.INVALID_TOKEN)
                                 .setErrorDescription("Invalid access token. Token expired."));
             }
-            if (auth.getRole() != targetRole) {
+            if (roles.contains(auth.getRole())) {
+                StringBuilder scope = new StringBuilder("[");
+                roles.forEach(role -> scope.append(role.toString()).append(","));
+                scope.deleteCharAt(scope.length() - 1).append("]");
                 return httpResponse.setStatusCode(HttpStatusCode.FORBIDDEN).addAuthentication(
-                        new BearerAuthentication(BearerAuthorizationError.INSUFFICIENT_SCOPE).setScope(targetRole.toString())
+                        new BearerAuthentication(BearerAuthorizationError.INSUFFICIENT_SCOPE).setScope(scope.toString())
                                 .setErrorDescription("Insufficient scope. Contact your system admin for more details."));
             }
 
@@ -88,12 +89,12 @@ public class AuthenticationService {
                                 .setErrorDescription("Target account is disabled. Contact your system admin for more details."));
             }
 
-            if (targetRole == Role.ADMIN && accessLevels != null) {
+            if (roles.contains(Role.ADMIN) && accessLevels != null) {
                 var admin = AdminService.getAdminById(auth.getUserId());
                 var accessLevel = admin.getData().getFirst().getAccessLevel();
                 if (!accessLevel.containsAll(List.of(accessLevels))) {
                     return httpResponse.setStatusCode(HttpStatusCode.FORBIDDEN).addAuthentication(
-                            new BearerAuthentication(BearerAuthorizationError.INSUFFICIENT_SCOPE).setScope(targetRole + "#" + accessLevel)
+                            new BearerAuthentication(BearerAuthorizationError.INSUFFICIENT_SCOPE).setScope(Role.ADMIN + "#" + Arrays.toString(accessLevels))
                                     .setErrorDescription("Insufficient scope. Contact your system admin for more details."));
                 }
             }

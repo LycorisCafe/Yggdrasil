@@ -53,7 +53,7 @@ public class AdminEndpoint {
     @GET("/")
     public static HttpResponse getAdmins(HttpGetRequest request,
                                          HttpResponse response) {
-        var auth = AuthenticationService.authenticate(request, Role.ADMIN, AccessLevel.SUPERUSER);
+        var auth = AuthenticationService.authenticate(request, new Role[]{Role.ADMIN}, AccessLevel.SUPERUSER);
         if (auth != null) return auth;
 
         if (request.getParameters() == null) {
@@ -74,7 +74,7 @@ public class AdminEndpoint {
     @SuppressWarnings("unchecked")
     public static HttpResponse updateAdmin(HttpPostRequest request,
                                            HttpResponse response) {
-        var auth = AuthenticationService.authenticate(request, Role.ADMIN, AccessLevel.SUPERUSER);
+        var auth = AuthenticationService.authenticate(request, new Role[]{Role.ADMIN}, AccessLevel.SUPERUSER);
         if (auth != null) return auth;
 
         var update = request.getParameters() == null ? null : request.getParameters().get("update") == null ?
@@ -92,7 +92,7 @@ public class AdminEndpoint {
     @DELETE("/")
     public static HttpResponse deleteAdmin(HttpDeleteRequest request,
                                            HttpResponse response) {
-        var auth = AuthenticationService.authenticate(request, Role.ADMIN, AccessLevel.SUPERUSER);
+        var auth = AuthenticationService.authenticate(request, new Role[]{Role.ADMIN}, AccessLevel.SUPERUSER);
         if (auth != null) return auth;
 
         if (request.getParameters() == null) {
@@ -109,7 +109,7 @@ public class AdminEndpoint {
     @ExpectContent("application/x-www-form-urlencoded")
     public static HttpResponse resetPassword(HttpPatchRequest request,
                                              HttpResponse response) {
-        var auth = AuthenticationService.authenticate(request, Role.ADMIN, AccessLevel.SUPERUSER);
+        var auth = AuthenticationService.authenticate(request, new Role[]{Role.ADMIN}, AccessLevel.SUPERUSER);
         if (auth != null) return auth;
 
         try {
