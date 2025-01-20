@@ -42,10 +42,9 @@ public class SubjectService implements EntityService<Subject> {
                     subjects.add(new Subject(
                             resultSet.getInt("grade"),
                             resultSet.getString("shortName")
-                    ).setId(Long.parseLong(resultSet.getString("id")))
+                    ).setId(resultSet.getBigDecimal("id"))
                             .setLongName(resultSet.getString("longName"))
-                            .setTeacherId(resultSet.getString("teacherId") == null ?
-                                    null : Long.parseLong(resultSet.getString("teacherId"))));
+                            .setTeacherId(resultSet.getBigDecimal("teacherId")));
                 }
             }
 

@@ -19,11 +19,12 @@ package io.github.lycoriscafe.yggdrasil.rest.guardian;
 import io.github.lycoriscafe.yggdrasil.configuration.commons.Entity;
 import io.github.lycoriscafe.yggdrasil.rest.Gender;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Objects;
 
 public class Guardian implements Entity {
-    private Long id;
+    private BigDecimal id;
     private String nic;
     private String initName;
     private String fullName;
@@ -49,11 +50,11 @@ public class Guardian implements Entity {
         this.contactNo = Objects.requireNonNull(contactNo);
     }
 
-    public Long getId() {
+    public BigDecimal getId() {
         return id;
     }
 
-    public Guardian setId(Long id) {
+    public Guardian setId(BigDecimal id) {
         this.id = id;
         return this;
     }
@@ -63,7 +64,7 @@ public class Guardian implements Entity {
     }
 
     public Guardian setNic(String nic) {
-        this.nic = nic;
+        this.nic = Objects.requireNonNull(nic);
         return this;
     }
 
@@ -72,7 +73,7 @@ public class Guardian implements Entity {
     }
 
     public Guardian setInitName(String initName) {
-        this.initName = initName;
+        this.initName = Objects.requireNonNull(initName);
         return this;
     }
 
@@ -81,7 +82,7 @@ public class Guardian implements Entity {
     }
 
     public Guardian setFullName(String fullName) {
-        this.fullName = fullName;
+        this.fullName = Objects.requireNonNull(fullName);
         return this;
     }
 
@@ -90,7 +91,7 @@ public class Guardian implements Entity {
     }
 
     public Guardian setGender(Gender gender) {
-        this.gender = gender;
+        this.gender = Objects.requireNonNull(gender);
         return this;
     }
 
@@ -99,7 +100,7 @@ public class Guardian implements Entity {
     }
 
     public void setDateOfBirth(LocalDate dateOfBirth) {
-        this.dateOfBirth = dateOfBirth;
+        this.dateOfBirth = Objects.requireNonNull(dateOfBirth);
     }
 
     public String getAddress() {
@@ -107,7 +108,7 @@ public class Guardian implements Entity {
     }
 
     public Guardian setAddress(String address) {
-        this.address = address;
+        this.address = Objects.requireNonNull(address);
         return this;
     }
 
@@ -125,7 +126,7 @@ public class Guardian implements Entity {
     }
 
     public Guardian setContactNo(String contactNo) {
-        this.contactNo = contactNo;
+        this.contactNo = Objects.requireNonNull(contactNo);
         return this;
     }
 }

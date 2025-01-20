@@ -59,11 +59,11 @@ CREATE TABLE guardian
 CREATE TABLE notification
 (
     id              SERIAL PRIMARY KEY,
-    createTimestamp TIMESTAMP DEFAULT NOW(),
-    updateTimestamp TIMESTAMP DEFAULT NOW() ON UPDATE NOW(),
+    createTimestamp DATETIME DEFAULT NOW(),
+    updateTimestamp DATETIME DEFAULT NOW() ON UPDATE NOW(),
     scope           SET ('STUDENT', 'TEACHER') NOT NULL,
     message         JSON                       NOT NULL,
-    draft           BOOLEAN   DEFAULT FALSE
+    draft           BOOLEAN  DEFAULT FALSE
 );
 
 ## RELIEF
@@ -176,7 +176,7 @@ CREATE TABLE authentication
     userId       BIGINT UNSIGNED                      NOT NULL,
     password     VARBINARY(100)                       NOT NULL,
     accessToken  VARBINARY(100) UNIQUE,
-    expires BIGINT UNSIGNED,
+    expires BIGINT,
     refreshToken VARBINARY(100) UNIQUE,
     UNIQUE (role, userId)
 );

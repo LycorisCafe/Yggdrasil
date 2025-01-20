@@ -45,7 +45,7 @@ public class NotificationService implements EntityService<Notification> {
                     notifications.add(new Notification(
                             Scope.valueOf(resultSet.getString("scope")),
                             resultSet.getString("message")
-                    ).setId(Long.parseLong(resultSet.getString("id")))
+                    ).setId(resultSet.getBigDecimal("id"))
                             .setCreateTimestamp(resultSet.getString("createTimestamp") == null ?
                                     null : LocalDateTime.parse(resultSet.getString("createTimestamp"), Utils.getDateTimeFormatter()))
                             .setUpdateTimestamp(resultSet.getString("updateTimestamp") == null ?

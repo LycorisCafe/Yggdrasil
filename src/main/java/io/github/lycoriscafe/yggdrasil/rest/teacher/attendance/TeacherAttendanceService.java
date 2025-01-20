@@ -42,8 +42,8 @@ public class TeacherAttendanceService implements EntityService<TeacherAttendance
             try (var resultSet = results.getResultSet()) {
                 while (resultSet.next()) {
                     teacherAttendances.add(new TeacherAttendance(
-                            Long.parseLong(resultSet.getString("teacherId"))
-                    ).setId(Long.parseLong(resultSet.getString("id")))
+                            resultSet.getBigDecimal("teacherId")
+                    ).setId(resultSet.getBigDecimal("id"))
                             .setDate(LocalDate.parse(resultSet.getString("date"), Utils.getDateFormatter()))
                             .setTime(LocalTime.parse(resultSet.getString("time"), Utils.getTimeFormatter())));
                 }

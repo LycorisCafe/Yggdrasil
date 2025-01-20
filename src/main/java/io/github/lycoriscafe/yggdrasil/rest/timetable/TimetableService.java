@@ -42,12 +42,12 @@ public class TimetableService implements EntityService<Timetable> {
             try (var resultSet = results.getResultSet()) {
                 while (resultSet.next()) {
                     timetables.add(new Timetable(
-                            Long.parseLong(resultSet.getString("teacherId")),
-                            Long.parseLong(resultSet.getString("subjectId")),
-                            Long.parseLong(resultSet.getString("classroomId")),
+                            resultSet.getBigDecimal("teacherId"),
+                            resultSet.getBigDecimal("subjectId"),
+                            resultSet.getBigDecimal("classroomId"),
                             DayOfWeek.of(resultSet.getInt("day")),
                             resultSet.getInt("timeslot")
-                    ).setId(Long.parseLong(resultSet.getString("id"))));
+                    ).setId(resultSet.getBigDecimal("id")));
                 }
             }
 

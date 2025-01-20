@@ -21,16 +21,17 @@ import io.github.lycoriscafe.yggdrasil.authentication.AuthenticationService;
 import io.github.lycoriscafe.yggdrasil.authentication.Role;
 import io.github.lycoriscafe.yggdrasil.configuration.Response;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
+import io.github.lycoriscafe.yggdrasil.configuration.YggdrasilConfig;
 import io.github.lycoriscafe.yggdrasil.configuration.commons.*;
 import io.github.lycoriscafe.yggdrasil.rest.Gender;
 
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class TeacherService implements EntityService<Teacher> {
     public enum Columns implements EntityColumn<Teacher> {
@@ -63,7 +64,7 @@ public class TeacherService implements EntityService<Teacher> {
                             resultSet.getString("address"),
                             resultSet.getString("email"),
                             resultSet.getString("contactNo")
-                    ).setId(Long.parseLong(resultSet.getString("id")))
+                    ).setId(resultSet.getBigDecimal("id"))
                             .setDisabled(resultSet.getBoolean("disabled")));
                 }
             }
@@ -93,11 +94,11 @@ public class TeacherService implements EntityService<Teacher> {
                         AuthenticationService.createAuthentication(
                                 new Authentication(Role.TEACHER,
                                         result.getData().getFirst().getId(),
-                                        "S" + Long.toUnsignedString(result.getData().getFirst().getId()))));
+                                        "S" + result.getData().getFirst().getId().toPlainString())));
             } catch (SQLException | NoSuchAlgorithmException e) {
                 delete(new SearchQueryBuilder<>(Teacher.class, Columns.class, TeacherService.class)
                         .setSearchBy(List.of(Columns.id))
-                        .setSearchByValues(List.of(Long.toUnsignedString(result.getData().getFirst().getId()))));
+                        .setSearchByValues(List.of(result.getData().getFirst().getId().toPlainString())));
                 return new Response<Teacher>().setError(e.getMessage());
             }
         }
@@ -108,13 +109,17 @@ public class TeacherService implements EntityService<Teacher> {
         return CommonService.update(updateQueryBuilder);
     }
 
-    public static Response<Teacher> resetPassword(Long id,
+    public static Response<Teacher> resetPassword(BigDecimal id,
                                                   String oldPassword,
                                                   String newPassword) {
-        Objects.requireNonNull(id);
-        Objects.requireNonNull(oldPassword);
-        Objects.requireNonNull(newPassword);
-        if (newPassword.length() < 8 || newPassword.length() > 50) return new Response<Teacher>().setError("Password length must between 8 and 50");
+        if (id == null) return new Response<Teacher>().setError("id cannot be null");
+        if (oldPassword == null) return new Response<Teacher>().setError("oldPassword cannot be null");
+        if (newPassword == null) return new Response<Teacher>().setError("newPassword cannot be null");
+        if (newPassword.length() < YggdrasilConfig.getDefaultUserPasswordBoundary()[0] ||
+                newPassword.length() > YggdrasilConfig.getDefaultUserPasswordBoundary()[1]) {
+            return new Response<Teacher>().setError("Password length must between 8 and 50");
+        }
+
         try {
             var auth = AuthenticationService.getAuthentication(Role.TEACHER, id);
             if (auth == null) return new Response<Teacher>().setError("Invalid ID");

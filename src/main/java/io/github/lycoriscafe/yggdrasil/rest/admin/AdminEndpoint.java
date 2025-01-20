@@ -18,8 +18,19 @@ package io.github.lycoriscafe.yggdrasil.rest.admin;
 
 import io.github.lycoriscafe.nexus.http.core.HttpEndpoint;
 import io.github.lycoriscafe.nexus.http.core.headers.auth.Authenticated;
+import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.GET;
+import io.github.lycoriscafe.nexus.http.engine.ReqResManager.httpReq.HttpGetRequest;
+import io.github.lycoriscafe.nexus.http.engine.ReqResManager.httpRes.HttpResponse;
+import io.github.lycoriscafe.yggdrasil.configuration.commons.SearchQueryBuilder;
 
 @HttpEndpoint("/admin")
 @Authenticated
 public class AdminEndpoint {
+    @GET("/")
+    public static HttpResponse get(HttpGetRequest req,
+                                   HttpResponse res) {
+        return res.setContent(AdminService.select(
+                        SearchQueryBuilder.build(Admin.class, AdminService.Columns.class, AdminService.class, req.getParameters()))
+                .parse());
+    }
 }

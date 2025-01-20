@@ -21,9 +21,11 @@ import io.github.lycoriscafe.yggdrasil.authentication.AuthenticationService;
 import io.github.lycoriscafe.yggdrasil.authentication.Role;
 import io.github.lycoriscafe.yggdrasil.configuration.Response;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
+import io.github.lycoriscafe.yggdrasil.configuration.YggdrasilConfig;
 import io.github.lycoriscafe.yggdrasil.configuration.commons.*;
 import io.github.lycoriscafe.yggdrasil.rest.Gender;
 
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
@@ -31,7 +33,6 @@ import java.time.LocalDate;
 import java.time.Year;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class StudentService implements EntityService<Student> {
     public enum Columns implements EntityColumn<Student> {
@@ -59,16 +60,15 @@ public class StudentService implements EntityService<Student> {
             try (var resultSet = results.getResultSet()) {
                 while (resultSet.next()) {
                     students.add(new Student(
-                            Long.parseLong(resultSet.getString("guardianId")),
+                            resultSet.getBigDecimal("guardianId"),
                             resultSet.getString("initName"),
                             resultSet.getString("fullName"),
                             Gender.valueOf(resultSet.getString("gender")),
                             LocalDate.parse(resultSet.getString("dateOfBirth"), Utils.getDateFormatter()),
                             resultSet.getString("address"),
                             Year.parse(resultSet.getString("regYear"))
-                    ).setId(Long.parseLong(resultSet.getString("id")))
-                            .setClassroomId(resultSet.getString("classroomId") == null ?
-                                    null : Long.parseLong(resultSet.getString("classroomId")))
+                    ).setId(resultSet.getBigDecimal("id"))
+                            .setClassroomId(resultSet.getBigDecimal("classroomId"))
                             .setNic(resultSet.getString("nic"))
                             .setContactNo(resultSet.getString("contactNo"))
                             .setEmail(resultSet.getString("email"))
@@ -101,11 +101,11 @@ public class StudentService implements EntityService<Student> {
                         AuthenticationService.createAuthentication(
                                 new Authentication(Role.STUDENT,
                                         result.getData().getFirst().getId(),
-                                        "S" + Long.toUnsignedString(result.getData().getFirst().getId()))));
+                                        "S" + result.getData().getFirst().getId().toPlainString())));
             } catch (SQLException | NoSuchAlgorithmException e) {
                 delete(new SearchQueryBuilder<>(Student.class, Columns.class, StudentService.class)
                         .setSearchBy(List.of(Columns.id))
-                        .setSearchByValues(List.of(Long.toUnsignedString(result.getData().getFirst().getId()))));
+                        .setSearchByValues(List.of(result.getData().getFirst().getId().toPlainString())));
                 return new Response<Student>().setError(e.getMessage());
             }
         }
@@ -116,13 +116,17 @@ public class StudentService implements EntityService<Student> {
         return CommonService.update(updateQueryBuilder);
     }
 
-    public static Response<Student> resetPassword(Long id,
+    public static Response<Student> resetPassword(BigDecimal id,
                                                   String oldPassword,
                                                   String newPassword) {
-        Objects.requireNonNull(id);
-        Objects.requireNonNull(oldPassword);
-        Objects.requireNonNull(newPassword);
-        if (newPassword.length() < 8 || newPassword.length() > 50) return new Response<Student>().setError("Password length must between 8 and 50");
+        if (id == null) return new Response<Student>().setError("id cannot be null");
+        if (oldPassword == null) return new Response<Student>().setError("oldPassword cannot be null");
+        if (newPassword == null) return new Response<Student>().setError("newPassword cannot be null");
+        if (newPassword.length() < YggdrasilConfig.getDefaultUserPasswordBoundary()[0] ||
+                newPassword.length() > YggdrasilConfig.getDefaultUserPasswordBoundary()[1]) {
+            return new Response<Student>().setError("Password length must between 8 and 50");
+        }
+
         try {
             var auth = AuthenticationService.getAuthentication(Role.STUDENT, id);
             if (auth == null) return new Response<Student>().setError("Invalid ID");

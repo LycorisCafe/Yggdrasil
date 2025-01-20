@@ -16,18 +16,19 @@
 
 package io.github.lycoriscafe.yggdrasil.authentication;
 
+import java.math.BigDecimal;
 import java.util.Objects;
 
 public class Authentication {
     private Role role;
-    private Long userId;
+    private BigDecimal userId;
     private String password;
     private String accessToken;
     private Long expires;
     private String refreshToken;
 
     public Authentication(Role role,
-                          Long userId,
+                          BigDecimal userId,
                           String password) {
         this.role = Objects.requireNonNull(role);
         this.userId = Objects.requireNonNull(userId);
@@ -43,11 +44,11 @@ public class Authentication {
         return this;
     }
 
-    public Long getUserId() {
+    public BigDecimal getUserId() {
         return userId;
     }
 
-    public Authentication setUserId(Long userId) {
+    public Authentication setUserId(BigDecimal userId) {
         this.userId = Objects.requireNonNull(userId);
         return this;
     }

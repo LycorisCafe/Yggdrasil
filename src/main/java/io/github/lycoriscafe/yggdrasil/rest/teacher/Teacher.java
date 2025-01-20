@@ -19,11 +19,12 @@ package io.github.lycoriscafe.yggdrasil.rest.teacher;
 import io.github.lycoriscafe.yggdrasil.configuration.commons.Entity;
 import io.github.lycoriscafe.yggdrasil.rest.Gender;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Objects;
 
 public class Teacher implements Entity {
-    private Long id;
+    private BigDecimal id;
     private String nic;
     private String initName;
     private String fullName;
@@ -52,11 +53,11 @@ public class Teacher implements Entity {
         this.contactNo = Objects.requireNonNull(contactNo);
     }
 
-    public Long getId() {
+    public BigDecimal getId() {
         return id;
     }
 
-    public Teacher setId(Long id) {
+    public Teacher setId(BigDecimal id) {
         this.id = id;
         return this;
     }
@@ -66,7 +67,7 @@ public class Teacher implements Entity {
     }
 
     public Teacher setNic(String nic) {
-        this.nic = nic;
+        this.nic = Objects.requireNonNull(nic);
         return this;
     }
 
@@ -75,7 +76,7 @@ public class Teacher implements Entity {
     }
 
     public Teacher setInitName(String initName) {
-        this.initName = initName;
+        this.initName = Objects.requireNonNull(initName);
         return this;
     }
 
@@ -84,7 +85,7 @@ public class Teacher implements Entity {
     }
 
     public Teacher setFullName(String fullName) {
-        this.fullName = fullName;
+        this.fullName = Objects.requireNonNull(fullName);
         return this;
     }
 
@@ -93,7 +94,7 @@ public class Teacher implements Entity {
     }
 
     public Teacher setGender(Gender gender) {
-        this.gender = gender;
+        this.gender = Objects.requireNonNull(gender);
         return this;
     }
 
@@ -102,7 +103,7 @@ public class Teacher implements Entity {
     }
 
     public void setDateOfBirth(LocalDate dateOfBirth) {
-        this.dateOfBirth = dateOfBirth;
+        this.dateOfBirth = Objects.requireNonNull(dateOfBirth);
     }
 
     public String getAddress() {
@@ -110,7 +111,7 @@ public class Teacher implements Entity {
     }
 
     public Teacher setAddress(String address) {
-        this.address = address;
+        this.address = Objects.requireNonNull(address);
         return this;
     }
 
@@ -119,7 +120,7 @@ public class Teacher implements Entity {
     }
 
     public Teacher setEmail(String email) {
-        this.email = email;
+        this.email = Objects.requireNonNull(email);
         return this;
     }
 
@@ -128,7 +129,7 @@ public class Teacher implements Entity {
     }
 
     public Teacher setContactNo(String contactNo) {
-        this.contactNo = contactNo;
+        this.contactNo = Objects.requireNonNull(contactNo);
         return this;
     }
 

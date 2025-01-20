@@ -38,9 +38,9 @@ public class StudentSubjectJoinService implements EntityService<StudentSubjectJo
             try (var resultSet = results.getResultSet()) {
                 while (resultSet.next()) {
                     studentSubjectJoins.add(new StudentSubjectJoin(
-                            Long.parseLong(resultSet.getString("studentId")),
-                            Long.parseLong(resultSet.getString("subjectId"))
-                    ).setId(Long.parseLong(resultSet.getString("id"))));
+                            resultSet.getBigDecimal("studentId"),
+                            resultSet.getBigDecimal("subjectId")
+                    ).setId(resultSet.getBigDecimal("id")));
                 }
             }
 

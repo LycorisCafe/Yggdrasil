@@ -20,12 +20,17 @@ import io.github.lycoriscafe.yggdrasil.authentication.Authentication;
 import io.github.lycoriscafe.yggdrasil.authentication.AuthenticationService;
 import io.github.lycoriscafe.yggdrasil.authentication.Role;
 import io.github.lycoriscafe.yggdrasil.configuration.Response;
+import io.github.lycoriscafe.yggdrasil.configuration.YggdrasilConfig;
 import io.github.lycoriscafe.yggdrasil.configuration.commons.*;
 
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class AdminService implements EntityService<Admin> {
     public enum Columns implements EntityColumn<Admin> {
@@ -49,7 +54,7 @@ public class AdminService implements EntityService<Admin> {
                         accessLevels.add(AccessLevel.valueOf(accessLevel));
                     }
                     admins.add(new Admin(resultSet.getString("name"), accessLevels)
-                            .setId(Long.parseLong(resultSet.getString("id")))
+                            .setId(resultSet.getBigDecimal("id"))
                             .setDisabled(resultSet.getBoolean("disabled")));
                 }
             }
@@ -79,11 +84,11 @@ public class AdminService implements EntityService<Admin> {
                         AuthenticationService.createAuthentication(
                                 new Authentication(Role.ADMIN,
                                         result.getData().getFirst().getId(),
-                                        "A" + Long.toUnsignedString(result.getData().getFirst().getId()))));
+                                        "A" + result.getData().getFirst().getId().toPlainString())));
             } catch (SQLException | NoSuchAlgorithmException e) {
                 delete(new SearchQueryBuilder<>(Admin.class, Columns.class, AdminService.class)
                         .setSearchBy(List.of(Columns.id))
-                        .setSearchByValues(List.of(Long.toUnsignedString(result.getData().getFirst().getId()))));
+                        .setSearchByValues(List.of(result.getData().getFirst().getId().toPlainString())));
                 return new Response<Admin>().setError(e.getMessage());
             }
         }
@@ -94,13 +99,17 @@ public class AdminService implements EntityService<Admin> {
         return CommonService.update(updateQueryBuilder);
     }
 
-    public static Response<Admin> resetPassword(Long id,
+    public static Response<Admin> resetPassword(BigDecimal id,
                                                 String oldPassword,
                                                 String newPassword) {
-        Objects.requireNonNull(id);
-        Objects.requireNonNull(oldPassword);
-        Objects.requireNonNull(newPassword);
-        if (newPassword.length() < 8 || newPassword.length() > 50) return new Response<Admin>().setError("Password length must between 8 and 50");
+        if (id == null) return new Response<Admin>().setError("id cannot be null");
+        if (oldPassword == null) return new Response<Admin>().setError("oldPassword cannot be null");
+        if (newPassword == null) return new Response<Admin>().setError("newPassword cannot be null");
+        if (newPassword.length() < YggdrasilConfig.getDefaultUserPasswordBoundary()[0] ||
+                newPassword.length() > YggdrasilConfig.getDefaultUserPasswordBoundary()[1]) {
+            return new Response<Admin>().setError("Password length must between 8 and 50");
+        }
+
         try {
             var auth = AuthenticationService.getAuthentication(Role.ADMIN, id);
             if (auth == null) return new Response<Admin>().setError("Invalid ID");

@@ -22,9 +22,11 @@ import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.POST;
 import io.github.lycoriscafe.yggdrasil.configuration.YggdrasilConfig;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
+import java.time.Instant;
 
 @HttpEndpoint("/login")
 public class AuthenticationEndpoint {
@@ -42,7 +44,7 @@ public class AuthenticationEndpoint {
                 }
 
                 Role role;
-                long userId;
+                BigDecimal userId;
                 try {
                     String username = tokenRequest.getParams().get("username");
                     role = switch (username.toLowerCase().charAt(0)) {
@@ -51,7 +53,7 @@ public class AuthenticationEndpoint {
                         case 's' -> Role.STUDENT;
                         default -> throw new IllegalStateException("Unexpected value");
                     };
-                    userId = Long.parseLong(username.substring(1));
+                    userId = new BigDecimal(username.substring(1));
                 } catch (Exception e) {
                     return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_CLIENT)
                             .setErrorDescription("Invalid username. Try again.");
@@ -76,12 +78,12 @@ public class AuthenticationEndpoint {
                 var accessToken = AuthenticationService.generateToken();
                 var refreshToken = AuthenticationService.generateToken();
                 auth.setAccessToken(accessToken)
-                        .setExpires(System.currentTimeMillis() + YggdrasilConfig.getDefaultAuthTimeout())
+                        .setExpires(Instant.now().getEpochSecond() + YggdrasilConfig.getDefaultAuthTimeout())
                         .setRefreshToken(refreshToken);
                 auth = AuthenticationService.updateAuthentication(auth);
                 if (auth == null) throw new RuntimeException("Failed to update authentication.");
                 return new BearerTokenSuccessResponse(accessToken)
-                        .setExpiresIn(auth.getExpires())
+                        .setExpiresIn(YggdrasilConfig.getDefaultAuthTimeout())
                         .setRefreshToken(refreshToken)
                         .setScope(role.toString());
             }
@@ -113,11 +115,11 @@ public class AuthenticationEndpoint {
                 }
 
                 var accessToken = AuthenticationService.generateToken();
-                auth.setAccessToken(accessToken).setExpires(System.currentTimeMillis() + YggdrasilConfig.getDefaultAuthTimeout());
+                auth.setAccessToken(accessToken).setExpires(Instant.now().getEpochSecond() + YggdrasilConfig.getDefaultAuthTimeout());
                 auth = AuthenticationService.updateAuthentication(auth);
                 if (auth == null) throw new RuntimeException("Failed to update authentication.");
                 return new BearerTokenSuccessResponse(accessToken)
-                        .setExpiresIn(auth.getExpires())
+                        .setExpiresIn(YggdrasilConfig.getDefaultAuthTimeout())
                         .setRefreshToken(auth.getRefreshToken())
                         .setScope(auth.getRole().toString());
             }

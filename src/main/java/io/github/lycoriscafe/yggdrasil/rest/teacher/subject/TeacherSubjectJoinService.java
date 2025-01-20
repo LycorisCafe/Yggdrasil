@@ -38,9 +38,9 @@ public class TeacherSubjectJoinService implements EntityService<TeacherSubjectJo
             try (var resultSet = results.getResultSet()) {
                 while (resultSet.next()) {
                     teacherSubjectJoins.add(new TeacherSubjectJoin(
-                            Long.parseLong(resultSet.getString("teacherId")),
-                            Long.parseLong(resultSet.getString("subjectId"))
-                    ).setId(Long.parseLong(resultSet.getString("id"))));
+                            resultSet.getBigDecimal("teacherId"),
+                            resultSet.getBigDecimal("subjectId")
+                    ).setId(resultSet.getBigDecimal("id")));
                 }
             }
 

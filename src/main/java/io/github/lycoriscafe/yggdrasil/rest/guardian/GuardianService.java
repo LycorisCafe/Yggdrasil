@@ -54,7 +54,7 @@ public class GuardianService implements EntityService<Guardian> {
                             LocalDate.parse(resultSet.getString("dateOfBirth"), Utils.getDateFormatter()),
                             resultSet.getString("address"),
                             resultSet.getString("contactNo")
-                    ).setId(Long.parseLong(resultSet.getString("id")))
+                    ).setId(resultSet.getBigDecimal("id"))
                             .setEmail(resultSet.getString("email")));
                 }
             }

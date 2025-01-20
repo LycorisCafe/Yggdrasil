@@ -18,35 +18,36 @@ package io.github.lycoriscafe.yggdrasil.rest.student.attendance;
 
 import io.github.lycoriscafe.yggdrasil.configuration.commons.Entity;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Objects;
 
 public class StudentAttendance implements Entity {
-    private Long id;
-    private Long studentId;
+    private BigDecimal id;
+    private BigDecimal studentId;
     private LocalDate date;
     private LocalTime time;
 
-    public StudentAttendance(Long studentId) {
+    public StudentAttendance(BigDecimal studentId) {
         this.studentId = Objects.requireNonNull(studentId);
     }
 
-    public Long getId() {
+    public BigDecimal getId() {
         return id;
     }
 
-    public StudentAttendance setId(Long id) {
+    public StudentAttendance setId(BigDecimal id) {
         this.id = id;
         return this;
     }
 
-    public Long getStudentId() {
+    public BigDecimal getStudentId() {
         return studentId;
     }
 
-    public StudentAttendance setStudentId(Long studentId) {
-        this.studentId = studentId;
+    public StudentAttendance setStudentId(BigDecimal studentId) {
+        this.studentId = Objects.requireNonNull(studentId);
         return this;
     }
 

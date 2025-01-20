@@ -24,15 +24,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 public class GsonTypeAdapters {
-    public static class Long implements JsonSerializer<java.lang.Long> {
-        @Override
-        public JsonElement serialize(java.lang.Long aLong,
-                                     Type type,
-                                     JsonSerializationContext jsonSerializationContext) {
-            return aLong == null ? null : new JsonPrimitive(java.lang.Long.toUnsignedString(aLong));
-        }
-    }
-
     public static class Date implements JsonSerializer<LocalDate>, JsonDeserializer<LocalDate> {
         @Override
         public LocalDate deserialize(JsonElement jsonElement,

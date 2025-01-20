@@ -18,43 +18,44 @@ package io.github.lycoriscafe.yggdrasil.rest.student.subject;
 
 import io.github.lycoriscafe.yggdrasil.configuration.commons.Entity;
 
+import java.math.BigDecimal;
 import java.util.Objects;
 
 public class StudentSubjectJoin implements Entity {
-    private Long id;
-    private Long studentId;
-    private Long subjectId;
+    private BigDecimal id;
+    private BigDecimal studentId;
+    private BigDecimal subjectId;
 
-    public StudentSubjectJoin(Long studentId,
-                              Long subjectId) {
+    public StudentSubjectJoin(BigDecimal studentId,
+                              BigDecimal subjectId) {
         this.studentId = Objects.requireNonNull(studentId);
         this.subjectId = Objects.requireNonNull(subjectId);
     }
 
-    public Long getId() {
+    public BigDecimal getId() {
         return id;
     }
 
-    public StudentSubjectJoin setId(Long id) {
+    public StudentSubjectJoin setId(BigDecimal id) {
         this.id = id;
         return this;
     }
 
-    public Long getStudentId() {
+    public BigDecimal getStudentId() {
         return studentId;
     }
 
-    public StudentSubjectJoin setStudentId(Long studentId) {
-        this.studentId = studentId;
+    public StudentSubjectJoin setStudentId(BigDecimal studentId) {
+        this.studentId = Objects.requireNonNull(studentId);
         return this;
     }
 
-    public Long getSubjectId() {
+    public BigDecimal getSubjectId() {
         return subjectId;
     }
 
-    public StudentSubjectJoin setSubjectId(Long subjectId) {
-        this.subjectId = subjectId;
+    public StudentSubjectJoin setSubjectId(BigDecimal subjectId) {
+        this.subjectId = Objects.requireNonNull(subjectId);
         return this;
     }
 }

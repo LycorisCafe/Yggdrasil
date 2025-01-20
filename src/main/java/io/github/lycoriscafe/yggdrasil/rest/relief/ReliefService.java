@@ -41,10 +41,10 @@ public class ReliefService implements EntityService<Relief> {
             try (var resultSet = results.getResultSet()) {
                 while (resultSet.next()) {
                     reliefs.add(new Relief(
-                            Long.parseLong(resultSet.getString("timetableId")),
-                            Long.parseLong(resultSet.getString("teacherId")),
+                            resultSet.getBigDecimal("timetableId"),
+                            resultSet.getBigDecimal("teacherId"),
                             LocalDate.parse(resultSet.getString("date"), Utils.getDateFormatter())
-                    ).setId(Long.parseLong(resultSet.getString("id"))));
+                    ).setId(resultSet.getBigDecimal("id")));
                 }
             }
 

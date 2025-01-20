@@ -36,11 +36,13 @@ import io.github.lycoriscafe.yggdrasil.rest.teacher.TeacherService;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.*;
 
 public class AuthenticationService {
@@ -64,7 +66,7 @@ public class AuthenticationService {
                         new BearerAuthentication(BearerAuthorizationError.INVALID_TOKEN)
                                 .setErrorDescription("Invalid access token. Try again."));
             }
-            if (System.currentTimeMillis() > auth.getExpires()) {
+            if (Instant.now().getEpochSecond() > auth.getExpires()) {
                 return httpResponse.setStatusCode(HttpStatusCode.UNAUTHORIZED).addAuthentication(
                         new BearerAuthentication(BearerAuthorizationError.INVALID_TOKEN)
                                 .setErrorDescription("Invalid access token. Token expired."));
@@ -86,11 +88,12 @@ public class AuthenticationService {
 
             if (roles.contains(Role.ADMIN) && accessLevels != null) {
                 var admin = AdminService.select(new SearchQueryBuilder<>(Admin.class, AdminService.Columns.class, AdminService.class)
-                        .setSearchBy(List.of(AdminService.Columns.id)).setSearchByValues(List.of(Long.toUnsignedString(auth.getUserId()))));
+                        .setSearchBy(List.of(AdminService.Columns.id)).setSearchByValues(List.of(auth.getUserId().toPlainString())));
                 var accessLevel = admin.getData().getFirst().getAccessLevel();
                 if (!accessLevel.containsAll(List.of(accessLevels))) {
                     return httpResponse.setStatusCode(HttpStatusCode.FORBIDDEN).addAuthentication(
-                            new BearerAuthentication(BearerAuthorizationError.INSUFFICIENT_SCOPE).setScope(Role.ADMIN + "#" + Arrays.toString(accessLevels))
+                            new BearerAuthentication(BearerAuthorizationError.INSUFFICIENT_SCOPE)
+                                    .setScope(Role.ADMIN + "#" + Arrays.toString(accessLevels))
                                     .setErrorDescription("Insufficient scope. Contact your system admin for more details."));
                 }
             }
@@ -113,11 +116,10 @@ public class AuthenticationService {
                 if (resultSet.next()) {
                     return new Authentication(
                             Role.valueOf(resultSet.getString("role")),
-                            Long.parseLong(resultSet.getString("userId")),
+                            resultSet.getBigDecimal("userId"),
                             resultSet.getString("password"))
                             .setAccessToken(resultSet.getString("accessToken"))
-                            .setExpires(resultSet.getString("expires") == null ?
-                                    null : Long.parseLong(resultSet.getString("expires")))
+                            .setExpires(resultSet.getLong("expires"))
                             .setRefreshToken(resultSet.getString("refreshToken"));
                 }
                 return null;
@@ -126,24 +128,23 @@ public class AuthenticationService {
     }
 
     public static Authentication getAuthentication(Role role,
-                                                   Long userId) throws SQLException {
+                                                   BigDecimal userId) throws SQLException {
         Objects.requireNonNull(role);
         Objects.requireNonNull(userId);
         try (var connection = Utils.getDatabaseConnection();
              var statement = connection.prepareStatement("SELECT * FROM authentication WHERE role = ? AND userId = ?")) {
             statement.setString(1, role.toString());
-            statement.setString(2, Long.toUnsignedString(userId));
+            statement.setBigDecimal(2, userId);
             Authentication authentication = null;
             try (var resultSet = statement.executeQuery()) {
                 connection.commit();
                 if (resultSet.next()) {
                     authentication = new Authentication(
                             Role.valueOf(resultSet.getString("role")),
-                            Long.parseLong(resultSet.getString("userId")),
+                            resultSet.getBigDecimal("userId"),
                             resultSet.getString("password"))
                             .setAccessToken(resultSet.getString("accessToken"))
-                            .setExpires(resultSet.getString("expires") == null ?
-                                    null : Long.parseLong(resultSet.getString("expires")))
+                            .setExpires(resultSet.getLong("expires"))
                             .setRefreshToken(resultSet.getString("refreshToken"));
                 }
             }
@@ -156,7 +157,7 @@ public class AuthenticationService {
         try (var connection = Utils.getDatabaseConnection();
              var statement = connection.prepareStatement("INSERT INTO authentication (role, userId, password) VALUES (?, ?, ?)")) {
             statement.setString(1, authentication.getRole().toString());
-            statement.setString(2, Long.toUnsignedString(authentication.getUserId()));
+            statement.setBigDecimal(2, authentication.getUserId());
             statement.setString(3, authentication.getPassword());
             if (statement.executeUpdate() != 1) {
                 connection.rollback();
@@ -174,11 +175,10 @@ public class AuthenticationService {
                      "WHERE role = ? AND userId = ?")) {
             statement.setString(1, authentication.getPassword());
             statement.setString(2, authentication.getAccessToken());
-            statement.setString(3, authentication.getExpires() == null ?
-                    null : Long.toUnsignedString(authentication.getExpires()));
+            statement.setLong(3, authentication.getExpires());
             statement.setString(4, authentication.getRefreshToken());
             statement.setString(5, authentication.getRole().toString());
-            statement.setString(6, Long.toUnsignedString(authentication.getUserId()));
+            statement.setBigDecimal(6, authentication.getUserId());
             if (statement.executeUpdate() != 1) {
                 connection.rollback();
                 return null;
@@ -189,13 +189,13 @@ public class AuthenticationService {
     }
 
     public static void deleteAuthentication(Role role,
-                                            Long userId) {
+                                            BigDecimal userId) {
         Objects.requireNonNull(role);
         Objects.requireNonNull(userId);
         try (var connection = Utils.getDatabaseConnection();
              var statement = connection.prepareStatement("DELETE FROM authentication WHERE role = ? AND userId = ?")) {
             statement.setString(1, role.toString());
-            statement.setString(2, Long.toUnsignedString(userId));
+            statement.setBigDecimal(2, userId);
             if (statement.executeUpdate() != 1) {
                 connection.rollback();
             }
@@ -212,11 +212,11 @@ public class AuthenticationService {
     }
 
     public static Response<?> logoutFromAll(Role role,
-                                            Long id) {
+                                            BigDecimal userId) {
         Objects.requireNonNull(role);
-        Objects.requireNonNull(id);
+        Objects.requireNonNull(userId);
         try {
-            var auth = AuthenticationService.getAuthentication(role, id);
+            var auth = AuthenticationService.getAuthentication(role, userId);
             if (auth == null) return new Response<>().setError("Invalid ID");
             if (AuthenticationService.updateAuthentication(auth.setAccessToken(null).setExpires(null).setRefreshToken(null)) == null) {
                 return new Response<Admin>().setError("Internal server error");
@@ -245,21 +245,21 @@ public class AuthenticationService {
     }
 
     public static boolean getIsAccountDisabled(Role role,
-                                               Long id) {
+                                               BigDecimal userId) {
         Objects.requireNonNull(role);
-        Objects.requireNonNull(id);
+        Objects.requireNonNull(userId);
         return switch (role) {
             case ADMIN -> AdminService.select(new SearchQueryBuilder<>(Admin.class, AdminService.Columns.class, AdminService.class)
                             .setSearchBy(List.of(AdminService.Columns.id))
-                            .setSearchByValues(List.of(Long.toUnsignedString(id))))
+                            .setSearchByValues(List.of(userId.toPlainString())))
                     .getData().getFirst().getDisabled();
             case TEACHER -> TeacherService.select(new SearchQueryBuilder<>(Teacher.class, TeacherService.Columns.class, TeacherService.class)
                             .setSearchBy(List.of(TeacherService.Columns.id))
-                            .setSearchByValues(List.of(Long.toUnsignedString(id))))
+                            .setSearchByValues(List.of(userId.toPlainString())))
                     .getData().getFirst().getDisabled();
             case STUDENT -> StudentService.select(new SearchQueryBuilder<>(Student.class, StudentService.Columns.class, StudentService.class)
                             .setSearchBy(List.of(StudentService.Columns.id))
-                            .setSearchByValues(List.of(Long.toUnsignedString(id))))
+                            .setSearchByValues(List.of(userId.toPlainString())))
                     .getData().getFirst().getDisabled();
         };
     }

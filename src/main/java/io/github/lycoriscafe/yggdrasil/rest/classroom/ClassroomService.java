@@ -41,9 +41,8 @@ public class ClassroomService implements EntityService<Classroom> {
                     classrooms.add(new Classroom(
                             resultSet.getInt("grade"),
                             resultSet.getString("name")
-                    ).setId(Long.parseLong(resultSet.getString("id")))
-                            .setTeacherId(resultSet.getString("teacherId") == null ?
-                                    null : Long.parseLong(resultSet.getString("teacherId"))));
+                    ).setId(resultSet.getBigDecimal("id"))
+                            .setTeacherId(resultSet.getBigDecimal("teacherId")));
                 }
             }
 

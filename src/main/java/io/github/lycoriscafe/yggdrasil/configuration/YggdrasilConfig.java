@@ -37,6 +37,7 @@ public class YggdrasilConfig {
     private static HttpServer httpServer;
     private static Long defaultResultsOffset = 50L;
     private static Long defaultAuthTimeout = 3600L;
+    private static Integer[] defaultUserPasswordBoundary = {8, 50};
 
     public static void initialize() throws IOException, ScannerException, SQLException, URISyntaxException {
         initializeDatabase();
@@ -49,8 +50,16 @@ public class YggdrasilConfig {
 
             String defaultResultsOffsetString = properties.getProperty("defaultResultsOffset");
             if (defaultResultsOffsetString != null) defaultResultsOffset = Long.parseLong(defaultResultsOffsetString);
+
             String defaultAuthTimeoutString = properties.getProperty("defaultAuthTimeout");
             if (defaultAuthTimeoutString != null) defaultAuthTimeout = Long.parseLong(defaultAuthTimeoutString);
+
+            String defaultUserPasswordBoundaryString = properties.getProperty("defaultUserPasswordBoundary");
+            if (defaultUserPasswordBoundaryString != null) {
+                String[] userPasswordBoundary = defaultUserPasswordBoundaryString.split(",");
+                if (userPasswordBoundary.length != 2) throw new IllegalArgumentException("Invalid defaultUserPasswordBoundary");
+                defaultUserPasswordBoundary = new Integer[]{Integer.parseInt(userPasswordBoundary[0]), Integer.parseInt(userPasswordBoundary[1])};
+            }
         }
     }
 
@@ -63,10 +72,8 @@ public class YggdrasilConfig {
     private static void initializeHttpServer() throws ScannerException, SQLException, IOException {
         var httpServerConfiguration = new HttpServerConfiguration("io.github.lycoriscafe.yggdrasil", "YggdrasilTemp")
                 .setUrlPrefix("/api/v1.0.0")
-//                .setDatabaseType(DatabaseType.TEMPORARY)
                 .addDefaultAuthentication(new BearerAuthentication("Access for Yggdrasil API"));
-        httpServer = new HttpServer(httpServerConfiguration);
-        httpServer.initialize();
+        httpServer = new HttpServer(httpServerConfiguration).initialize();
     }
 
     public static HikariDataSource getDatabase() {
@@ -83,5 +90,9 @@ public class YggdrasilConfig {
 
     public static Long getDefaultAuthTimeout() {
         return defaultAuthTimeout;
+    }
+
+    public static Integer[] getDefaultUserPasswordBoundary() {
+        return defaultUserPasswordBoundary;
     }
 }

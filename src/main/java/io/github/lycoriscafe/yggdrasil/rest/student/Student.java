@@ -19,14 +19,15 @@ package io.github.lycoriscafe.yggdrasil.rest.student;
 import io.github.lycoriscafe.yggdrasil.configuration.commons.Entity;
 import io.github.lycoriscafe.yggdrasil.rest.Gender;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Year;
 import java.util.Objects;
 
 public class Student implements Entity {
-    private Long id;
-    private Long guardianId;
-    private Long classroomId;
+    private BigDecimal id;
+    private BigDecimal guardianId;
+    private BigDecimal classroomId;
     private String initName;
     private String fullName;
     private Gender gender;
@@ -38,7 +39,7 @@ public class Student implements Entity {
     private String email;
     private Boolean disabled;
 
-    public Student(Long guardianId,
+    public Student(BigDecimal guardianId,
                    String initName,
                    String fullName,
                    Gender gender,
@@ -54,29 +55,29 @@ public class Student implements Entity {
         this.regYear = Objects.requireNonNull(regYear);
     }
 
-    public Long getId() {
+    public BigDecimal getId() {
         return id;
     }
 
-    public Student setId(Long id) {
+    public Student setId(BigDecimal id) {
         this.id = id;
         return this;
     }
 
-    public Long getGuardianId() {
+    public BigDecimal getGuardianId() {
         return guardianId;
     }
 
-    public Student setGuardianId(Long guardianId) {
-        this.guardianId = guardianId;
+    public Student setGuardianId(BigDecimal guardianId) {
+        this.guardianId = Objects.requireNonNull(guardianId);
         return this;
     }
 
-    public Long getClassroomId() {
+    public BigDecimal getClassroomId() {
         return classroomId;
     }
 
-    public Student setClassroomId(Long classroomId) {
+    public Student setClassroomId(BigDecimal classroomId) {
         this.classroomId = classroomId;
         return this;
     }
@@ -86,7 +87,7 @@ public class Student implements Entity {
     }
 
     public Student setInitName(String initName) {
-        this.initName = initName;
+        this.initName = Objects.requireNonNull(initName);
         return this;
     }
 
@@ -95,7 +96,7 @@ public class Student implements Entity {
     }
 
     public Student setFullName(String fullName) {
-        this.fullName = fullName;
+        this.fullName = Objects.requireNonNull(fullName);
         return this;
     }
 
@@ -104,7 +105,7 @@ public class Student implements Entity {
     }
 
     public Student setGender(Gender gender) {
-        this.gender = gender;
+        this.gender = Objects.requireNonNull(gender);
         return this;
     }
 
@@ -113,7 +114,7 @@ public class Student implements Entity {
     }
 
     public Student setDateOfBirth(LocalDate dateOfBirth) {
-        this.dateOfBirth = dateOfBirth;
+        this.dateOfBirth = Objects.requireNonNull(dateOfBirth);
         return this;
     }
 
@@ -131,7 +132,7 @@ public class Student implements Entity {
     }
 
     public Student setAddress(String address) {
-        this.address = address;
+        this.address = Objects.requireNonNull(address);
         return this;
     }
 
@@ -140,7 +141,7 @@ public class Student implements Entity {
     }
 
     public Student setRegYear(Year regYear) {
-        this.regYear = regYear;
+        this.regYear = Objects.requireNonNull(regYear);
         return this;
     }
 

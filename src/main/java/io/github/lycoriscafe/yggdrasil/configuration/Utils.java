@@ -38,7 +38,6 @@ public class Utils {
         return new GsonBuilder()
                 .serializeNulls()
                 .setDateFormat(DATE_TIME_FORMAT)
-                .registerTypeAdapter(Long.class, new GsonTypeAdapters.Long())
                 .registerTypeAdapter(LocalDate.class, new GsonTypeAdapters.Date())
                 .registerTypeAdapter(LocalTime.class, new GsonTypeAdapters.Time())
                 .registerTypeAdapter(LocalDateTime.class, new GsonTypeAdapters.DateTime())
