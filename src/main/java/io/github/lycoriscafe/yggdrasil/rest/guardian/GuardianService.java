@@ -49,7 +49,7 @@ public class GuardianService {
                                                   Long resultsFrom,
                                                   Long resultsOffset) {
         try {
-            var results = CommonService.get(new CommonService.SearchQueryBuilder<Guardian, Columns>(Guardian.class)
+            var results = CommonService.select(new CommonService.SearchQueryBuilder<Guardian, Columns>(Guardian.class)
                     .setSearchBy(searchBy).setSearchByValues(searchByValues).setIsCaseSensitive(isCaseSensitive).setOrderBy(orderBy)
                     .setAscending(isAscending).setResultsFrom(resultsFrom).setResultsOffset(resultsOffset));
             if (results.getResponse() != null) return results.getResponse();

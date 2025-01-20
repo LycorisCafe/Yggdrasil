@@ -14,12 +14,7 @@
  * limitations under the License.
  */
 
-package io.github.lycoriscafe.yggdrasil.rest.admin;
+package io.github.lycoriscafe.yggdrasil.configuration.commons;
 
-import io.github.lycoriscafe.nexus.http.core.HttpEndpoint;
-import io.github.lycoriscafe.nexus.http.core.headers.auth.Authenticated;
-
-@HttpEndpoint("/admin")
-@Authenticated
-public class AdminEndpoint {
+public interface EntityService {
 }

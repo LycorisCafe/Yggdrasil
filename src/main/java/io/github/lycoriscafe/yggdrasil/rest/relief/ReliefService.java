@@ -43,7 +43,7 @@ public class ReliefService {
                                               Long resultsFrom,
                                               Long resultsOffset) {
         try {
-            var results = CommonService.get(new CommonService.SearchQueryBuilder<Relief, Columns>(Relief.class)
+            var results = CommonService.select(new CommonService.SearchQueryBuilder<Relief, Columns>(Relief.class)
                     .setSearchBy(searchBy).setSearchByValues(searchByValues).setIsCaseSensitive(isCaseSensitive).setOrderBy(orderBy)
                     .setAscending(isAscending).setResultsFrom(resultsFrom).setResultsOffset(resultsOffset));
             if (results.getResponse() != null) return results.getResponse();

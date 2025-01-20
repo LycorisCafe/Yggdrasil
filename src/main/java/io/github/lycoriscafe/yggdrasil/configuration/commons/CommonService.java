@@ -21,141 +21,11 @@ import io.github.lycoriscafe.yggdrasil.configuration.Utils;
 import io.github.lycoriscafe.yggdrasil.configuration.YggdrasilConfig;
 
 import java.sql.ResultSet;
-import java.util.ArrayList;
+import java.sql.Statement;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 public class CommonService {
-    public static class SearchQueryBuilder<T extends Entity, U extends Enum<U> & EntityColumn> {
-        private Class<T> entity;
-        private List<U> searchBy;
-        private List<String> searchByValues;
-        private List<Boolean> isCaseSensitive;
-        private List<U> orderBy;
-        private Boolean isAscending;
-        private Long resultsFrom;
-        private Long resultsOffset;
-
-        public SearchQueryBuilder(Class<T> entity) {
-            this.entity = Objects.requireNonNull(entity);
-        }
-
-        public Class<T> getEntity() {
-            return entity;
-        }
-
-        public SearchQueryBuilder<T, U> setEntity(Class<T> entity) {
-            this.entity = entity;
-            return this;
-        }
-
-        public List<U> getSearchBy() {
-            return searchBy;
-        }
-
-        public SearchQueryBuilder<T, U> setSearchBy(List<U> searchBy) {
-            this.searchBy = searchBy;
-            return this;
-        }
-
-        public List<String> getSearchByValues() {
-            return searchByValues;
-        }
-
-        public SearchQueryBuilder<T, U> setSearchByValues(List<String> searchByValues) {
-            this.searchByValues = searchByValues;
-            return this;
-        }
-
-        public List<Boolean> getIsCaseSensitive() {
-            return isCaseSensitive;
-        }
-
-        public SearchQueryBuilder<T, U> setIsCaseSensitive(List<Boolean> isCaseSensitive) {
-            this.isCaseSensitive = isCaseSensitive;
-            return this;
-        }
-
-        public List<U> getOrderBy() {
-            return orderBy;
-        }
-
-        public SearchQueryBuilder<T, U> setOrderBy(List<U> orderBy) {
-            this.orderBy = orderBy;
-            return this;
-        }
-
-        public Boolean getAscending() {
-            return isAscending;
-        }
-
-        public SearchQueryBuilder<T, U> setAscending(Boolean ascending) {
-            isAscending = ascending;
-            return this;
-        }
-
-        public Long getResultsFrom() {
-            return resultsFrom;
-        }
-
-        public SearchQueryBuilder<T, U> setResultsFrom(Long resultsFrom) {
-            this.resultsFrom = resultsFrom;
-            return this;
-        }
-
-        public Long getResultsOffset() {
-            return resultsOffset;
-        }
-
-        public SearchQueryBuilder<T, U> setResultsOffset(Long resultsOffset) {
-            this.resultsOffset = resultsOffset;
-            return this;
-        }
-
-        public static <T extends Entity, U extends Enum<U> & EntityColumn> SearchQueryBuilder<T, U> build(Class<T> entity,
-                                                                                                          Class<U> columns,
-                                                                                                          Map<String, String> parameters) {
-            var searchQuery = new SearchQueryBuilder<T, U>(entity);
-            if (parameters == null) return searchQuery;
-
-            List<U> searchBy = new ArrayList<>();
-            List<String> searchByValues = new ArrayList<>();
-            List<Boolean> isCaseSensitive = new ArrayList<>();
-            for (String key : parameters.keySet()) {
-                try {
-                    U col = Enum.valueOf(columns, key);
-                    searchBy.add(col);
-                    String[] values = parameters.get(key).split(",", 0);
-                    searchByValues.add(values[0]);
-                    isCaseSensitive.add(values.length == 2 && Boolean.parseBoolean(values[1]));
-                } catch (Exception ignored) {}
-            }
-            searchQuery.setSearchBy(searchBy.isEmpty() ? null : searchBy)
-                    .setSearchByValues(searchByValues.isEmpty() ? null : searchByValues)
-                    .setIsCaseSensitive(isCaseSensitive.isEmpty() ? null : isCaseSensitive);
-            List<U> orderBy = new ArrayList<>();
-            if (parameters.containsKey("orderBy")) {
-                String[] values = parameters.get("orderBy").split(",", 0);
-                for (String value : values) {
-                    U col = Enum.valueOf(columns, value);
-                    orderBy.add(col);
-                }
-            }
-            searchQuery.setOrderBy(orderBy.isEmpty() ? null : orderBy);
-            if (parameters.containsKey("isAscending")) {
-                searchQuery.setAscending(Boolean.parseBoolean(parameters.get("isAscending")));
-            }
-            if (parameters.containsKey("resultsFrom")) {
-                searchQuery.setResultsFrom(Long.parseLong(parameters.get("resultsFrom")));
-            }
-            if (parameters.containsKey("resultsOffset")) {
-                searchQuery.setResultsOffset(Long.parseLong(parameters.get("resultsOffset")));
-            }
-            return searchQuery;
-        }
-    }
-
     public static class ResultSetHolder<T extends Entity> {
         private Response<T> response;
         private ResultSet resultSet;
@@ -209,7 +79,9 @@ public class CommonService {
         }
     }
 
-    public static <T extends Entity, U extends Enum<U> & EntityColumn> ResultSetHolder<T> get(SearchQueryBuilder<T, U> queryBuilder) {
+    public static <T extends Entity,
+            U extends Enum<U> & EntityColumn,
+            V extends EntityService> ResultSetHolder<T> select(SearchQueryBuilder<T, U, V> queryBuilder) {
         Objects.requireNonNull(queryBuilder);
         if (queryBuilder.getResultsFrom() == null || queryBuilder.getResultsFrom() < 0) queryBuilder.setResultsFrom(0L);
         if (queryBuilder.getResultsOffset() == null || queryBuilder.getResultsOffset() < 0) {
@@ -288,11 +160,16 @@ public class CommonService {
         }
     }
 
-    public static <T extends Entity, U extends Enum<U> & EntityColumn> Response<T> delete(SearchQueryBuilder<T, U> queryBuilder) {
+    public static <T extends Entity,
+            U extends Enum<U> & EntityColumn,
+            V extends EntityService> Response<T> delete(SearchQueryBuilder<T, U, V> queryBuilder) {
         Objects.requireNonNull(queryBuilder);
-        Objects.requireNonNull(queryBuilder.getSearchBy());
-        Objects.requireNonNull(queryBuilder.getSearchByValues());
-        StringBuilder query = new StringBuilder("DELETE FROM " + queryBuilder.getEntity().getName().toLowerCase() + " WHERE ");
+        if (queryBuilder.getSearchBy() == null || queryBuilder.getSearchByValues() == null ||
+                queryBuilder.getSearchBy().size() != queryBuilder.getSearchByValues().size()) {
+            return new Response<T>().setError("Invalid search parameters");
+        }
+
+        StringBuilder query = new StringBuilder("DELETE FROM ").append(queryBuilder.getEntity().getName().toLowerCase()).append(" WHERE ");
         for (int i = 0; i < queryBuilder.getSearchBy().size(); i++) {
             if (i > 0) query.append(" AND ");
             query.append(queryBuilder.getSearchBy().get(i)).append(" LIKE ");
@@ -310,6 +187,101 @@ public class CommonService {
             }
             connection.commit();
             return new Response<T>().setSuccess(true);
+        } catch (Exception e) {
+            return new Response<T>().setError(e.getMessage());
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T extends Entity,
+            U extends Enum<U> & EntityColumn,
+            V extends EntityService> Response<T> insert(UpdateQueryBuilder<T, U, V> queryBuilder) {
+        Objects.requireNonNull(queryBuilder);
+        if (queryBuilder.getColumns() == null || queryBuilder.getValues() == null ||
+                queryBuilder.getColumns().size() != queryBuilder.getValues().size()) {
+            return new Response<T>().setError("Invalid insert parameters");
+        }
+
+        StringBuilder query = new StringBuilder("INSERT INTO ").append(queryBuilder.getEntity().getName().toLowerCase()).append(" (");
+        for (int i = 0; i < queryBuilder.getColumns().size(); i++) {
+            if (i > 0) query.append(", ");
+            query.append(queryBuilder.getColumns().get(i));
+        }
+        query.append(") ").append("VALUES").append(" (");
+        for (int i = 0; i < queryBuilder.getValues().size(); i++) {
+            if (i > 0) query.append(", ");
+            query.append("?");
+        }
+        query.append(")");
+        try (var connection = Utils.getDatabaseConnection();
+             var statement = connection.prepareStatement(query.toString(), Statement.RETURN_GENERATED_KEYS)) {
+            for (int i = 1; i <= queryBuilder.getValues().size(); i++) {
+                statement.setString(i, queryBuilder.getValues().get(i - 1));
+            }
+            if (statement.executeUpdate() != 1) {
+                connection.rollback();
+                return new Response<T>().setError("Internal server error");
+            }
+            connection.commit();
+            try (var resultSet = statement.getGeneratedKeys()) {
+                if (resultSet.next()) {
+                    var searchQuery = new SearchQueryBuilder<>(queryBuilder.getEntity(), queryBuilder.getEntityColumns(), queryBuilder.getEntityService())
+                            .setSearchBy(List.of(Enum.valueOf(queryBuilder.getEntityColumns(), "id")))
+                            .setSearchByValues(List.of(resultSet.getString(1)));
+                    Class<? extends EntityService> serviceClass = queryBuilder.getEntityService();
+                    return (Response<T>) serviceClass.getDeclaredMethod("select", SearchQueryBuilder.class).invoke(null, searchQuery);
+                }
+            }
+            return new Response<T>().setSuccess(true);
+        } catch (Exception e) {
+            return new Response<T>().setError(e.getMessage());
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T extends Entity,
+            U extends Enum<U> & EntityColumn,
+            V extends EntityService> Response<T> update(UpdateQueryBuilder<T, U, V> queryBuilder) {
+        Objects.requireNonNull(queryBuilder);
+        if (queryBuilder.getColumns() == null || queryBuilder.getValues() == null ||
+                queryBuilder.getColumns().size() != queryBuilder.getValues().size()) {
+            return new Response<T>().setError("Invalid update parameters");
+        }
+        if (queryBuilder.getSearchBy() == null || queryBuilder.getSearchByValues() == null ||
+                queryBuilder.getSearchBy().size() != queryBuilder.getSearchByValues().size()) {
+            return new Response<T>().setError("Invalid search parameters");
+        }
+
+        StringBuilder query = new StringBuilder("UPDATE ").append(queryBuilder.getEntity().getName().toLowerCase()).append(" SET ");
+        for (int i = 0; i < queryBuilder.getColumns().size(); i++) {
+            if (i > 0) query.append(", ");
+            query.append(queryBuilder.getColumns().get(i)).append(" = ").append("?");
+        }
+        query.append(" WHERE ");
+        for (int i = 0; i < queryBuilder.getValues().size(); i++) {
+            if (i > 0) query.append(" AND ");
+            query.append(queryBuilder.getSearchBy().get(i)).append(" = ").append("?");
+        }
+        try (var connection = Utils.getDatabaseConnection();
+             var statement = connection.prepareStatement(query.toString())) {
+            int nextParamIndex = 1;
+            for (int i = 1; i <= queryBuilder.getValues().size(); i++) {
+                statement.setString(i, queryBuilder.getValues().get(i - 1));
+                nextParamIndex++;
+            }
+            for (int i = 0; i < queryBuilder.getSearchByValues().size(); i++) {
+                statement.setString(nextParamIndex++, queryBuilder.getSearchByValues().get(i));
+            }
+            if (statement.executeUpdate() != 1) {
+                connection.rollback();
+                return new Response<T>().setError("Internal server error");
+            }
+            connection.commit();
+            var searchQuery = new SearchQueryBuilder<>(queryBuilder.getEntity(), queryBuilder.getEntityColumns(), queryBuilder.getEntityService())
+                    .setSearchBy(List.of(Enum.valueOf(queryBuilder.getEntityColumns(), "id")))
+                    .setSearchByValues(List.of(queryBuilder.getSearchByValues().get(queryBuilder.getSearchByValues().indexOf("id"))));
+            Class<? extends EntityService> serviceClass = queryBuilder.getEntityService();
+            return (Response<T>) serviceClass.getDeclaredMethod("select", SearchQueryBuilder.class).invoke(null, searchQuery);
         } catch (Exception e) {
             return new Response<T>().setError(e.getMessage());
         }

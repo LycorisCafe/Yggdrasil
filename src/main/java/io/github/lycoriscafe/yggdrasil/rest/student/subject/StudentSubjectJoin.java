@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class StudentSubjectJoin implements Entity {
+    private Long id;
     private Long studentId;
     private Long subjectId;
 
@@ -32,6 +33,15 @@ public class StudentSubjectJoin implements Entity {
                               Long subjectId) {
         this.studentId = Objects.requireNonNull(studentId);
         this.subjectId = Objects.requireNonNull(subjectId);
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public StudentSubjectJoin setId(Long id) {
+        this.id = id;
+        return this;
     }
 
     public Long getStudentId() {

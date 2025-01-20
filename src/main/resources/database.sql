@@ -97,6 +97,7 @@ CREATE TABLE student
 ## STUDENT ATTENDANCE
 CREATE TABLE studentAttendance
 (
+    id   SERIAL PRIMARY KEY,
     studentId BIGINT UNSIGNED NOT NULL,
     date DATE DEFAULT (DATE(NOW())),
     time TIME DEFAULT (TIME(NOW())),
@@ -106,6 +107,7 @@ CREATE TABLE studentAttendance
 ## STUDENT SUBJECT JOIN
 CREATE TABLE studentSubjectJoin
 (
+    id SERIAL PRIMARY KEY,
     studentId BIGINT UNSIGNED NOT NULL,
     subjectId BIGINT UNSIGNED NOT NULL,
     UNIQUE (studentId, subjectId)
@@ -140,6 +142,7 @@ CREATE TABLE teacher
 ## TEACHER ATTENDANCE
 CREATE TABLE teacherAttendance
 (
+    id   SERIAL PRIMARY KEY,
     teacherId BIGINT UNSIGNED NOT NULL,
     date DATE DEFAULT (DATE(NOW())),
     time TIME DEFAULT (TIME(NOW())),
@@ -149,6 +152,7 @@ CREATE TABLE teacherAttendance
 ## TEACHER SUBJECT JOIN
 CREATE TABLE teacherSubjectJoin
 (
+    id SERIAL PRIMARY KEY,
     teacherId BIGINT UNSIGNED NOT NULL,
     subjectId BIGINT UNSIGNED NOT NULL,
     UNIQUE (teacherId, subjectId)
@@ -168,6 +172,7 @@ CREATE TABLE timetable
 ## AUTHENTICATION
 CREATE TABLE authentication
 (
+    id      SERIAL PRIMARY KEY,
     role         ENUM ('STUDENT', 'TEACHER', 'ADMIN') NOT NULL,
     userId       BIGINT UNSIGNED                      NOT NULL,
     password     VARBINARY(100)                       NOT NULL,

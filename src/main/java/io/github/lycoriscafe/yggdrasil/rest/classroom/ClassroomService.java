@@ -42,7 +42,7 @@ public class ClassroomService {
                                                     Long resultsFrom,
                                                     Long resultsOffset) {
         try {
-            var results = CommonService.get(new CommonService.SearchQueryBuilder<Classroom, Columns>(Classroom.class)
+            var results = CommonService.select(new CommonService.SearchQueryBuilder<Classroom, Columns>(Classroom.class)
                     .setSearchBy(searchBy).setSearchByValues(searchByValues).setIsCaseSensitive(isCaseSensitive).setOrderBy(orderBy)
                     .setAscending(isAscending).setResultsFrom(resultsFrom).setResultsOffset(resultsOffset));
             if (results.getResponse() != null) return results.getResponse();

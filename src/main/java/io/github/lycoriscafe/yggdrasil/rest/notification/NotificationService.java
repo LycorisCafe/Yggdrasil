@@ -46,7 +46,7 @@ public class NotificationService {
                                                           Long resultsFrom,
                                                           Long resultsOffset) {
         try {
-            var results = CommonService.get(new CommonService.SearchQueryBuilder<Notification, Columns>(Notification.class)
+            var results = CommonService.select(new CommonService.SearchQueryBuilder<Notification, Columns>(Notification.class)
                     .setSearchBy(searchBy).setSearchByValues(searchByValues).setIsCaseSensitive(isCaseSensitive).setOrderBy(orderBy)
                     .setAscending(isAscending).setResultsFrom(resultsFrom).setResultsOffset(resultsOffset));
 

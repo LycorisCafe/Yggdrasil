@@ -45,7 +45,7 @@ public class TimetableService {
                                                     Long resultsFrom,
                                                     Long resultsOffset) {
         try {
-            var results = CommonService.get(new CommonService.SearchQueryBuilder<Timetable, Columns>(Timetable.class)
+            var results = CommonService.select(new CommonService.SearchQueryBuilder<Timetable, Columns>(Timetable.class)
                     .setSearchBy(searchBy).setSearchByValues(searchByValues).setIsCaseSensitive(isCaseSensitive).setOrderBy(orderBy)
                     .setAscending(isAscending).setResultsFrom(resultsFrom).setResultsOffset(resultsOffset));
             if (results.getResponse() != null) return results.getResponse();

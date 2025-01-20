@@ -39,7 +39,7 @@ public class TeacherSubjectJoinService {
                                                                       Long resultsFrom,
                                                                       Long resultsOffset) {
         try {
-            var results = CommonService.get(new CommonService.SearchQueryBuilder<TeacherSubjectJoin, Columns>(TeacherSubjectJoin.class)
+            var results = CommonService.select(new CommonService.SearchQueryBuilder<TeacherSubjectJoin, Columns>(TeacherSubjectJoin.class)
                     .setSearchBy(searchBy).setSearchByValues(searchByValues).setIsCaseSensitive(isCaseSensitive).setOrderBy(orderBy)
                     .setAscending(isAscending).setResultsFrom(resultsFrom).setResultsOffset(resultsOffset));
             if (results.getResponse() != null) return results.getResponse();

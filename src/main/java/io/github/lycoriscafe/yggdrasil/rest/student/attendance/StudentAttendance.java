@@ -23,12 +23,22 @@ import java.time.LocalTime;
 import java.util.Objects;
 
 public class StudentAttendance implements Entity {
+    private Long id;
     private Long studentId;
     private LocalDate date;
     private LocalTime time;
 
     public StudentAttendance(Long studentId) {
         this.studentId = Objects.requireNonNull(studentId);
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public StudentAttendance setId(Long id) {
+        this.id = id;
+        return this;
     }
 
     public Long getStudentId() {

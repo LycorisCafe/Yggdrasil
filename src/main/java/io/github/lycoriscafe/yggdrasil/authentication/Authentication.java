@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class Authentication {
+    private Long id;
     private Role role;
     private Long userId;
     private String password;
@@ -33,6 +34,15 @@ public class Authentication {
         this.role = Objects.requireNonNull(role);
         this.userId = Objects.requireNonNull(userId);
         this.password = Objects.requireNonNull(password);
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public Authentication setId(Long id) {
+        this.id = id;
+        return this;
     }
 
     public Role getRole() {
