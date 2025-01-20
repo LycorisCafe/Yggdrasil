@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public class SearchQueryBuilder<T extends Entity, U extends Enum<U> & EntityColumn, V extends EntityService> {
+public class SearchQueryBuilder<T extends Entity, U extends Enum<U> & EntityColumn<T>, V extends EntityService<T>> {
     private Class<T> entity;
     private Class<U> entityColumns;
     private Class<V> entityService;
@@ -132,11 +132,11 @@ public class SearchQueryBuilder<T extends Entity, U extends Enum<U> & EntityColu
     }
 
     public static <T extends Entity,
-            U extends Enum<U> & EntityColumn,
-            V extends EntityService> SearchQueryBuilder<T, U, V> build(Class<T> entity,
-                                                                       Class<U> entityColumns,
-                                                                       Class<V> entityService,
-                                                                       Map<String, String> parameters) {
+            U extends Enum<U> & EntityColumn<T>,
+            V extends EntityService<T>> SearchQueryBuilder<T, U, V> build(Class<T> entity,
+                                                                          Class<U> entityColumns,
+                                                                          Class<V> entityService,
+                                                                          Map<String, String> parameters) {
         var searchQuery = new SearchQueryBuilder<>(entity, entityColumns, entityService);
         if (parameters == null) return searchQuery;
 

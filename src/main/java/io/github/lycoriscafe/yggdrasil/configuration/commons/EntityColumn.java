@@ -16,5 +16,5 @@
 
 package io.github.lycoriscafe.yggdrasil.configuration.commons;
 
-public interface EntityColumn {
+public interface EntityColumn<T extends Entity> {
 }

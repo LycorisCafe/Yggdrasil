@@ -18,33 +18,24 @@ package io.github.lycoriscafe.yggdrasil.rest.teacher.attendance;
 
 import io.github.lycoriscafe.yggdrasil.configuration.Response;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
-import io.github.lycoriscafe.yggdrasil.configuration.commons.CommonService;
-import io.github.lycoriscafe.yggdrasil.configuration.commons.EntityColumn;
+import io.github.lycoriscafe.yggdrasil.configuration.commons.*;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
-public class TeacherAttendanceService {
-    public enum Columns implements EntityColumn {
+public class TeacherAttendanceService implements EntityService<TeacherAttendance> {
+    public enum Columns implements EntityColumn<TeacherAttendance> {
+        id,
         teacherId,
         date,
         time
     }
 
-    public static Response<TeacherAttendance> getTeacherAttendances(List<Columns> searchBy,
-                                                                    List<String> searchByValues,
-                                                                    List<Boolean> isCaseSensitive,
-                                                                    List<Columns> orderBy,
-                                                                    Boolean isAscending,
-                                                                    Long resultsFrom,
-                                                                    Long resultsOffset) {
+    public static Response<TeacherAttendance> select(SearchQueryBuilder<TeacherAttendance, Columns, TeacherAttendanceService> searchQueryBuilder) {
         try {
-            var results = CommonService.select(new CommonService.SearchQueryBuilder<TeacherAttendance, Columns>(TeacherAttendance.class)
-                    .setSearchBy(searchBy).setSearchByValues(searchByValues).setIsCaseSensitive(isCaseSensitive).setOrderBy(orderBy)
-                    .setAscending(isAscending).setResultsFrom(resultsFrom).setResultsOffset(resultsOffset));
+            var results = CommonService.select(searchQueryBuilder);
             if (results.getResponse() != null) return results.getResponse();
 
             List<TeacherAttendance> teacherAttendances = new ArrayList<>();
@@ -52,7 +43,8 @@ public class TeacherAttendanceService {
                 while (resultSet.next()) {
                     teacherAttendances.add(new TeacherAttendance(
                             Long.parseLong(resultSet.getString("teacherId"))
-                    ).setDate(LocalDate.parse(resultSet.getString("date"), Utils.getDateFormatter()))
+                    ).setId(Long.parseLong(resultSet.getString("id")))
+                            .setDate(LocalDate.parse(resultSet.getString("date"), Utils.getDateFormatter()))
                             .setTime(LocalTime.parse(resultSet.getString("time"), Utils.getTimeFormatter())));
                 }
             }
@@ -68,30 +60,15 @@ public class TeacherAttendanceService {
         }
     }
 
-    public static Response<TeacherAttendance> createTeacherAttendance(TeacherAttendance teacherAttendance) {
-        Objects.requireNonNull(teacherAttendance);
-        try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement("INSERT INTO teacherattendance (teacherId) VALUES (?)")) {
-            statement.setString(1, Long.toUnsignedString(teacherAttendance.getTeacherId()));
-            if (statement.executeUpdate() != 1) {
-                connection.rollback();
-                return new Response<TeacherAttendance>().setError("Internal server error");
-            }
-            connection.commit();
-            return getTeacherAttendances(List.of(Columns.teacherId, Columns.date),
-                    List.of(Long.toUnsignedString(teacherAttendance.getTeacherId()), teacherAttendance.getDate().format(Utils.getDateFormatter())),
-                    null, null, null, null, 1L);
-        } catch (Exception e) {
-            return new Response<TeacherAttendance>().setError(e.getMessage());
-        }
+    public static Response<TeacherAttendance> delete(SearchQueryBuilder<TeacherAttendance, Columns, TeacherAttendanceService> searchQueryBuilder) {
+        return CommonService.delete(searchQueryBuilder);
     }
 
-    public static Response<TeacherAttendance> deleteTeacherAttendanceByTeacherIdAndDate(Long teacherId,
-                                                                                        LocalDate date) {
-        Objects.requireNonNull(teacherId);
-        Objects.requireNonNull(date);
-        return CommonService.delete(new CommonService.SearchQueryBuilder<TeacherAttendance, Columns>(TeacherAttendance.class)
-                .setSearchBy(List.of(Columns.teacherId, Columns.date))
-                .setSearchByValues(List.of(Long.toUnsignedString(teacherId), date.format(Utils.getDateFormatter()))));
+    public static Response<TeacherAttendance> insert(UpdateQueryBuilder<TeacherAttendance, Columns, TeacherAttendanceService> updateQueryBuilder) {
+        return CommonService.insert(updateQueryBuilder);
+    }
+
+    public static Response<TeacherAttendance> update(UpdateQueryBuilder<TeacherAttendance, Columns, TeacherAttendanceService> updateQueryBuilder) {
+        return CommonService.update(updateQueryBuilder);
     }
 }

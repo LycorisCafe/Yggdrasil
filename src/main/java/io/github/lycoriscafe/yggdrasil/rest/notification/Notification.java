@@ -16,11 +16,9 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.notification;
 
-import io.github.lycoriscafe.nexus.http.core.headers.content.MultipartFormData;
 import io.github.lycoriscafe.yggdrasil.configuration.commons.Entity;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Objects;
 
 public class Notification implements Entity {
@@ -30,8 +28,6 @@ public class Notification implements Entity {
     private Scope scope;
     private String message;
     private Boolean draft;
-
-    private Notification() {}
 
     public Notification(Scope scope,
                         String message) {
@@ -91,21 +87,5 @@ public class Notification implements Entity {
     public Notification setDraft(Boolean draft) {
         this.draft = draft;
         return this;
-    }
-
-    public static Notification toNotification(List<MultipartFormData> multipartFormData) {
-        var notification = new Notification();
-        for (var formData : multipartFormData) {
-            switch (formData.getName()) {
-                case "id" -> notification.setId(Long.parseLong(new String(formData.getData())));
-                case "createTimestamp" -> notification.setCreateTimestamp(LocalDateTime.parse(new String(formData.getData())));
-                case "updateTimestamp" -> notification.setUpdateTimestamp(LocalDateTime.parse(new String(formData.getData())));
-                case "scope" -> notification.setScope(Scope.valueOf(new String(formData.getData())));
-                case "message" -> notification.setMessage(new String(formData.getData()));
-                case "draft" -> notification.setDraft(Boolean.parseBoolean(new String(formData.getData())));
-                default -> throw new IllegalStateException("Unexpected value: " + formData.getName());
-            }
-        }
-        return notification;
     }
 }

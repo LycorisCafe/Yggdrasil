@@ -36,6 +36,7 @@ public class YggdrasilConfig {
     private static HikariDataSource database;
     private static HttpServer httpServer;
     private static Long defaultResultsOffset = 50L;
+    private static Long defaultAuthTimeout = 3600L;
 
     public static void initialize() throws IOException, ScannerException, SQLException, URISyntaxException {
         initializeDatabase();
@@ -48,6 +49,8 @@ public class YggdrasilConfig {
 
             String defaultResultsOffsetString = properties.getProperty("defaultResultsOffset");
             if (defaultResultsOffsetString != null) defaultResultsOffset = Long.parseLong(defaultResultsOffsetString);
+            String defaultAuthTimeoutString = properties.getProperty("defaultAuthTimeout");
+            if (defaultAuthTimeoutString != null) defaultAuthTimeout = Long.parseLong(defaultAuthTimeoutString);
         }
     }
 
@@ -59,7 +62,7 @@ public class YggdrasilConfig {
 
     private static void initializeHttpServer() throws ScannerException, SQLException, IOException {
         var httpServerConfiguration = new HttpServerConfiguration("io.github.lycoriscafe.yggdrasil", "YggdrasilTemp")
-//                .setUrlPrefix("/api/v1.0.0")
+                .setUrlPrefix("/api/v1.0.0")
 //                .setDatabaseType(DatabaseType.TEMPORARY)
                 .addDefaultAuthentication(new BearerAuthentication("Access for Yggdrasil API"));
         httpServer = new HttpServer(httpServerConfiguration);
@@ -76,5 +79,9 @@ public class YggdrasilConfig {
 
     public static Long getDefaultResultsOffset() {
         return defaultResultsOffset;
+    }
+
+    public static Long getDefaultAuthTimeout() {
+        return defaultAuthTimeout;
     }
 }

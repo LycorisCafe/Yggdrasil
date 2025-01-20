@@ -80,8 +80,8 @@ public class CommonService {
     }
 
     public static <T extends Entity,
-            U extends Enum<U> & EntityColumn,
-            V extends EntityService> ResultSetHolder<T> select(SearchQueryBuilder<T, U, V> queryBuilder) {
+            U extends Enum<U> & EntityColumn<T>,
+            V extends EntityService<T>> ResultSetHolder<T> select(SearchQueryBuilder<T, U, V> queryBuilder) {
         Objects.requireNonNull(queryBuilder);
         if (queryBuilder.getResultsFrom() == null || queryBuilder.getResultsFrom() < 0) queryBuilder.setResultsFrom(0L);
         if (queryBuilder.getResultsOffset() == null || queryBuilder.getResultsOffset() < 0) {
@@ -161,8 +161,8 @@ public class CommonService {
     }
 
     public static <T extends Entity,
-            U extends Enum<U> & EntityColumn,
-            V extends EntityService> Response<T> delete(SearchQueryBuilder<T, U, V> queryBuilder) {
+            U extends Enum<U> & EntityColumn<T>,
+            V extends EntityService<T>> Response<T> delete(SearchQueryBuilder<T, U, V> queryBuilder) {
         Objects.requireNonNull(queryBuilder);
         if (queryBuilder.getSearchBy() == null || queryBuilder.getSearchByValues() == null ||
                 queryBuilder.getSearchBy().size() != queryBuilder.getSearchByValues().size()) {
@@ -194,8 +194,8 @@ public class CommonService {
 
     @SuppressWarnings("unchecked")
     public static <T extends Entity,
-            U extends Enum<U> & EntityColumn,
-            V extends EntityService> Response<T> insert(UpdateQueryBuilder<T, U, V> queryBuilder) {
+            U extends Enum<U> & EntityColumn<T>,
+            V extends EntityService<T>> Response<T> insert(UpdateQueryBuilder<T, U, V> queryBuilder) {
         Objects.requireNonNull(queryBuilder);
         if (queryBuilder.getColumns() == null || queryBuilder.getValues() == null ||
                 queryBuilder.getColumns().size() != queryBuilder.getValues().size()) {
@@ -228,7 +228,7 @@ public class CommonService {
                     var searchQuery = new SearchQueryBuilder<>(queryBuilder.getEntity(), queryBuilder.getEntityColumns(), queryBuilder.getEntityService())
                             .setSearchBy(List.of(Enum.valueOf(queryBuilder.getEntityColumns(), "id")))
                             .setSearchByValues(List.of(resultSet.getString(1)));
-                    Class<? extends EntityService> serviceClass = queryBuilder.getEntityService();
+                    Class<? extends EntityService<T>> serviceClass = queryBuilder.getEntityService();
                     return (Response<T>) serviceClass.getDeclaredMethod("select", SearchQueryBuilder.class).invoke(null, searchQuery);
                 }
             }
@@ -240,8 +240,8 @@ public class CommonService {
 
     @SuppressWarnings("unchecked")
     public static <T extends Entity,
-            U extends Enum<U> & EntityColumn,
-            V extends EntityService> Response<T> update(UpdateQueryBuilder<T, U, V> queryBuilder) {
+            U extends Enum<U> & EntityColumn<T>,
+            V extends EntityService<T>> Response<T> update(UpdateQueryBuilder<T, U, V> queryBuilder) {
         Objects.requireNonNull(queryBuilder);
         if (queryBuilder.getColumns() == null || queryBuilder.getValues() == null ||
                 queryBuilder.getColumns().size() != queryBuilder.getValues().size()) {
@@ -280,7 +280,7 @@ public class CommonService {
             var searchQuery = new SearchQueryBuilder<>(queryBuilder.getEntity(), queryBuilder.getEntityColumns(), queryBuilder.getEntityService())
                     .setSearchBy(List.of(Enum.valueOf(queryBuilder.getEntityColumns(), "id")))
                     .setSearchByValues(List.of(queryBuilder.getSearchByValues().get(queryBuilder.getSearchByValues().indexOf("id"))));
-            Class<? extends EntityService> serviceClass = queryBuilder.getEntityService();
+            Class<? extends EntityService<T>> serviceClass = queryBuilder.getEntityService();
             return (Response<T>) serviceClass.getDeclaredMethod("select", SearchQueryBuilder.class).invoke(null, searchQuery);
         } catch (Exception e) {
             return new Response<T>().setError(e.getMessage());

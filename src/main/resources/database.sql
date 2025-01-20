@@ -172,12 +172,11 @@ CREATE TABLE timetable
 ## AUTHENTICATION
 CREATE TABLE authentication
 (
-    id      SERIAL PRIMARY KEY,
     role         ENUM ('STUDENT', 'TEACHER', 'ADMIN') NOT NULL,
     userId       BIGINT UNSIGNED                      NOT NULL,
     password     VARBINARY(100)                       NOT NULL,
     accessToken  VARBINARY(100) UNIQUE,
-    expires TIMESTAMP,
+    expires BIGINT UNSIGNED,
     refreshToken VARBINARY(100) UNIQUE,
     UNIQUE (role, userId)
 );

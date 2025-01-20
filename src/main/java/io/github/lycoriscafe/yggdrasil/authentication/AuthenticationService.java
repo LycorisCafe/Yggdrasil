@@ -25,10 +25,13 @@ import io.github.lycoriscafe.nexus.http.engine.ReqResManager.httpReq.HttpRequest
 import io.github.lycoriscafe.nexus.http.engine.ReqResManager.httpRes.HttpResponse;
 import io.github.lycoriscafe.yggdrasil.configuration.Response;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
+import io.github.lycoriscafe.yggdrasil.configuration.commons.SearchQueryBuilder;
 import io.github.lycoriscafe.yggdrasil.rest.admin.AccessLevel;
 import io.github.lycoriscafe.yggdrasil.rest.admin.Admin;
 import io.github.lycoriscafe.yggdrasil.rest.admin.AdminService;
+import io.github.lycoriscafe.yggdrasil.rest.student.Student;
 import io.github.lycoriscafe.yggdrasil.rest.student.StudentService;
+import io.github.lycoriscafe.yggdrasil.rest.teacher.Teacher;
 import io.github.lycoriscafe.yggdrasil.rest.teacher.TeacherService;
 
 import java.io.ByteArrayOutputStream;
@@ -38,9 +41,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.sql.SQLException;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.*;
 
 public class AuthenticationService {
@@ -64,7 +64,7 @@ public class AuthenticationService {
                         new BearerAuthentication(BearerAuthorizationError.INVALID_TOKEN)
                                 .setErrorDescription("Invalid access token. Try again."));
             }
-            if (Instant.now().getEpochSecond() > auth.getExpires().atZone(ZoneId.systemDefault()).toEpochSecond()) {
+            if (System.currentTimeMillis() > auth.getExpires()) {
                 return httpResponse.setStatusCode(HttpStatusCode.UNAUTHORIZED).addAuthentication(
                         new BearerAuthentication(BearerAuthorizationError.INVALID_TOKEN)
                                 .setErrorDescription("Invalid access token. Token expired."));
@@ -78,19 +78,15 @@ public class AuthenticationService {
                                 .setErrorDescription("Insufficient scope. Contact your system admin for more details."));
             }
 
-            var disabled = switch (auth.getRole()) {
-                case ADMIN -> AdminService.getAdminById(auth.getUserId()).getData().getFirst().getDisabled();
-                case TEACHER -> TeacherService.getTeacherById(auth.getUserId()).getData().getFirst().getDisabled();
-                case STUDENT -> StudentService.getStudentById(auth.getUserId()).getData().getFirst().getDisabled();
-            };
-            if (disabled) {
+            if (AuthenticationService.getIsAccountDisabled(auth.getRole(), auth.getUserId())) {
                 return httpResponse.setStatusCode(HttpStatusCode.UNAUTHORIZED).addAuthentication(
                         new BearerAuthentication(BearerAuthorizationError.INVALID_TOKEN)
                                 .setErrorDescription("Target account is disabled. Contact your system admin for more details."));
             }
 
             if (roles.contains(Role.ADMIN) && accessLevels != null) {
-                var admin = AdminService.getAdminById(auth.getUserId());
+                var admin = AdminService.select(new SearchQueryBuilder<>(Admin.class, AdminService.Columns.class, AdminService.class)
+                        .setSearchBy(List.of(AdminService.Columns.id)).setSearchByValues(List.of(Long.toUnsignedString(auth.getUserId()))));
                 var accessLevel = admin.getData().getFirst().getAccessLevel();
                 if (!accessLevel.containsAll(List.of(accessLevels))) {
                     return httpResponse.setStatusCode(HttpStatusCode.FORBIDDEN).addAuthentication(
@@ -121,7 +117,7 @@ public class AuthenticationService {
                             resultSet.getString("password"))
                             .setAccessToken(resultSet.getString("accessToken"))
                             .setExpires(resultSet.getString("expires") == null ?
-                                    null : LocalDateTime.parse(resultSet.getString("expires"), Utils.getDateTimeFormatter()))
+                                    null : Long.parseLong(resultSet.getString("expires")))
                             .setRefreshToken(resultSet.getString("refreshToken"));
                 }
                 return null;
@@ -147,7 +143,7 @@ public class AuthenticationService {
                             resultSet.getString("password"))
                             .setAccessToken(resultSet.getString("accessToken"))
                             .setExpires(resultSet.getString("expires") == null ?
-                                    null : LocalDateTime.parse(resultSet.getString("expires"), Utils.getDateTimeFormatter()))
+                                    null : Long.parseLong(resultSet.getString("expires")))
                             .setRefreshToken(resultSet.getString("refreshToken"));
                 }
             }
@@ -179,7 +175,7 @@ public class AuthenticationService {
             statement.setString(1, authentication.getPassword());
             statement.setString(2, authentication.getAccessToken());
             statement.setString(3, authentication.getExpires() == null ?
-                    null : Utils.getDateTimeFormatter().format(authentication.getExpires()));
+                    null : Long.toUnsignedString(authentication.getExpires()));
             statement.setString(4, authentication.getRefreshToken());
             statement.setString(5, authentication.getRole().toString());
             statement.setString(6, Long.toUnsignedString(authentication.getUserId()));
@@ -246,5 +242,25 @@ public class AuthenticationService {
 
     public static String encryptData(byte[] data) throws NoSuchAlgorithmException {
         return Base64.getEncoder().withoutPadding().encodeToString(MessageDigest.getInstance("SHA-256").digest(data));
+    }
+
+    public static boolean getIsAccountDisabled(Role role,
+                                               Long id) {
+        Objects.requireNonNull(role);
+        Objects.requireNonNull(id);
+        return switch (role) {
+            case ADMIN -> AdminService.select(new SearchQueryBuilder<>(Admin.class, AdminService.Columns.class, AdminService.class)
+                            .setSearchBy(List.of(AdminService.Columns.id))
+                            .setSearchByValues(List.of(Long.toUnsignedString(id))))
+                    .getData().getFirst().getDisabled();
+            case TEACHER -> TeacherService.select(new SearchQueryBuilder<>(Teacher.class, TeacherService.Columns.class, TeacherService.class)
+                            .setSearchBy(List.of(TeacherService.Columns.id))
+                            .setSearchByValues(List.of(Long.toUnsignedString(id))))
+                    .getData().getFirst().getDisabled();
+            case STUDENT -> StudentService.select(new SearchQueryBuilder<>(Student.class, StudentService.Columns.class, StudentService.class)
+                            .setSearchBy(List.of(StudentService.Columns.id))
+                            .setSearchByValues(List.of(Long.toUnsignedString(id))))
+                    .getData().getFirst().getDisabled();
+        };
     }
 }

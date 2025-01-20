@@ -18,34 +18,23 @@ package io.github.lycoriscafe.yggdrasil.rest.relief;
 
 import io.github.lycoriscafe.yggdrasil.configuration.Response;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
-import io.github.lycoriscafe.yggdrasil.configuration.commons.CommonService;
-import io.github.lycoriscafe.yggdrasil.configuration.commons.EntityColumn;
+import io.github.lycoriscafe.yggdrasil.configuration.commons.*;
 
-import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
-public class ReliefService {
-    public enum Columns implements EntityColumn {
+public class ReliefService implements EntityService<Relief> {
+    public enum Columns implements EntityColumn<Relief> {
         id,
         timetableId,
         teacherId,
         date
     }
 
-    public static Response<Relief> getReliefs(List<Columns> searchBy,
-                                              List<String> searchByValues,
-                                              List<Boolean> isCaseSensitive,
-                                              List<Columns> orderBy,
-                                              Boolean isAscending,
-                                              Long resultsFrom,
-                                              Long resultsOffset) {
+    public static Response<Relief> select(SearchQueryBuilder<Relief, Columns, ReliefService> searchQueryBuilder) {
         try {
-            var results = CommonService.select(new CommonService.SearchQueryBuilder<Relief, Columns>(Relief.class)
-                    .setSearchBy(searchBy).setSearchByValues(searchByValues).setIsCaseSensitive(isCaseSensitive).setOrderBy(orderBy)
-                    .setAscending(isAscending).setResultsFrom(resultsFrom).setResultsOffset(resultsOffset));
+            var results = CommonService.select(searchQueryBuilder);
             if (results.getResponse() != null) return results.getResponse();
 
             List<Relief> reliefs = new ArrayList<>();
@@ -70,71 +59,15 @@ public class ReliefService {
         }
     }
 
-    public static Response<Relief> getReliefById(Long id) {
-        try {
-            return getReliefs(List.of(Columns.id), List.of(Long.toUnsignedString(id)),
-                    null, null, null, null, 1L);
-        } catch (Exception e) {
-            return new Response<Relief>().setError(e.getMessage());
-        }
+    public static Response<Relief> delete(SearchQueryBuilder<Relief, Columns, ReliefService> searchQueryBuilder) {
+        return CommonService.delete(searchQueryBuilder);
     }
 
-    public static Response<Relief> createClassroom(Relief relief) {
-        Objects.requireNonNull(relief);
-        try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement("INSERT INTO relief (id, timetableId, teacherId, date) " +
-                     "VALUES (?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
-            statement.setString(1, relief.getId() == null ? null : Long.toUnsignedString(relief.getId()));
-            statement.setString(2, Long.toUnsignedString(relief.getTimetableId()));
-            statement.setString(3, Long.toUnsignedString(relief.getTeacherId()));
-            statement.setString(4, relief.getDate().format(Utils.getDateFormatter()));
-            if (statement.executeUpdate() != 1) {
-                connection.rollback();
-                return new Response<Relief>().setError("Internal server error");
-            }
-            try (var resultSet = statement.getGeneratedKeys()) {
-                if (!resultSet.next()) {
-                    connection.rollback();
-                    return new Response<Relief>().setError("Internal server error");
-                }
-                connection.commit();
-                return getReliefById(Long.parseLong(resultSet.getString(1)));
-            }
-        } catch (Exception e) {
-            return new Response<Relief>().setError(e.getMessage());
-        }
+    public static Response<Relief> insert(UpdateQueryBuilder<Relief, Columns, ReliefService> updateQueryBuilder) {
+        return CommonService.insert(updateQueryBuilder);
     }
 
-    public static Response<Relief> updateRelief(Relief relief) {
-        Objects.requireNonNull(relief);
-
-        var oldRelief = getReliefById(relief.getId());
-        if (oldRelief.getError() != null) return oldRelief;
-        var data = oldRelief.getData().getFirst();
-        if (relief.getTimetableId() == null) relief.setTimetableId(data.getTimetableId());
-        if (relief.getTeacherId() == null) relief.setTeacherId(data.getTeacherId());
-        if (relief.getDate() == null) relief.setDate(data.getDate());
-
-        try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement("UPDATE relief SET timetableId = ?, teacherId = ?, date = ? WHERE id = ?")) {
-            statement.setString(1, Long.toUnsignedString(relief.getTimetableId()));
-            statement.setString(2, Long.toUnsignedString(relief.getTeacherId()));
-            statement.setString(3, relief.getDate().format(Utils.getDateFormatter()));
-            statement.setString(4, Long.toUnsignedString(relief.getId()));
-            if (statement.executeUpdate() != 1) {
-                connection.rollback();
-                return new Response<Relief>().setError("Internal server error");
-            }
-            connection.commit();
-            return getReliefById(relief.getId());
-        } catch (Exception e) {
-            return new Response<Relief>().setError(e.getMessage());
-        }
-    }
-
-    public static Response<Relief> deleteReliefById(Long id) {
-        Objects.requireNonNull(id);
-        return CommonService.delete(new CommonService.SearchQueryBuilder<Relief, Columns>(Relief.class).setSearchBy(List.of(Columns.id))
-                .setSearchByValues(List.of(Long.toUnsignedString(id))));
+    public static Response<Relief> update(UpdateQueryBuilder<Relief, Columns, ReliefService> updateQueryBuilder) {
+        return CommonService.update(updateQueryBuilder);
     }
 }

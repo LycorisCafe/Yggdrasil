@@ -16,5 +16,5 @@
 
 package io.github.lycoriscafe.yggdrasil.configuration.commons;
 
-public interface EntityService {
+public interface EntityService<T extends Entity> {
 }

@@ -19,16 +19,12 @@ package io.github.lycoriscafe.yggdrasil.authentication;
 import io.github.lycoriscafe.nexus.http.core.HttpEndpoint;
 import io.github.lycoriscafe.nexus.http.core.headers.auth.scheme.bearer.*;
 import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.POST;
-import io.github.lycoriscafe.yggdrasil.rest.admin.AdminService;
-import io.github.lycoriscafe.yggdrasil.rest.student.StudentService;
-import io.github.lycoriscafe.yggdrasil.rest.teacher.TeacherService;
+import io.github.lycoriscafe.yggdrasil.configuration.YggdrasilConfig;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 
 @HttpEndpoint("/login")
 public class AuthenticationEndpoint {
@@ -72,12 +68,7 @@ public class AuthenticationEndpoint {
                             .setErrorDescription("Invalid password. Try again.");
                 }
 
-                var disabled = switch (auth.getRole()) {
-                    case ADMIN -> AdminService.getAdminById(auth.getUserId()).getData().getFirst().getDisabled();
-                    case TEACHER -> TeacherService.getTeacherById(auth.getUserId()).getData().getFirst().getDisabled();
-                    case STUDENT -> StudentService.getStudentById(auth.getUserId()).getData().getFirst().getDisabled();
-                };
-                if (disabled) {
+                if (AuthenticationService.getIsAccountDisabled(auth.getRole(), auth.getUserId())) {
                     return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_CLIENT)
                             .setErrorDescription("Target account is disabled. Contact your system admin for more details.");
                 }
@@ -85,12 +76,12 @@ public class AuthenticationEndpoint {
                 var accessToken = AuthenticationService.generateToken();
                 var refreshToken = AuthenticationService.generateToken();
                 auth.setAccessToken(accessToken)
-                        .setExpires(LocalDateTime.now().plusHours(1))
+                        .setExpires(System.currentTimeMillis() + YggdrasilConfig.getDefaultAuthTimeout())
                         .setRefreshToken(refreshToken);
                 auth = AuthenticationService.updateAuthentication(auth);
                 if (auth == null) throw new RuntimeException("Failed to update authentication.");
                 return new BearerTokenSuccessResponse(accessToken)
-                        .setExpiresIn(auth.getExpires().atZone(ZoneId.systemDefault()).toEpochSecond())
+                        .setExpiresIn(auth.getExpires())
                         .setRefreshToken(refreshToken)
                         .setScope(role.toString());
             }
@@ -116,22 +107,17 @@ public class AuthenticationEndpoint {
                             .setErrorDescription("Invalid refresh token. Use credentials or try again.");
                 }
 
-                var disabled = switch (auth.getRole()) {
-                    case ADMIN -> AdminService.getAdminById(auth.getUserId()).getData().getFirst().getDisabled();
-                    case TEACHER -> TeacherService.getTeacherById(auth.getUserId()).getData().getFirst().getDisabled();
-                    case STUDENT -> StudentService.getStudentById(auth.getUserId()).getData().getFirst().getDisabled();
-                };
-                if (disabled) {
+                if (AuthenticationService.getIsAccountDisabled(auth.getRole(), auth.getUserId())) {
                     return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_CLIENT)
                             .setErrorDescription("Target account is disabled. Contact your system admin for more details.");
                 }
 
                 var accessToken = AuthenticationService.generateToken();
-                auth.setAccessToken(accessToken).setExpires(LocalDateTime.now().plusHours(1));
+                auth.setAccessToken(accessToken).setExpires(System.currentTimeMillis() + YggdrasilConfig.getDefaultAuthTimeout());
                 auth = AuthenticationService.updateAuthentication(auth);
                 if (auth == null) throw new RuntimeException("Failed to update authentication.");
                 return new BearerTokenSuccessResponse(accessToken)
-                        .setExpiresIn(auth.getExpires().atZone(ZoneId.systemDefault()).toEpochSecond())
+                        .setExpiresIn(auth.getExpires())
                         .setRefreshToken(auth.getRefreshToken())
                         .setScope(auth.getRole().toString());
             }

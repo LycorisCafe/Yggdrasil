@@ -18,18 +18,15 @@ package io.github.lycoriscafe.yggdrasil.rest.guardian;
 
 import io.github.lycoriscafe.yggdrasil.configuration.Response;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
-import io.github.lycoriscafe.yggdrasil.configuration.commons.CommonService;
-import io.github.lycoriscafe.yggdrasil.configuration.commons.EntityColumn;
+import io.github.lycoriscafe.yggdrasil.configuration.commons.*;
 import io.github.lycoriscafe.yggdrasil.rest.Gender;
 
-import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
-public class GuardianService {
-    public enum Columns implements EntityColumn {
+public class GuardianService implements EntityService<Guardian> {
+    public enum Columns implements EntityColumn<Guardian> {
         id,
         nic,
         initName,
@@ -41,17 +38,9 @@ public class GuardianService {
         contactNo
     }
 
-    public static Response<Guardian> getGuardians(List<Columns> searchBy,
-                                                  List<String> searchByValues,
-                                                  List<Boolean> isCaseSensitive,
-                                                  List<Columns> orderBy,
-                                                  Boolean isAscending,
-                                                  Long resultsFrom,
-                                                  Long resultsOffset) {
+    public static Response<Guardian> select(SearchQueryBuilder<Guardian, Columns, GuardianService> searchQueryBuilder) {
         try {
-            var results = CommonService.select(new CommonService.SearchQueryBuilder<Guardian, Columns>(Guardian.class)
-                    .setSearchBy(searchBy).setSearchByValues(searchByValues).setIsCaseSensitive(isCaseSensitive).setOrderBy(orderBy)
-                    .setAscending(isAscending).setResultsFrom(resultsFrom).setResultsOffset(resultsOffset));
+            var results = CommonService.select(searchQueryBuilder);
             if (results.getResponse() != null) return results.getResponse();
 
             List<Guardian> guardians = new ArrayList<>();
@@ -81,87 +70,15 @@ public class GuardianService {
         }
     }
 
-    public static Response<Guardian> getGuardianById(Long id) {
-        try {
-            return getGuardians(List.of(Columns.id), List.of(Long.toUnsignedString(id)),
-                    null, null, null, null, 1L);
-        } catch (Exception e) {
-            return new Response<Guardian>().setError(e.getMessage());
-        }
+    public static Response<Guardian> delete(SearchQueryBuilder<Guardian, Columns, GuardianService> searchQueryBuilder) {
+        return CommonService.delete(searchQueryBuilder);
     }
 
-    public static Response<Guardian> createGuardian(Guardian guardian) {
-        Objects.requireNonNull(guardian);
-        try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement("INSERT INTO guardian (id, nic, initName, fullName, gender, dateOfBirth, address, email, contactNo) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
-            statement.setString(1, guardian.getId() == null ? null : Long.toUnsignedString(guardian.getId()));
-            statement.setString(2, guardian.getNic());
-            statement.setString(3, guardian.getInitName());
-            statement.setString(4, guardian.getFullName());
-            statement.setString(5, guardian.getGender().toString());
-            statement.setString(6, guardian.getDateOfBirth().format(Utils.getDateFormatter()));
-            statement.setString(7, guardian.getAddress());
-            statement.setString(8, guardian.getEmail());
-            statement.setString(9, guardian.getContactNo());
-            if (statement.executeUpdate() != 1) {
-                connection.rollback();
-                return new Response<Guardian>().setError("Internal server error");
-            }
-            try (var resultSet = statement.getGeneratedKeys()) {
-                if (!resultSet.next()) {
-                    connection.rollback();
-                    return new Response<Guardian>().setError("Internal server error");
-                }
-                connection.commit();
-                return getGuardianById(Long.parseLong(resultSet.getString(1)));
-            }
-        } catch (Exception e) {
-            return new Response<Guardian>().setError(e.getMessage());
-        }
+    public static Response<Guardian> insert(UpdateQueryBuilder<Guardian, Columns, GuardianService> updateQueryBuilder) {
+        return CommonService.insert(updateQueryBuilder);
     }
 
-    public static Response<Guardian> updateGuardian(Guardian guardian) {
-        Objects.requireNonNull(guardian);
-
-        var oldGuardian = getGuardianById(guardian.getId());
-        if (oldGuardian.getError() != null) return oldGuardian;
-        var data = oldGuardian.getData().getFirst();
-        if (guardian.getNic() == null) guardian.setNic(data.getNic());
-        if (guardian.getInitName() == null) guardian.setInitName(data.getInitName());
-        if (guardian.getFullName() == null) guardian.setFullName(data.getFullName());
-        if (guardian.getGender() == null) guardian.setGender(data.getGender());
-        if (guardian.getDateOfBirth() == null) guardian.setDateOfBirth(data.getDateOfBirth());
-        if (guardian.getAddress() == null) guardian.setAddress(data.getAddress());
-        if (guardian.getEmail() == null) guardian.setEmail(data.getEmail());
-        if (guardian.getContactNo() == null) guardian.setContactNo(data.getContactNo());
-
-        try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement("UPDATE guardian SET nic = ?, initName = ?, fullName = ?, gender = ?, dateOfBirth = ?, " +
-                     "address = ?, email = ?, contactNo = ? WHERE id = ?")) {
-            statement.setString(1, guardian.getNic());
-            statement.setString(2, guardian.getInitName());
-            statement.setString(3, guardian.getFullName());
-            statement.setString(4, guardian.getGender().toString());
-            statement.setString(5, guardian.getDateOfBirth().format(Utils.getDateFormatter()));
-            statement.setString(6, guardian.getAddress());
-            statement.setString(7, guardian.getEmail());
-            statement.setString(8, guardian.getContactNo());
-            statement.setString(9, Long.toUnsignedString(guardian.getId()));
-            if (statement.executeUpdate() != 1) {
-                connection.rollback();
-                return new Response<Guardian>().setError("Internal server error");
-            }
-            connection.commit();
-            return getGuardianById(guardian.getId());
-        } catch (Exception e) {
-            return new Response<Guardian>().setError(e.getMessage());
-        }
-    }
-
-    public static Response<Guardian> deleteGuardianById(Long id) {
-        Objects.requireNonNull(id);
-        return CommonService.delete(new CommonService.SearchQueryBuilder<Guardian, Columns>(Guardian.class).setSearchBy(List.of(Columns.id))
-                .setSearchByValues(List.of(Long.toUnsignedString(id))));
+    public static Response<Guardian> update(UpdateQueryBuilder<Guardian, Columns, GuardianService> updateQueryBuilder) {
+        return CommonService.update(updateQueryBuilder);
     }
 }

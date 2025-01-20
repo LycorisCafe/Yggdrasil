@@ -16,13 +16,10 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.teacher;
 
-import io.github.lycoriscafe.nexus.http.core.headers.content.MultipartFormData;
-import io.github.lycoriscafe.yggdrasil.configuration.Utils;
 import io.github.lycoriscafe.yggdrasil.configuration.commons.Entity;
 import io.github.lycoriscafe.yggdrasil.rest.Gender;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Objects;
 
 public class Teacher implements Entity {
@@ -36,8 +33,6 @@ public class Teacher implements Entity {
     private String email;
     private String contactNo;
     private Boolean disabled;
-
-    private Teacher() {}
 
     public Teacher(String nic,
                    String initName,
@@ -144,25 +139,5 @@ public class Teacher implements Entity {
     public Teacher setDisabled(Boolean disabled) {
         this.disabled = disabled;
         return this;
-    }
-
-    public static Teacher toTeacher(List<MultipartFormData> multipartFormData) {
-        var teacher = new Teacher();
-        for (var formData : multipartFormData) {
-            switch (formData.getName()) {
-                case "id" -> teacher.setId(Long.parseLong(new String(formData.getData())));
-                case "nic" -> teacher.setNic(new String(formData.getData()));
-                case "initName" -> teacher.setInitName(new String(formData.getData()));
-                case "fullName" -> teacher.setFullName(new String(formData.getData()));
-                case "gender" -> teacher.setGender(Gender.valueOf(new String(formData.getData())));
-                case "dateOfBirth" -> teacher.setDateOfBirth(LocalDate.parse(new String(formData.getData()), Utils.getDateFormatter()));
-                case "address" -> teacher.setAddress(new String(formData.getData()));
-                case "email" -> teacher.setEmail(new String(formData.getData()));
-                case "contactNo" -> teacher.setContactNo(new String(formData.getData()));
-                case "disabled" -> teacher.setDisabled(Boolean.parseBoolean(new String(formData.getData())));
-                default -> throw new IllegalStateException("Unexpected value: " + formData.getName());
-            }
-        }
-        return teacher;
     }
 }

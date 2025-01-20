@@ -17,18 +17,14 @@
 package io.github.lycoriscafe.yggdrasil.rest.timetable;
 
 import io.github.lycoriscafe.yggdrasil.configuration.Response;
-import io.github.lycoriscafe.yggdrasil.configuration.Utils;
-import io.github.lycoriscafe.yggdrasil.configuration.commons.CommonService;
-import io.github.lycoriscafe.yggdrasil.configuration.commons.EntityColumn;
+import io.github.lycoriscafe.yggdrasil.configuration.commons.*;
 
-import java.sql.Statement;
 import java.time.DayOfWeek;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
-public class TimetableService {
-    public enum Columns implements EntityColumn {
+public class TimetableService implements EntityService<Timetable> {
+    public enum Columns implements EntityColumn<Timetable> {
         id,
         teacherId,
         subjectId,
@@ -37,17 +33,9 @@ public class TimetableService {
         timeslot
     }
 
-    public static Response<Timetable> getTimetables(List<Columns> searchBy,
-                                                    List<String> searchByValues,
-                                                    List<Boolean> isCaseSensitive,
-                                                    List<Columns> orderBy,
-                                                    Boolean isAscending,
-                                                    Long resultsFrom,
-                                                    Long resultsOffset) {
+    public static Response<Timetable> select(SearchQueryBuilder<Timetable, Columns, TimetableService> searchQueryBuilder) {
         try {
-            var results = CommonService.select(new CommonService.SearchQueryBuilder<Timetable, Columns>(Timetable.class)
-                    .setSearchBy(searchBy).setSearchByValues(searchByValues).setIsCaseSensitive(isCaseSensitive).setOrderBy(orderBy)
-                    .setAscending(isAscending).setResultsFrom(resultsFrom).setResultsOffset(resultsOffset));
+            var results = CommonService.select(searchQueryBuilder);
             if (results.getResponse() != null) return results.getResponse();
 
             List<Timetable> timetables = new ArrayList<>();
@@ -74,79 +62,15 @@ public class TimetableService {
         }
     }
 
-    public static Response<Timetable> getTimetableById(Long id) {
-        try {
-            return getTimetables(List.of(Columns.id), List.of(Long.toUnsignedString(id)),
-                    null, null, null, null, 1L);
-        } catch (Exception e) {
-            return new Response<Timetable>().setError(e.getMessage());
-        }
+    public static Response<Timetable> delete(SearchQueryBuilder<Timetable, Columns, TimetableService> searchQueryBuilder) {
+        return CommonService.delete(searchQueryBuilder);
     }
 
-    public static Response<Timetable> createTimetable(Timetable timetable) {
-        Objects.requireNonNull(timetable);
-        try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement("INSERT INTO timetable (id, teacherId, subjectId, classroomId, day, timeslot) " +
-                     "VALUES (?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
-            statement.setString(1, Long.toUnsignedString(timetable.getId()));
-            statement.setString(2, Long.toUnsignedString(timetable.getTeacherId()));
-            statement.setString(3, Long.toUnsignedString(timetable.getSubjectId()));
-            statement.setString(4, Long.toUnsignedString(timetable.getClassroomId()));
-            statement.setInt(5, timetable.getDay().getValue());
-            statement.setInt(6, timetable.getTimeslot());
-            if (statement.executeUpdate() != 1) {
-                connection.rollback();
-                return new Response<Timetable>().setError("Internal server error");
-            }
-            try (var resultSet = statement.getGeneratedKeys()) {
-                if (!resultSet.next()) {
-                    connection.rollback();
-                    return new Response<Timetable>().setError("Internal server error");
-                }
-                connection.commit();
-                return getTimetableById(Long.parseLong(resultSet.getString(1)));
-            }
-        } catch (Exception e) {
-            return new Response<Timetable>().setError(e.getMessage());
-        }
+    public static Response<Timetable> insert(UpdateQueryBuilder<Timetable, Columns, TimetableService> updateQueryBuilder) {
+        return CommonService.insert(updateQueryBuilder);
     }
 
-    public static Response<Timetable> updateTimetable(Timetable timetable) {
-        Objects.requireNonNull(timetable);
-
-        var oldTimetable = getTimetableById(timetable.getId());
-        if (oldTimetable.getError() != null) return oldTimetable;
-        var data = oldTimetable.getData().getFirst();
-        if (timetable.getTeacherId() == null) timetable.setTeacherId(data.getTeacherId());
-        if (timetable.getSubjectId() == null) timetable.setSubjectId(data.getSubjectId());
-        if (timetable.getClassroomId() == null) timetable.setClassroomId(data.getClassroomId());
-        if (timetable.getDay() == null) timetable.setDay(data.getDay());
-        if (timetable.getTimeslot() == null) timetable.setTimeslot(data.getTimeslot());
-
-        try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement("UPDATE timetable SET teacherId = ?, subjectId = ?, classroomId = ?, day = ?, " +
-                     "timeslot = ? WHERE id = ?")) {
-            statement.setString(1, Long.toUnsignedString(timetable.getTeacherId()));
-            statement.setString(2, Long.toUnsignedString(timetable.getSubjectId()));
-            statement.setString(3, Long.toUnsignedString(timetable.getClassroomId()));
-            statement.setInt(4, timetable.getDay().getValue());
-            statement.setInt(5, timetable.getTimeslot());
-            statement.setString(6, Long.toUnsignedString(timetable.getId()));
-            if (statement.executeUpdate() != 1) {
-                connection.rollback();
-                return new Response<Timetable>().setError("Internal server error");
-            }
-            connection.commit();
-            return getTimetableById(timetable.getId());
-        } catch (Exception e) {
-            return new Response<Timetable>().setError(e.getMessage());
-        }
-    }
-
-    public static Response<Timetable> deleteTimetableById(Long id) {
-        Objects.requireNonNull(id);
-        return CommonService.delete(new CommonService.SearchQueryBuilder<Timetable, Columns>(Timetable.class)
-                .setSearchBy(List.of(Columns.id))
-                .setSearchByValues(List.of(Long.toUnsignedString(id))));
+    public static Response<Timetable> update(UpdateQueryBuilder<Timetable, Columns, TimetableService> updateQueryBuilder) {
+        return CommonService.update(updateQueryBuilder);
     }
 }

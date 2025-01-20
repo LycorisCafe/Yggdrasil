@@ -16,13 +16,10 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.guardian;
 
-import io.github.lycoriscafe.nexus.http.core.headers.content.MultipartFormData;
-import io.github.lycoriscafe.yggdrasil.configuration.Utils;
 import io.github.lycoriscafe.yggdrasil.configuration.commons.Entity;
 import io.github.lycoriscafe.yggdrasil.rest.Gender;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Objects;
 
 public class Guardian implements Entity {
@@ -35,8 +32,6 @@ public class Guardian implements Entity {
     private String address;
     private String email;
     private String contactNo;
-
-    private Guardian() {}
 
     public Guardian(String nic,
                     String initName,
@@ -132,24 +127,5 @@ public class Guardian implements Entity {
     public Guardian setContactNo(String contactNo) {
         this.contactNo = contactNo;
         return this;
-    }
-
-    public static Guardian toGuardian(List<MultipartFormData> multipartFormData) {
-        var guardian = new Guardian();
-        for (var formData : multipartFormData) {
-            switch (formData.getName()) {
-                case "id" -> guardian.setId(Long.parseLong(new String(formData.getData())));
-                case "nic" -> guardian.setNic(new String(formData.getData()));
-                case "initName" -> guardian.setInitName(new String(formData.getData()));
-                case "fullName" -> guardian.setFullName(new String(formData.getData()));
-                case "gender" -> guardian.setGender(Gender.valueOf(new String(formData.getData())));
-                case "dateOfBirth" -> guardian.setDateOfBirth(LocalDate.parse(new String(formData.getData()), Utils.getDateFormatter()));
-                case "address" -> guardian.setAddress(new String(formData.getData()));
-                case "email" -> guardian.setEmail(new String(formData.getData()));
-                case "contactNo" -> guardian.setContactNo(new String(formData.getData()));
-                default -> throw new IllegalStateException("Unexpected value: " + formData.getName());
-            }
-        }
-        return guardian;
     }
 }

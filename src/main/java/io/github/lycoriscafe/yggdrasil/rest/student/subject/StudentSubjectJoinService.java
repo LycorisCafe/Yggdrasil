@@ -17,31 +17,21 @@
 package io.github.lycoriscafe.yggdrasil.rest.student.subject;
 
 import io.github.lycoriscafe.yggdrasil.configuration.Response;
-import io.github.lycoriscafe.yggdrasil.configuration.Utils;
-import io.github.lycoriscafe.yggdrasil.configuration.commons.CommonService;
-import io.github.lycoriscafe.yggdrasil.configuration.commons.EntityColumn;
+import io.github.lycoriscafe.yggdrasil.configuration.commons.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
-public class StudentSubjectJoinService {
-    public enum Columns implements EntityColumn {
+public class StudentSubjectJoinService implements EntityService<StudentSubjectJoin> {
+    public enum Columns implements EntityColumn<StudentSubjectJoin> {
+        id,
         studentId,
         subjectId
     }
 
-    public static Response<StudentSubjectJoin> getStudentSubjectJoins(List<Columns> searchBy,
-                                                                      List<String> searchByValues,
-                                                                      List<Boolean> isCaseSensitive,
-                                                                      List<Columns> orderBy,
-                                                                      Boolean isAscending,
-                                                                      Long resultsFrom,
-                                                                      Long resultsOffset) {
+    public static Response<StudentSubjectJoin> select(SearchQueryBuilder<StudentSubjectJoin, Columns, StudentSubjectJoinService> searchQueryBuilder) {
         try {
-            var results = CommonService.select(new CommonService.SearchQueryBuilder<StudentSubjectJoin, Columns>(StudentSubjectJoin.class)
-                    .setSearchBy(searchBy).setSearchByValues(searchByValues).setIsCaseSensitive(isCaseSensitive).setOrderBy(orderBy)
-                    .setAscending(isAscending).setResultsFrom(resultsFrom).setResultsOffset(resultsOffset));
+            var results = CommonService.select(searchQueryBuilder);
             if (results.getResponse() != null) return results.getResponse();
 
             List<StudentSubjectJoin> studentSubjectJoins = new ArrayList<>();
@@ -50,7 +40,7 @@ public class StudentSubjectJoinService {
                     studentSubjectJoins.add(new StudentSubjectJoin(
                             Long.parseLong(resultSet.getString("studentId")),
                             Long.parseLong(resultSet.getString("subjectId"))
-                    ));
+                    ).setId(Long.parseLong(resultSet.getString("id"))));
                 }
             }
 
@@ -65,31 +55,15 @@ public class StudentSubjectJoinService {
         }
     }
 
-    public static Response<StudentSubjectJoin> createStudentSubjectJoin(StudentSubjectJoin studentSubjectJoin) {
-        Objects.requireNonNull(studentSubjectJoin);
-        try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement("INSERT INTO studentsubjectjoin (studentId, subjectId) VALUES (?, ?)")) {
-            statement.setString(1, Long.toUnsignedString(studentSubjectJoin.getStudentId()));
-            statement.setString(2, Long.toUnsignedString(studentSubjectJoin.getSubjectId()));
-            if (statement.executeUpdate() != 1) {
-                connection.rollback();
-                return new Response<StudentSubjectJoin>().setError("Internal server error");
-            }
-            connection.commit();
-            return getStudentSubjectJoins(List.of(Columns.studentId, Columns.subjectId),
-                    List.of(Long.toUnsignedString(studentSubjectJoin.getStudentId()), Long.toUnsignedString(studentSubjectJoin.getSubjectId())),
-                    null, null, null, null, 1L);
-        } catch (Exception e) {
-            return new Response<StudentSubjectJoin>().setError(e.getMessage());
-        }
+    public static Response<StudentSubjectJoin> delete(SearchQueryBuilder<StudentSubjectJoin, Columns, StudentSubjectJoinService> searchQueryBuilder) {
+        return CommonService.delete(searchQueryBuilder);
     }
 
-    public static Response<StudentSubjectJoin> deleteStudentSubjectJoinByStudentIdAndSubjectId(Long studentId,
-                                                                                               Long subjectId) {
-        Objects.requireNonNull(studentId);
-        Objects.requireNonNull(subjectId);
-        return CommonService.delete(new CommonService.SearchQueryBuilder<StudentSubjectJoin, Columns>(StudentSubjectJoin.class)
-                .setSearchBy(List.of(Columns.studentId, Columns.subjectId))
-                .setSearchByValues(List.of(Long.toUnsignedString(studentId), Long.toUnsignedString(subjectId))));
+    public static Response<StudentSubjectJoin> insert(UpdateQueryBuilder<StudentSubjectJoin, Columns, StudentSubjectJoinService> updateQueryBuilder) {
+        return CommonService.insert(updateQueryBuilder);
+    }
+
+    public static Response<StudentSubjectJoin> update(UpdateQueryBuilder<StudentSubjectJoin, Columns, StudentSubjectJoinService> updateQueryBuilder) {
+        return CommonService.update(updateQueryBuilder);
     }
 }

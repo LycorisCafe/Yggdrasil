@@ -38,6 +38,7 @@ public class TeacherAttendance implements Entity {
 
     public TeacherAttendance setId(Long id) {
         this.id = id;
+        return this;
     }
 
     public Long getTeacherId() {

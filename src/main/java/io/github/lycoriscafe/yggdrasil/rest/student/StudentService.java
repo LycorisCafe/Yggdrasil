@@ -21,20 +21,20 @@ import io.github.lycoriscafe.yggdrasil.authentication.AuthenticationService;
 import io.github.lycoriscafe.yggdrasil.authentication.Role;
 import io.github.lycoriscafe.yggdrasil.configuration.Response;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
-import io.github.lycoriscafe.yggdrasil.configuration.commons.CommonService;
-import io.github.lycoriscafe.yggdrasil.configuration.commons.EntityColumn;
+import io.github.lycoriscafe.yggdrasil.configuration.commons.*;
 import io.github.lycoriscafe.yggdrasil.rest.Gender;
 
 import java.nio.charset.StandardCharsets;
-import java.sql.Statement;
+import java.security.NoSuchAlgorithmException;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.Year;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class StudentService {
-    public enum Columns implements EntityColumn {
+public class StudentService implements EntityService<Student> {
+    public enum Columns implements EntityColumn<Student> {
         id,
         guardianId,
         classroomId,
@@ -50,17 +50,9 @@ public class StudentService {
         disabled
     }
 
-    public static Response<Student> getStudents(List<Columns> searchBy,
-                                                List<String> searchByValues,
-                                                List<Boolean> isCaseSensitive,
-                                                List<Columns> orderBy,
-                                                Boolean isAscending,
-                                                Long resultsFrom,
-                                                Long resultsOffset) {
+    public static Response<Student> select(SearchQueryBuilder<Student, Columns, StudentService> searchQueryBuilder) {
         try {
-            var results = CommonService.select(new CommonService.SearchQueryBuilder<Student, Columns>(Student.class)
-                    .setSearchBy(searchBy).setSearchByValues(searchByValues).setIsCaseSensitive(isCaseSensitive).setOrderBy(orderBy)
-                    .setAscending(isAscending).setResultsFrom(resultsFrom).setResultsOffset(resultsOffset));
+            var results = CommonService.select(searchQueryBuilder);
             if (results.getResponse() != null) return results.getResponse();
 
             List<Student> students = new ArrayList<>();
@@ -95,111 +87,33 @@ public class StudentService {
         }
     }
 
-    public static Response<Student> getStudentById(Long id) {
-        try {
-            return getStudents(List.of(Columns.id), List.of(Long.toUnsignedString(id)),
-                    null, null, null, null, 1L);
-        } catch (Exception e) {
-            return new Response<Student>().setError(e.getMessage());
-        }
+    public static Response<Student> delete(SearchQueryBuilder<Student, Columns, StudentService> searchQueryBuilder) {
+        var result = CommonService.delete(searchQueryBuilder);
+        if (result.isSuccess()) AuthenticationService.deleteAuthentication(Role.STUDENT, result.getData().getFirst().getId());
+        return result;
     }
 
-    public static Response<Student> createStudent(Student student) {
-        Objects.requireNonNull(student);
-        try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement("INSERT INTO student (id, guardianId, classroomId, initName, fullName, gender, " +
-                     "dateOfBirth, nic, address, regYear, contactNo, email, disabled) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, DEFAULT(disabled)))", Statement.RETURN_GENERATED_KEYS)) {
-            statement.setString(1, student.getId() == null ? null : Long.toUnsignedString(student.getId()));
-            statement.setString(2, Long.toUnsignedString(student.getGuardianId()));
-            statement.setString(3, student.getClassroomId() == null ? null : Long.toUnsignedString(student.getClassroomId()));
-            statement.setString(4, student.getInitName());
-            statement.setString(5, student.getFullName());
-            statement.setString(6, student.getGender().toString());
-            statement.setString(7, student.getDateOfBirth().format(Utils.getDateFormatter()));
-            statement.setString(8, student.getNic());
-            statement.setString(9, student.getAddress());
-            statement.setString(10, student.getRegYear().toString());
-            statement.setString(11, student.getContactNo());
-            statement.setString(12, student.getEmail());
-            statement.setBoolean(13, student.getDisabled());
-            if (statement.executeUpdate() != 1) {
-                connection.rollback();
-                return new Response<Student>().setError("Internal server error");
-            }
-            try (var resultSet = statement.getGeneratedKeys()) {
-                if (!resultSet.next()) {
-                    connection.rollback();
-                    return new Response<Student>().setError("Internal server error");
-                }
-                if (AuthenticationService.updatePassword(
+    public static Response<Student> insert(UpdateQueryBuilder<Student, Columns, StudentService> updateQueryBuilder) {
+        var result = CommonService.insert(updateQueryBuilder);
+        if (result.isSuccess()) {
+            try {
+                AuthenticationService.updatePassword(
                         AuthenticationService.createAuthentication(
                                 new Authentication(Role.STUDENT,
-                                        Long.parseLong(resultSet.getString(1)),
-                                        "S" + resultSet.getString(1)))) == null) {
-                    connection.rollback();
-                    return new Response<Student>().setError("Internal server error");
-                }
-                connection.commit();
-                return getStudentById(Long.parseLong(resultSet.getString(1)));
+                                        result.getData().getFirst().getId(),
+                                        "S" + Long.toUnsignedString(result.getData().getFirst().getId()))));
+            } catch (SQLException | NoSuchAlgorithmException e) {
+                delete(new SearchQueryBuilder<>(Student.class, Columns.class, StudentService.class)
+                        .setSearchBy(List.of(Columns.id))
+                        .setSearchByValues(List.of(Long.toUnsignedString(result.getData().getFirst().getId()))));
+                return new Response<Student>().setError(e.getMessage());
             }
-        } catch (Exception e) {
-            return new Response<Student>().setError(e.getMessage());
         }
-    }
-
-    public static Response<Student> updateStudent(Student student) {
-        Objects.requireNonNull(student);
-
-        var oldStudent = getStudentById(student.getId());
-        if (oldStudent.getError() != null) return oldStudent;
-        var data = oldStudent.getData().getFirst();
-        if (student.getGuardianId() == null) student.setGuardianId(data.getGuardianId());
-        if (student.getClassroomId() == null) student.setClassroomId(data.getClassroomId());
-        if (student.getInitName() == null) student.setInitName(data.getInitName());
-        if (student.getFullName() == null) student.setFullName(data.getFullName());
-        if (student.getGender() == null) student.setGender(data.getGender());
-        if (student.getDateOfBirth() == null) student.setDateOfBirth(data.getDateOfBirth());
-        if (student.getNic() == null) student.setNic(data.getNic());
-        if (student.getAddress() == null) student.setAddress(data.getAddress());
-        if (student.getRegYear() == null) student.setRegYear(data.getRegYear());
-        if (student.getContactNo() == null) student.setContactNo(data.getContactNo());
-        if (student.getEmail() == null) student.setEmail(data.getEmail());
-        if (student.getDisabled() == null) student.setDisabled(data.getDisabled());
-
-        try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement("UPDATE student SET guardianId = ?, classroomId = ?, initName = ?, fullName = ?, " +
-                     "gender = ?, dateOfBirth = ?, nic = ?, address = ?, regYear = ?, contactNo = ?, email = ?, disabled = ? WHERE id = ?")) {
-            statement.setString(1, Long.toUnsignedString(student.getGuardianId()));
-            statement.setString(2, student.getClassroomId() == null ? null : Long.toUnsignedString(student.getClassroomId()));
-            statement.setString(3, student.getInitName());
-            statement.setString(4, student.getFullName());
-            statement.setString(5, student.getGender().toString());
-            statement.setString(6, student.getDateOfBirth().format(Utils.getDateFormatter()));
-            statement.setString(7, student.getNic());
-            statement.setString(8, student.getAddress());
-            statement.setString(9, student.getRegYear().toString());
-            statement.setString(10, student.getContactNo());
-            statement.setString(11, student.getEmail());
-            statement.setBoolean(12, student.getDisabled());
-            statement.setString(13, Long.toUnsignedString(student.getId()));
-            if (statement.executeUpdate() != 1) {
-                connection.rollback();
-                return new Response<Student>().setError("Internal server error");
-            }
-            connection.commit();
-            return getStudentById(student.getId());
-        } catch (Exception e) {
-            return new Response<Student>().setError(e.getMessage());
-        }
-    }
-
-    public static Response<Student> deleteStudentById(Long id) {
-        Objects.requireNonNull(id);
-        var result = CommonService.delete(new CommonService.SearchQueryBuilder<Student, Columns>(Student.class).setSearchBy(List.of(Columns.id))
-                .setSearchByValues(List.of(Long.toUnsignedString(id))));
-        if (result.isSuccess()) AuthenticationService.deleteAuthentication(Role.STUDENT, id);
         return result;
+    }
+
+    public static Response<Student> update(UpdateQueryBuilder<Student, Columns, StudentService> updateQueryBuilder) {
+        return CommonService.update(updateQueryBuilder);
     }
 
     public static Response<Student> resetPassword(Long id,

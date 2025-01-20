@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public class UpdateQueryBuilder<T extends Entity, U extends Enum<U> & EntityColumn, V extends EntityService> {
+public class UpdateQueryBuilder<T extends Entity, U extends Enum<U> & EntityColumn<T>, V extends EntityService<T>> {
     private Class<T> entity;
     private Class<U> entityColumns;
     private Class<V> entityService;
@@ -114,12 +114,12 @@ public class UpdateQueryBuilder<T extends Entity, U extends Enum<U> & EntityColu
     }
 
     public static <T extends Entity,
-            U extends Enum<U> & EntityColumn,
-            V extends EntityService> UpdateQueryBuilder<T, U, V> build(Class<T> entity,
-                                                                       Class<U> entityColumns,
-                                                                       Class<V> entityService,
-                                                                       Map<String, String> parameters,
-                                                                       List<MultipartFormData> multipartFormData) {
+            U extends Enum<U> & EntityColumn<T>,
+            V extends EntityService<T>> UpdateQueryBuilder<T, U, V> build(Class<T> entity,
+                                                                          Class<U> entityColumns,
+                                                                          Class<V> entityService,
+                                                                          Map<String, String> parameters,
+                                                                          List<MultipartFormData> multipartFormData) {
         var updateQueryBuilder = new UpdateQueryBuilder<>(entity, entityColumns, entityService);
 
         List<U> columns = new ArrayList<>();

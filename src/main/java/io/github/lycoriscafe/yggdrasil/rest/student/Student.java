@@ -16,13 +16,11 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.student;
 
-import io.github.lycoriscafe.nexus.http.core.headers.content.MultipartFormData;
 import io.github.lycoriscafe.yggdrasil.configuration.commons.Entity;
 import io.github.lycoriscafe.yggdrasil.rest.Gender;
 
 import java.time.LocalDate;
 import java.time.Year;
-import java.util.List;
 import java.util.Objects;
 
 public class Student implements Entity {
@@ -39,8 +37,6 @@ public class Student implements Entity {
     private String contactNo;
     private String email;
     private Boolean disabled;
-
-    private Student() {}
 
     public Student(Long guardianId,
                    String initName,
@@ -173,28 +169,5 @@ public class Student implements Entity {
     public Student setDisabled(Boolean disabled) {
         this.disabled = disabled;
         return this;
-    }
-
-    public static Student toStudent(List<MultipartFormData> multipartFormData) {
-        var student = new Student();
-        for (var formData : multipartFormData) {
-            switch (formData.getName()) {
-                case "id" -> student.setId(Long.parseLong(new String(formData.getData())));
-                case "guardianId" -> student.setGuardianId(Long.parseLong(new String(formData.getData())));
-                case "classroomId" -> student.setClassroomId(Long.parseLong(new String(formData.getData())));
-                case "initName" -> student.setInitName(new String(formData.getData()));
-                case "fullName" -> student.setFullName(new String(formData.getData()));
-                case "gender" -> student.setGender(Gender.valueOf(new String(formData.getData())));
-                case "dateOfBirth" -> student.setDateOfBirth(LocalDate.parse(new String(formData.getData())));
-                case "nic" -> student.setNic(new String(formData.getData()));
-                case "address" -> student.setAddress(new String(formData.getData()));
-                case "regYear" -> student.setRegYear(Year.parse(new String(formData.getData())));
-                case "contactNo" -> student.setContactNo(new String(formData.getData()));
-                case "email" -> student.setEmail(new String(formData.getData()));
-                case "disabled" -> student.setDisabled(Boolean.parseBoolean(new String(formData.getData())));
-                default -> throw new IllegalStateException("Unexpected value: " + formData.getName());
-            }
-        }
-        return student;
     }
 }

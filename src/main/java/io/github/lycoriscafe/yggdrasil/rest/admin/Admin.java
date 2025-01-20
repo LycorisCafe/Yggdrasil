@@ -16,11 +16,8 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.admin;
 
-import io.github.lycoriscafe.nexus.http.core.headers.content.MultipartFormData;
 import io.github.lycoriscafe.yggdrasil.configuration.commons.Entity;
 
-import java.util.HashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -29,8 +26,6 @@ public class Admin implements Entity {
     private String name;
     private Set<AccessLevel> accessLevel;
     private Boolean disabled;
-
-    private Admin() {}
 
     public Admin(String name,
                  Set<AccessLevel> accessLevel) {
@@ -74,25 +69,5 @@ public class Admin implements Entity {
     public Admin setDisabled(Boolean disabled) {
         this.disabled = disabled;
         return this;
-    }
-
-    public static Admin toAdmin(List<MultipartFormData> multipartFormData) {
-        var admin = new Admin();
-        for (var formData : multipartFormData) {
-            switch (formData.getName()) {
-                case "id" -> admin.setId(Long.parseLong(new String(formData.getData())));
-                case "name" -> admin.setName(new String(formData.getData()));
-                case "accessLevel" -> {
-                    var accessLevels = new HashSet<AccessLevel>();
-                    for (String accessLevel : new String(formData.getData()).split(",")) {
-                        accessLevels.add(AccessLevel.valueOf(accessLevel));
-                    }
-                    admin.setAccessLevel(accessLevels);
-                }
-                case "disabled" -> admin.setDisabled(Boolean.valueOf(new String(formData.getData())));
-                default -> throw new IllegalArgumentException("invalid form data: " + formData.getName());
-            }
-        }
-        return admin;
     }
 }

@@ -17,17 +17,13 @@
 package io.github.lycoriscafe.yggdrasil.rest.subject;
 
 import io.github.lycoriscafe.yggdrasil.configuration.Response;
-import io.github.lycoriscafe.yggdrasil.configuration.Utils;
-import io.github.lycoriscafe.yggdrasil.configuration.commons.CommonService;
-import io.github.lycoriscafe.yggdrasil.configuration.commons.EntityColumn;
+import io.github.lycoriscafe.yggdrasil.configuration.commons.*;
 
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
-public class SubjectService {
-    public enum Columns implements EntityColumn {
+public class SubjectService implements EntityService<Subject> {
+    public enum Columns implements EntityColumn<Subject> {
         id,
         grade,
         shortName,
@@ -35,17 +31,9 @@ public class SubjectService {
         teacherId
     }
 
-    public static Response<Subject> getSubjects(List<Columns> searchBy,
-                                                List<String> searchByValues,
-                                                List<Boolean> isCaseSensitive,
-                                                List<Columns> orderBy,
-                                                Boolean isAscending,
-                                                Long resultsFrom,
-                                                Long resultsOffset) {
+    public static Response<Subject> select(SearchQueryBuilder<Subject, Columns, SubjectService> searchQueryBuilder) {
         try {
-            var results = CommonService.select(new CommonService.SearchQueryBuilder<Subject, Columns>(Subject.class)
-                    .setSearchBy(searchBy).setSearchByValues(searchByValues).setIsCaseSensitive(isCaseSensitive).setOrderBy(orderBy)
-                    .setAscending(isAscending).setResultsFrom(resultsFrom).setResultsOffset(resultsOffset));
+            var results = CommonService.select(searchQueryBuilder);
             if (results.getResponse() != null) return results.getResponse();
 
             List<Subject> subjects = new ArrayList<>();
@@ -72,74 +60,15 @@ public class SubjectService {
         }
     }
 
-    public static Response<Subject> getSubjectById(Long id) {
-        try {
-            return getSubjects(List.of(Columns.id), List.of(Long.toUnsignedString(id)),
-                    null, null, null, null, 1L);
-        } catch (Exception e) {
-            return new Response<Subject>().setError(e.getMessage());
-        }
+    public static Response<Subject> delete(SearchQueryBuilder<Subject, Columns, SubjectService> searchQueryBuilder) {
+        return CommonService.delete(searchQueryBuilder);
     }
 
-    public static Response<Subject> createSubject(Subject subject) {
-        Objects.requireNonNull(subject);
-        try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement("INSERT INTO subject (id, grade, shortName, longName, teacherId) " +
-                     "VALUES (?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
-            statement.setString(1, subject.getId() == null ? null : Long.toUnsignedString(subject.getId()));
-            statement.setInt(2, subject.getGrade());
-            statement.setString(3, subject.getShortName());
-            statement.setString(4, subject.getLongName());
-            statement.setString(5, Long.toUnsignedString(subject.getTeacherId()));
-            if (statement.executeUpdate() != 1) {
-                connection.rollback();
-                return new Response<Subject>().setError("Internal server error");
-            }
-            try (var resultSet = statement.getGeneratedKeys()) {
-                if (!resultSet.next()) {
-                    connection.rollback();
-                    return new Response<Subject>().setError("Internal server error");
-                }
-                connection.commit();
-                return getSubjectById(Long.parseLong(resultSet.getString(1)));
-            }
-        } catch (Exception e) {
-            return new Response<Subject>().setError(e.getMessage());
-        }
+    public static Response<Subject> insert(UpdateQueryBuilder<Subject, Columns, SubjectService> updateQueryBuilder) {
+        return CommonService.insert(updateQueryBuilder);
     }
 
-    public static Response<Subject> updateSubject(Subject subject) {
-        Objects.requireNonNull(subject);
-
-        var oldSubject = getSubjectById(subject.getId());
-        if (oldSubject.getError() != null) return oldSubject;
-        var data = oldSubject.getData().getFirst();
-        if (subject.getGrade() == null) subject.setGrade(data.getGrade());
-        if (subject.getShortName() == null) subject.setShortName(data.getShortName());
-        if (subject.getLongName() == null) subject.setLongName(data.getLongName());
-        if (subject.getTeacherId() == null) subject.setTeacherId(data.getTeacherId());
-
-        try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement("UPDATE subject SET grade = ?, shortName = ?, longName = ?, teacherId = ? WHERE id = ?")) {
-            statement.setInt(1, subject.getGrade());
-            statement.setString(2, subject.getShortName());
-            statement.setString(3, subject.getLongName());
-            statement.setString(4, Long.toUnsignedString(subject.getTeacherId()));
-            statement.setString(5, Long.toUnsignedString(subject.getId()));
-            if (statement.executeUpdate() != 1) {
-                connection.rollback();
-                return new Response<Subject>().setError("Internal server error");
-            }
-            connection.commit();
-            return getSubjectById(subject.getId());
-        } catch (Exception e) {
-            return new Response<Subject>().setError(e.getMessage());
-        }
-    }
-
-    public static Response<Subject> deleteSubjectById(Long id) {
-        Objects.requireNonNull(id);
-        return CommonService.delete(new CommonService.SearchQueryBuilder<Subject, Columns>(Subject.class).setSearchBy(List.of(Columns.id))
-                .setSearchByValues(List.of(Long.toUnsignedString(id))));
+    public static Response<Subject> update(UpdateQueryBuilder<Subject, Columns, SubjectService> updateQueryBuilder) {
+        return CommonService.update(updateQueryBuilder);
     }
 }

@@ -27,8 +27,8 @@ import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.util.*;
 
-public class AdminService implements EntityService {
-    public enum Columns implements EntityColumn {
+public class AdminService implements EntityService<Admin> {
+    public enum Columns implements EntityColumn<Admin> {
         id,
         name,
         accessLevel,

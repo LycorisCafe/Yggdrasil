@@ -16,11 +16,9 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.timetable;
 
-import io.github.lycoriscafe.nexus.http.core.headers.content.MultipartFormData;
 import io.github.lycoriscafe.yggdrasil.configuration.commons.Entity;
 
 import java.time.DayOfWeek;
-import java.util.List;
 import java.util.Objects;
 
 public class Timetable implements Entity {
@@ -30,8 +28,6 @@ public class Timetable implements Entity {
     private Long classroomId;
     private DayOfWeek day;
     private Integer timeslot;
-
-    private Timetable() {}
 
     public Timetable(Long teacherId,
                      Long subjectId,
@@ -97,21 +93,5 @@ public class Timetable implements Entity {
     public Timetable setTimeslot(Integer timeslot) {
         this.timeslot = timeslot;
         return this;
-    }
-
-    public static Timetable toTimetable(List<MultipartFormData> multipartFormData) {
-        var timetable = new Timetable();
-        for (var formData : multipartFormData) {
-            switch (formData.getName()) {
-                case "id" -> timetable.setId(Long.parseLong(new String(formData.getData())));
-                case "teacherId" -> timetable.setTeacherId(Long.parseLong(new String(formData.getData())));
-                case "subjectId" -> timetable.setSubjectId(Long.parseLong(new String(formData.getData())));
-                case "classroomId" -> timetable.setClassroomId(Long.parseLong(new String(formData.getData())));
-                case "day" -> timetable.setDay(DayOfWeek.of(Integer.parseInt(new String(formData.getData()))));
-                case "timeslot" -> timetable.setTimeslot(Integer.parseInt(new String(formData.getData())));
-                default -> throw new IllegalStateException("Unexpected value: " + formData.getName());
-            }
-        }
-        return timetable;
     }
 }

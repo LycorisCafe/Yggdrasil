@@ -16,10 +16,8 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.subject;
 
-import io.github.lycoriscafe.nexus.http.core.headers.content.MultipartFormData;
 import io.github.lycoriscafe.yggdrasil.configuration.commons.Entity;
 
-import java.util.List;
 import java.util.Objects;
 
 public class Subject implements Entity {
@@ -28,8 +26,6 @@ public class Subject implements Entity {
     private String shortName;
     private String longName;
     private Long teacherId;
-
-    private Subject() {}
 
     public Subject(Integer grade,
                    String shortName) {
@@ -80,20 +76,5 @@ public class Subject implements Entity {
     public Subject setTeacherId(Long teacherId) {
         this.teacherId = teacherId;
         return this;
-    }
-
-    public static Subject toSubject(List<MultipartFormData> multipartFormData) {
-        var subject = new Subject();
-        for (var formData : multipartFormData) {
-            switch (formData.getName()) {
-                case "id" -> subject.setId(Long.parseLong(new String(formData.getData())));
-                case "grade" -> subject.setGrade(Integer.parseInt(new String(formData.getData())));
-                case "shortName" -> subject.setShortName(new String(formData.getData()));
-                case "longName" -> subject.setLongName(new String(formData.getData()));
-                case "teacherId" -> subject.setTeacherId(Long.parseLong(new String(formData.getData())));
-                default -> throw new IllegalStateException("Unexpected value: " + formData.getName());
-            }
-        }
-        return subject;
     }
 }

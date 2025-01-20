@@ -16,16 +16,14 @@
 
 package io.github.lycoriscafe.yggdrasil.authentication;
 
-import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class Authentication {
-    private Long id;
     private Role role;
     private Long userId;
     private String password;
     private String accessToken;
-    private LocalDateTime expires;
+    private Long expires;
     private String refreshToken;
 
     public Authentication(Role role,
@@ -34,15 +32,6 @@ public class Authentication {
         this.role = Objects.requireNonNull(role);
         this.userId = Objects.requireNonNull(userId);
         this.password = Objects.requireNonNull(password);
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public Authentication setId(Long id) {
-        this.id = id;
-        return this;
     }
 
     public Role getRole() {
@@ -81,11 +70,11 @@ public class Authentication {
         return this;
     }
 
-    public LocalDateTime getExpires() {
+    public Long getExpires() {
         return expires;
     }
 
-    public Authentication setExpires(LocalDateTime expires) {
+    public Authentication setExpires(Long expires) {
         this.expires = expires;
         return this;
     }

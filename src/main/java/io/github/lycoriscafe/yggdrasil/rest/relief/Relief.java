@@ -16,11 +16,9 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.relief;
 
-import io.github.lycoriscafe.nexus.http.core.headers.content.MultipartFormData;
 import io.github.lycoriscafe.yggdrasil.configuration.commons.Entity;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Objects;
 
 public class Relief implements Entity {
@@ -28,8 +26,6 @@ public class Relief implements Entity {
     private Long timetableId;
     private Long teacherId;
     private LocalDate date;
-
-    private Relief() {}
 
     public Relief(Long timetableId,
                   Long teacherId,
@@ -73,19 +69,5 @@ public class Relief implements Entity {
     public Relief setDate(LocalDate date) {
         this.date = date;
         return this;
-    }
-
-    public static Relief toRelief(List<MultipartFormData> multipartFormData) {
-        var relief = new Relief();
-        for (var formData : multipartFormData) {
-            switch (formData.getName()) {
-                case "id" -> relief.setId(Long.parseLong(new String(formData.getData())));
-                case "timetableId" -> relief.setTimetableId(Long.parseLong(new String(formData.getData())));
-                case "teacherId" -> relief.setTeacherId(Long.parseLong(new String(formData.getData())));
-                case "date" -> relief.setDate(LocalDate.parse(new String(formData.getData())));
-                default -> throw new IllegalStateException("Unexpected value: " + formData.getName());
-            }
-        }
-        return relief;
     }
 }
