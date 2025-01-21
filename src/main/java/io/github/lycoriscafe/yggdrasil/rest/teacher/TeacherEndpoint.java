@@ -47,10 +47,11 @@ public class TeacherEndpoint {
     public static HttpResponse read(HttpGetRequest req,
                                     HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN, Role.TEACHER, Role.STUDENT},
-                AccessLevel.SUPERUSER, AccessLevel.TEACHER_READ, AccessLevel.TEACHER_WRITE);
+                AccessLevel.SUPERUSER, AccessLevel.TEACHER_RELIEF);
         if (auth != null) return auth;
 
-        return res.setContent(TeacherService.select(SearchQueryBuilder.build(Teacher.class, TeacherService.Columns.class, TeacherService.class,
+        return res.setContent(TeacherService.select(SearchQueryBuilder.build(
+                Teacher.class, TeacherService.Columns.class, TeacherService.class,
                 req.getParameters())).parse());
     }
 
@@ -60,10 +61,11 @@ public class TeacherEndpoint {
     public static HttpResponse create(HttpPostRequest req,
                                       HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN},
-                AccessLevel.SUPERUSER, AccessLevel.TEACHER_WRITE);
+                AccessLevel.SUPERUSER, AccessLevel.TEACHER_RELIEF);
         if (auth != null) return auth;
 
-        return res.setContent(TeacherService.insert(UpdateQueryBuilder.build(Teacher.class, TeacherService.Columns.class, TeacherService.class,
+        return res.setContent(TeacherService.insert(UpdateQueryBuilder.build(
+                Teacher.class, TeacherService.Columns.class, TeacherService.class,
                 req.getParameters(), (List<MultipartFormData>) req.getContent().getData())).parse());
     }
 
@@ -73,10 +75,11 @@ public class TeacherEndpoint {
     public static HttpResponse update(HttpPostRequest req,
                                       HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN},
-                AccessLevel.SUPERUSER, AccessLevel.TEACHER_WRITE);
+                AccessLevel.SUPERUSER, AccessLevel.TEACHER_RELIEF);
         if (auth != null) return auth;
 
-        return res.setContent(TeacherService.update(UpdateQueryBuilder.build(Teacher.class, TeacherService.Columns.class, TeacherService.class,
+        return res.setContent(TeacherService.update(UpdateQueryBuilder.build(
+                Teacher.class, TeacherService.Columns.class, TeacherService.class,
                 req.getParameters(), (List<MultipartFormData>) req.getContent().getData())).parse());
     }
 
@@ -84,10 +87,11 @@ public class TeacherEndpoint {
     public static HttpResponse delete(HttpDeleteRequest req,
                                       HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN},
-                AccessLevel.SUPERUSER, AccessLevel.TEACHER_WRITE);
+                AccessLevel.SUPERUSER, AccessLevel.TEACHER_RELIEF);
         if (auth != null) return auth;
 
-        return res.setContent(TeacherService.delete(SearchQueryBuilder.build(Teacher.class, TeacherService.Columns.class, TeacherService.class,
+        return res.setContent(TeacherService.delete(SearchQueryBuilder.build(
+                Teacher.class, TeacherService.Columns.class, TeacherService.class,
                 req.getParameters())).parse());
     }
 
@@ -95,8 +99,8 @@ public class TeacherEndpoint {
     @ExpectContent("application/x-www-form-urlencoded")
     public static HttpResponse resetPassword(HttpPatchRequest req,
                                              HttpResponse res) {
-        var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN, Role.STUDENT},
-                AccessLevel.SUPERUSER, AccessLevel.TEACHER_WRITE);
+        var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN, Role.TEACHER},
+                AccessLevel.SUPERUSER, AccessLevel.TEACHER_RELIEF);
         if (auth != null) return auth;
 
         return res.setContent(TeacherService.resetPassword((UrlEncodedData) req.getContent().getData()).parse());
@@ -106,8 +110,8 @@ public class TeacherEndpoint {
     @ExpectContent("application/x-www-form-urlencoded")
     public static HttpResponse logout(HttpPatchRequest req,
                                       HttpResponse res) {
-        var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN, Role.STUDENT},
-                AccessLevel.SUPERUSER, AccessLevel.TEACHER_WRITE);
+        var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN, Role.TEACHER},
+                AccessLevel.SUPERUSER, AccessLevel.TEACHER_RELIEF);
         if (auth != null) return auth;
 
         try {

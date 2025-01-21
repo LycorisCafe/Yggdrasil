@@ -18,8 +18,75 @@ package io.github.lycoriscafe.yggdrasil.rest.guardian;
 
 import io.github.lycoriscafe.nexus.http.core.HttpEndpoint;
 import io.github.lycoriscafe.nexus.http.core.headers.auth.Authenticated;
+import io.github.lycoriscafe.nexus.http.core.headers.content.ExpectContent;
+import io.github.lycoriscafe.nexus.http.core.headers.content.MultipartFormData;
+import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.DELETE;
+import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.GET;
+import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.POST;
+import io.github.lycoriscafe.nexus.http.engine.ReqResManager.httpReq.HttpDeleteRequest;
+import io.github.lycoriscafe.nexus.http.engine.ReqResManager.httpReq.HttpGetRequest;
+import io.github.lycoriscafe.nexus.http.engine.ReqResManager.httpReq.HttpPostRequest;
+import io.github.lycoriscafe.nexus.http.engine.ReqResManager.httpRes.HttpResponse;
+import io.github.lycoriscafe.yggdrasil.authentication.AuthenticationService;
+import io.github.lycoriscafe.yggdrasil.authentication.Role;
+import io.github.lycoriscafe.yggdrasil.configuration.commons.SearchQueryBuilder;
+import io.github.lycoriscafe.yggdrasil.configuration.commons.UpdateQueryBuilder;
+import io.github.lycoriscafe.yggdrasil.rest.admin.AccessLevel;
+
+import java.util.List;
 
 @HttpEndpoint("/guardian")
 @Authenticated
 public class GuardianEndpoint {
+    @GET("/read")
+    public static HttpResponse read(HttpGetRequest req,
+                                    HttpResponse res) {
+        var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN, Role.TEACHER, Role.STUDENT},
+                AccessLevel.SUPERUSER, AccessLevel.STUDENT_GUARDIAN);
+        if (auth != null) return auth;
+
+        return res.setContent(GuardianService.select(SearchQueryBuilder.build(
+                Guardian.class, GuardianService.Columns.class, GuardianService.class,
+                req.getParameters())).parse());
+    }
+
+    @POST("/create")
+    @ExpectContent("multipart/form-data")
+    @SuppressWarnings("unchecked")
+    public static HttpResponse create(HttpPostRequest req,
+                                      HttpResponse res) {
+        var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN},
+                AccessLevel.SUPERUSER, AccessLevel.STUDENT_GUARDIAN);
+        if (auth != null) return auth;
+
+        return res.setContent(GuardianService.insert(UpdateQueryBuilder.build(
+                Guardian.class, GuardianService.Columns.class, GuardianService.class,
+                req.getParameters(), (List<MultipartFormData>) req.getContent().getData())).parse());
+    }
+
+    @POST("/update")
+    @ExpectContent("multipart/form-data")
+    @SuppressWarnings("unchecked")
+    public static HttpResponse update(HttpPostRequest req,
+                                      HttpResponse res) {
+        var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN},
+                AccessLevel.SUPERUSER, AccessLevel.STUDENT_GUARDIAN);
+        if (auth != null) return auth;
+
+        return res.setContent(GuardianService.update(UpdateQueryBuilder.build(
+                Guardian.class, GuardianService.Columns.class, GuardianService.class,
+                req.getParameters(), (List<MultipartFormData>) req.getContent().getData())).parse());
+    }
+
+    @DELETE("/delete")
+    public static HttpResponse delete(HttpDeleteRequest req,
+                                      HttpResponse res) {
+        var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN},
+                AccessLevel.SUPERUSER, AccessLevel.STUDENT_GUARDIAN);
+        if (auth != null) return auth;
+
+        return res.setContent(GuardianService.delete(SearchQueryBuilder.build(
+                Guardian.class, GuardianService.Columns.class, GuardianService.class,
+                req.getParameters())).parse());
+    }
 }

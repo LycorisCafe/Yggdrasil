@@ -48,7 +48,8 @@ public class AdminEndpoint {
         var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN}, AccessLevel.SUPERUSER);
         if (auth != null) return auth;
 
-        return res.setContent(AdminService.select(SearchQueryBuilder.build(Admin.class, AdminService.Columns.class, AdminService.class,
+        return res.setContent(AdminService.select(SearchQueryBuilder.build(
+                Admin.class, AdminService.Columns.class, AdminService.class,
                 req.getParameters())).parse());
     }
 
@@ -60,7 +61,8 @@ public class AdminEndpoint {
         var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN}, AccessLevel.SUPERUSER);
         if (auth != null) return auth;
 
-        return res.setContent(AdminService.insert(UpdateQueryBuilder.build(Admin.class, AdminService.Columns.class, AdminService.class,
+        return res.setContent(AdminService.insert(UpdateQueryBuilder.build(
+                Admin.class, AdminService.Columns.class, AdminService.class,
                 req.getParameters(), (List<MultipartFormData>) req.getContent().getData())).parse());
     }
 
@@ -72,7 +74,8 @@ public class AdminEndpoint {
         var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN}, AccessLevel.SUPERUSER);
         if (auth != null) return auth;
 
-        return res.setContent(AdminService.update(UpdateQueryBuilder.build(Admin.class, AdminService.Columns.class, AdminService.class,
+        return res.setContent(AdminService.update(UpdateQueryBuilder.build(
+                Admin.class, AdminService.Columns.class, AdminService.class,
                 req.getParameters(), (List<MultipartFormData>) req.getContent().getData())).parse());
     }
 

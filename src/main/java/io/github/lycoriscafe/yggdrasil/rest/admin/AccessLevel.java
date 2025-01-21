@@ -18,9 +18,8 @@ package io.github.lycoriscafe.yggdrasil.rest.admin;
 
 public enum AccessLevel {
     SUPERUSER,
-    TEACHER_READ,
-    TEACHER_WRITE,
-    STUDENT_READ,
-    STUDENT_WRITE,
-    NOTIFICATION
+    TIMETABLE_CLASSROOM_SUBJECT,
+    NOTIFICATION,
+    STUDENT_GUARDIAN,
+    TEACHER_RELIEF
 }

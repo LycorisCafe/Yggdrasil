@@ -18,8 +18,75 @@ package io.github.lycoriscafe.yggdrasil.rest.teacher.subject;
 
 import io.github.lycoriscafe.nexus.http.core.HttpEndpoint;
 import io.github.lycoriscafe.nexus.http.core.headers.auth.Authenticated;
+import io.github.lycoriscafe.nexus.http.core.headers.content.ExpectContent;
+import io.github.lycoriscafe.nexus.http.core.headers.content.MultipartFormData;
+import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.DELETE;
+import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.GET;
+import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.POST;
+import io.github.lycoriscafe.nexus.http.engine.ReqResManager.httpReq.HttpDeleteRequest;
+import io.github.lycoriscafe.nexus.http.engine.ReqResManager.httpReq.HttpGetRequest;
+import io.github.lycoriscafe.nexus.http.engine.ReqResManager.httpReq.HttpPostRequest;
+import io.github.lycoriscafe.nexus.http.engine.ReqResManager.httpRes.HttpResponse;
+import io.github.lycoriscafe.yggdrasil.authentication.AuthenticationService;
+import io.github.lycoriscafe.yggdrasil.authentication.Role;
+import io.github.lycoriscafe.yggdrasil.configuration.commons.SearchQueryBuilder;
+import io.github.lycoriscafe.yggdrasil.configuration.commons.UpdateQueryBuilder;
+import io.github.lycoriscafe.yggdrasil.rest.admin.AccessLevel;
+
+import java.util.List;
 
 @HttpEndpoint("/teacher/subject")
 @Authenticated
 public class TeacherSubjectJoinEndpoint {
+    @GET("/read")
+    public static HttpResponse read(HttpGetRequest req,
+                                    HttpResponse res) {
+        var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN, Role.TEACHER, Role.STUDENT},
+                AccessLevel.SUPERUSER, AccessLevel.TEACHER_RELIEF);
+        if (auth != null) return auth;
+
+        return res.setContent(TeacherSubjectJoinService.select(SearchQueryBuilder.build(
+                TeacherSubjectJoin.class, TeacherSubjectJoinService.Columns.class, TeacherSubjectJoinService.class,
+                req.getParameters())).parse());
+    }
+
+    @POST("/create")
+    @ExpectContent("multipart/form-data")
+    @SuppressWarnings("unchecked")
+    public static HttpResponse create(HttpPostRequest req,
+                                      HttpResponse res) {
+        var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN},
+                AccessLevel.SUPERUSER, AccessLevel.TEACHER_RELIEF);
+        if (auth != null) return auth;
+
+        return res.setContent(TeacherSubjectJoinService.insert(UpdateQueryBuilder.build(
+                TeacherSubjectJoin.class, TeacherSubjectJoinService.Columns.class, TeacherSubjectJoinService.class,
+                req.getParameters(), (List<MultipartFormData>) req.getContent().getData())).parse());
+    }
+
+    @POST("/update")
+    @ExpectContent("multipart/form-data")
+    @SuppressWarnings("unchecked")
+    public static HttpResponse update(HttpPostRequest req,
+                                      HttpResponse res) {
+        var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN},
+                AccessLevel.SUPERUSER, AccessLevel.TEACHER_RELIEF);
+        if (auth != null) return auth;
+
+        return res.setContent(TeacherSubjectJoinService.update(UpdateQueryBuilder.build(
+                TeacherSubjectJoin.class, TeacherSubjectJoinService.Columns.class, TeacherSubjectJoinService.class,
+                req.getParameters(), (List<MultipartFormData>) req.getContent().getData())).parse());
+    }
+
+    @DELETE("/delete")
+    public static HttpResponse delete(HttpDeleteRequest req,
+                                      HttpResponse res) {
+        var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN},
+                AccessLevel.SUPERUSER, AccessLevel.TEACHER_RELIEF);
+        if (auth != null) return auth;
+
+        return res.setContent(TeacherSubjectJoinService.delete(SearchQueryBuilder.build(
+                TeacherSubjectJoin.class, TeacherSubjectJoinService.Columns.class, TeacherSubjectJoinService.class,
+                req.getParameters())).parse());
+    }
 }
