@@ -16,10 +16,7 @@
 
 package io.github.lycoriscafe.yggdrasil.configuration.commons;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public class SearchQueryBuilder<T extends Entity, U extends Enum<U> & EntityColumn<T>, V extends EntityService<T>> {
     private Class<T> entity;
@@ -144,37 +141,30 @@ public class SearchQueryBuilder<T extends Entity, U extends Enum<U> & EntityColu
         List<String> searchByValues = new ArrayList<>();
         List<Boolean> isCaseSensitive = new ArrayList<>();
         for (String key : parameters.keySet()) {
-            try {
-                U col = Enum.valueOf(entityColumns, key);
-                searchBy.add(col);
-                String[] values = parameters.get(key).split(",", 0);
-                searchByValues.add(values[0]);
-                isCaseSensitive.add(values.length == 2 && Boolean.parseBoolean(values[1]));
-            } catch (Exception ignored) {}
+            var col = Arrays.stream(entityColumns.getEnumConstants()).filter(e -> e.name().equalsIgnoreCase(key)).findAny().orElse(null);
+            if (col == null) continue;
+            searchBy.add(col);
+            String[] values = parameters.get(key).split(",", 0);
+            searchByValues.add(values[0]);
+            isCaseSensitive.add(values.length == 2 && Boolean.parseBoolean(values[1]));
         }
         searchQuery.setSearchBy(searchBy.isEmpty() ? null : searchBy)
                 .setSearchByValues(searchByValues.isEmpty() ? null : searchByValues)
                 .setIsCaseSensitive(isCaseSensitive.isEmpty() ? null : isCaseSensitive);
 
         List<U> orderBy = new ArrayList<>();
-        if (parameters.containsKey("orderBy")) {
-            String[] values = parameters.get("orderBy").split(",", 0);
-            for (String value : values) {
-                U col = Enum.valueOf(entityColumns, value);
-                orderBy.add(col);
-            }
-        }
+        parameters.keySet().stream().filter(p -> p.equalsIgnoreCase("orderBy")).findAny()
+                .ifPresent(key -> Arrays.stream(parameters.get(key).split(",", 0))
+                        .forEach(value -> Arrays.stream(entityColumns.getEnumConstants()).filter(e -> e.name().equalsIgnoreCase(value))
+                                .findAny().ifPresent(orderBy::add)));
         searchQuery.setOrderBy(orderBy.isEmpty() ? null : orderBy);
 
-        if (parameters.containsKey("isAscending")) {
-            searchQuery.setAscending(Boolean.parseBoolean(parameters.get("isAscending")));
-        }
-        if (parameters.containsKey("resultsFrom")) {
-            searchQuery.setResultsFrom(Long.parseLong(parameters.get("resultsFrom")));
-        }
-        if (parameters.containsKey("resultsOffset")) {
-            searchQuery.setResultsOffset(Long.parseLong(parameters.get("resultsOffset")));
-        }
+        parameters.keySet().stream().filter(p -> p.equalsIgnoreCase("isAscending")).findAny()
+                .ifPresent(string -> searchQuery.setAscending(Boolean.parseBoolean(parameters.get(string))));
+        parameters.keySet().stream().filter(p -> p.equalsIgnoreCase("resultsFrom")).findAny()
+                .ifPresent(string -> searchQuery.setResultsFrom(Long.parseLong(parameters.get(string))));
+        parameters.keySet().stream().filter(p -> p.equalsIgnoreCase("resultsOffset")).findAny()
+                .ifPresent(string -> searchQuery.setResultsOffset(Long.parseLong(parameters.get(string))));
         return searchQuery;
     }
 }

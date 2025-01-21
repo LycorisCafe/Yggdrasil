@@ -18,10 +18,7 @@ package io.github.lycoriscafe.yggdrasil.configuration.commons;
 
 import io.github.lycoriscafe.nexus.http.core.headers.content.MultipartFormData;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public class UpdateQueryBuilder<T extends Entity, U extends Enum<U> & EntityColumn<T>, V extends EntityService<T>> {
     private Class<T> entity;
@@ -125,11 +122,11 @@ public class UpdateQueryBuilder<T extends Entity, U extends Enum<U> & EntityColu
         List<U> columns = new ArrayList<>();
         List<String> values = new ArrayList<>();
         for (MultipartFormData formData : multipartFormData) {
-            try {
-                U col = Enum.valueOf(entityColumns, formData.getName());
-                columns.add(col);
-                values.add(new String(formData.getData()));
-            } catch (Exception ignored) {}
+            var col = Arrays.stream(entityColumns.getEnumConstants()).filter(e -> e.name().equalsIgnoreCase(formData.getName())).findAny()
+                    .orElse(null);
+            if (col == null) continue;
+            columns.add(col);
+            values.add(new String(formData.getData()));
         }
         updateQueryBuilder.setColumns(columns.isEmpty() ? null : columns)
                 .setValues(values.isEmpty() ? null : values);
@@ -139,13 +136,12 @@ public class UpdateQueryBuilder<T extends Entity, U extends Enum<U> & EntityColu
         List<String> searchByValues = new ArrayList<>();
         List<Boolean> isCaseSensitive = new ArrayList<>();
         for (String key : parameters.keySet()) {
-            try {
-                U col = Enum.valueOf(entityColumns, key);
-                searchBy.add(col);
-                String[] val = parameters.get(key).split(",", 0);
-                searchByValues.add(val[0]);
-                isCaseSensitive.add(val.length == 2 && Boolean.parseBoolean(val[1]));
-            } catch (Exception ignored) {}
+            var col = Arrays.stream(entityColumns.getEnumConstants()).filter(e -> e.name().equalsIgnoreCase(key)).findAny().orElse(null);
+            if (col == null) continue;
+            searchBy.add(col);
+            String[] vals = parameters.get(key).split(",", 0);
+            searchByValues.add(vals[0]);
+            isCaseSensitive.add(vals.length == 2 && Boolean.parseBoolean(vals[1]));
         }
         updateQueryBuilder.setSearchBy(searchBy.isEmpty() ? null : searchBy)
                 .setSearchByValues(searchByValues.isEmpty() ? null : searchByValues)
