@@ -16,6 +16,7 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.admin;
 
+import io.github.lycoriscafe.nexus.http.core.headers.content.UrlEncodedData;
 import io.github.lycoriscafe.yggdrasil.authentication.Authentication;
 import io.github.lycoriscafe.yggdrasil.authentication.AuthenticationService;
 import io.github.lycoriscafe.yggdrasil.authentication.Role;
@@ -99,10 +100,16 @@ public class AdminService implements EntityService<Admin> {
         return CommonService.update(updateQueryBuilder);
     }
 
-    public static Response<Admin> resetPassword(BigDecimal id,
-                                                String oldPassword,
-                                                String newPassword) {
-        if (id == null) return new Response<Admin>().setError("id cannot be null");
+    public static Response<Admin> resetPassword(UrlEncodedData encodedData) {
+        BigDecimal id = null;
+        try {
+            id = new BigDecimal(encodedData.get("id"));
+        } catch (Exception e) {
+            new Response<Admin>().setError("Invalid id");
+        }
+
+        String oldPassword = encodedData.get("oldPassword");
+        String newPassword = encodedData.get("newPassword");
         if (oldPassword == null) return new Response<Admin>().setError("oldPassword cannot be null");
         if (newPassword == null) return new Response<Admin>().setError("newPassword cannot be null");
         if (newPassword.length() < YggdrasilConfig.getDefaultUserPasswordBoundary()[0] ||

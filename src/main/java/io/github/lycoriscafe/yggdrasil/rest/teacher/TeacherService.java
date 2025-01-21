@@ -16,6 +16,7 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.teacher;
 
+import io.github.lycoriscafe.nexus.http.core.headers.content.UrlEncodedData;
 import io.github.lycoriscafe.yggdrasil.authentication.Authentication;
 import io.github.lycoriscafe.yggdrasil.authentication.AuthenticationService;
 import io.github.lycoriscafe.yggdrasil.authentication.Role;
@@ -109,10 +110,16 @@ public class TeacherService implements EntityService<Teacher> {
         return CommonService.update(updateQueryBuilder);
     }
 
-    public static Response<Teacher> resetPassword(BigDecimal id,
-                                                  String oldPassword,
-                                                  String newPassword) {
-        if (id == null) return new Response<Teacher>().setError("id cannot be null");
+    public static Response<Teacher> resetPassword(UrlEncodedData encodedData) {
+        BigDecimal id = null;
+        try {
+            id = new BigDecimal(encodedData.get("id"));
+        } catch (Exception e) {
+            new Response<Teacher>().setError("Invalid id");
+        }
+
+        String oldPassword = encodedData.get("oldPassword");
+        String newPassword = encodedData.get("newPassword");
         if (oldPassword == null) return new Response<Teacher>().setError("oldPassword cannot be null");
         if (newPassword == null) return new Response<Teacher>().setError("newPassword cannot be null");
         if (newPassword.length() < YggdrasilConfig.getDefaultUserPasswordBoundary()[0] ||

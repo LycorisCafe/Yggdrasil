@@ -113,9 +113,9 @@ public class CommonService {
                 if (i > 0) query.append(", ");
                 query.append(queryBuilder.getOrderBy().get(i));
             }
-        }
-        if (queryBuilder.getAscending() != null) {
-            query.append(queryBuilder.getAscending() ? " ASC" : " DESC");
+            if (queryBuilder.getAscending() != null) {
+                query.append(queryBuilder.getAscending() ? " ASC" : " DESC");
+            }
         }
         String generableResultQuery = query.toString().replaceFirst("\\*", "COUNT(1)");
         query.append(" LIMIT ?, ?");
@@ -169,7 +169,7 @@ public class CommonService {
             return new Response<T>().setError("Invalid search parameters");
         }
 
-        StringBuilder query = new StringBuilder("DELETE FROM ").append(queryBuilder.getEntity().getName().toLowerCase()).append(" WHERE ");
+        StringBuilder query = new StringBuilder("DELETE FROM ").append(queryBuilder.getEntity().getSimpleName().toLowerCase()).append(" WHERE ");
         for (int i = 0; i < queryBuilder.getSearchBy().size(); i++) {
             if (i > 0) query.append(" AND ");
             query.append(queryBuilder.getSearchBy().get(i)).append(" LIKE ");
@@ -202,7 +202,7 @@ public class CommonService {
             return new Response<T>().setError("Invalid insert parameters");
         }
 
-        StringBuilder query = new StringBuilder("INSERT INTO ").append(queryBuilder.getEntity().getName().toLowerCase()).append(" (");
+        StringBuilder query = new StringBuilder("INSERT INTO ").append(queryBuilder.getEntity().getSimpleName().toLowerCase()).append(" (");
         for (int i = 0; i < queryBuilder.getColumns().size(); i++) {
             if (i > 0) query.append(", ");
             query.append(queryBuilder.getColumns().get(i));
@@ -252,7 +252,7 @@ public class CommonService {
             return new Response<T>().setError("Invalid search parameters");
         }
 
-        StringBuilder query = new StringBuilder("UPDATE ").append(queryBuilder.getEntity().getName().toLowerCase()).append(" SET ");
+        StringBuilder query = new StringBuilder("UPDATE ").append(queryBuilder.getEntity().getSimpleName().toLowerCase()).append(" SET ");
         for (int i = 0; i < queryBuilder.getColumns().size(); i++) {
             if (i > 0) query.append(", ");
             query.append(queryBuilder.getColumns().get(i)).append(" = ").append("?");

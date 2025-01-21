@@ -71,7 +71,7 @@ public class YggdrasilConfig {
 
     private static void initializeHttpServer() throws ScannerException, SQLException, IOException {
         var httpServerConfiguration = new HttpServerConfiguration("io.github.lycoriscafe.yggdrasil", "YggdrasilTemp")
-                .setUrlPrefix("/api/v1.0.0")
+                .setUrlPrefix("/api/v1")
                 .addDefaultAuthentication(new BearerAuthentication("Access for Yggdrasil API"));
         httpServer = new HttpServer(httpServerConfiguration).initialize();
     }

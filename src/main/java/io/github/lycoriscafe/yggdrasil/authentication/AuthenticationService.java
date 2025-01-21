@@ -211,15 +211,15 @@ public class AuthenticationService {
         return updateAuthentication(authentication);
     }
 
-    public static Response<?> logoutFromAll(Role role,
-                                            BigDecimal userId) {
+    public static Response<?> logout(Role role,
+                                     BigDecimal userId) {
         Objects.requireNonNull(role);
         Objects.requireNonNull(userId);
         try {
             var auth = AuthenticationService.getAuthentication(role, userId);
             if (auth == null) return new Response<>().setError("Invalid ID");
             if (AuthenticationService.updateAuthentication(auth.setAccessToken(null).setExpires(null).setRefreshToken(null)) == null) {
-                return new Response<Admin>().setError("Internal server error");
+                return new Response<>().setError("Internal server error");
             }
             return new Response<>().setSuccess(true);
         } catch (Exception e) {
