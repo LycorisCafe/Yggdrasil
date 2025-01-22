@@ -38,28 +38,6 @@
 
     <developers>
         <developer>
-            <id>bihara79miyuni</id>
-            <name>Miyuni Bihara</name>
-            <email>biharamiyuni@gmail.com</email>
-            <url>https://github.com/bihara79miyuni</url>
-            <timezone>+05:30</timezone>
-            <properties>
-                <!-- messenger platform -->
-                <Telegram>https://t.me/B2004ihara</Telegram>
-            </properties>
-        </developer>
-        <developer>
-            <id>DasunNethsara-04</id>
-            <name>Dasun Nethsara</name>
-            <email>techsaralk.pro@gmail.com</email>
-            <url>https://github.com/DasunNethsara-04</url>
-            <timezone>+05:30</timezone>
-            <properties>
-                <!-- messenger platform -->
-                <Telegram>https://t.me/techsara_lk</Telegram>
-            </properties>
-        </developer>
-        <developer>
             <id>NaveenB2004</id>
             <name>Naveen Balasooriya</name>
             <email>naveennbalasooriya2004@gmail.com</email>
@@ -68,17 +46,6 @@
             <properties>
                 <!-- messenger platform -->
                 <Telegram>https://t.me/NaveenB2004</Telegram>
-            </properties>
-        </developer>
-        <developer>
-            <id>randillasith</id>
-            <name>Randil Lasith</name>
-            <email>randillasith900@gmail.com</email>
-            <url>https://github.com/randillasith</url>
-            <timezone>+05:30</timezone>
-            <properties>
-                <!-- messenger platform -->
-                <Telegram>https://t.me/RandilLasith</Telegram>
             </properties>
         </developer>
     </developers>
