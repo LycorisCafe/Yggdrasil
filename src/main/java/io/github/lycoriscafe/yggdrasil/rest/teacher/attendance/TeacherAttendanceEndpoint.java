@@ -42,7 +42,7 @@ public class TeacherAttendanceEndpoint {
     public static HttpResponse read(HttpGetRequest req,
                                     HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN, Role.TEACHER, Role.STUDENT},
-                AccessLevel.SUPERUSER, AccessLevel.TEACHER_RELIEF);
+                AccessLevel.SUPERUSER, AccessLevel.TEACHER);
         if (auth != null) return auth;
 
         return res.setContent(TeacherAttendanceService.select(SearchQueryBuilder.build(
@@ -56,7 +56,7 @@ public class TeacherAttendanceEndpoint {
     public static HttpResponse create(HttpPostRequest req,
                                       HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN},
-                AccessLevel.SUPERUSER, AccessLevel.TEACHER_RELIEF);
+                AccessLevel.SUPERUSER, AccessLevel.TEACHER);
         if (auth != null) return auth;
 
         return res.setContent(TeacherAttendanceService.insert(UpdateQueryBuilder.build(
@@ -70,7 +70,7 @@ public class TeacherAttendanceEndpoint {
     public static HttpResponse update(HttpPostRequest req,
                                       HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN},
-                AccessLevel.SUPERUSER, AccessLevel.TEACHER_RELIEF);
+                AccessLevel.SUPERUSER, AccessLevel.TEACHER);
         if (auth != null) return auth;
 
         return res.setContent(TeacherAttendanceService.update(UpdateQueryBuilder.build(
@@ -82,7 +82,7 @@ public class TeacherAttendanceEndpoint {
     public static HttpResponse delete(HttpDeleteRequest req,
                                       HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN},
-                AccessLevel.SUPERUSER, AccessLevel.TEACHER_RELIEF);
+                AccessLevel.SUPERUSER, AccessLevel.TEACHER);
         if (auth != null) return auth;
 
         return res.setContent(TeacherAttendanceService.delete(SearchQueryBuilder.build(

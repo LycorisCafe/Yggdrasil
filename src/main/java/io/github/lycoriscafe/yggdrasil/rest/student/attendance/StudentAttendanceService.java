@@ -61,14 +61,26 @@ public class StudentAttendanceService implements EntityService<StudentAttendance
     }
 
     public static Response<StudentAttendance> delete(SearchQueryBuilder<StudentAttendance, Columns, StudentAttendanceService> searchQueryBuilder) {
+        if (searchQueryBuilder.getSearchBy() == null || !searchQueryBuilder.getSearchBy().contains(Columns.id)) {
+            return new Response<StudentAttendance>().setError("Required parameters not found");
+        }
         return CommonService.delete(searchQueryBuilder);
     }
 
     public static Response<StudentAttendance> insert(UpdateQueryBuilder<StudentAttendance, Columns, StudentAttendanceService> updateQueryBuilder) {
+        if (updateQueryBuilder.getColumns() == null || !updateQueryBuilder.getColumns().contains(Columns.studentId)) {
+            return new Response<StudentAttendance>().setError("Required parameters not found");
+        }
         return CommonService.insert(updateQueryBuilder);
     }
 
     public static Response<StudentAttendance> update(UpdateQueryBuilder<StudentAttendance, Columns, StudentAttendanceService> updateQueryBuilder) {
+        if (updateQueryBuilder.getSearchBy() == null || !updateQueryBuilder.getSearchBy().contains(Columns.id)) {
+            return new Response<StudentAttendance>().setError("Required parameters not found");
+        }
+        if (updateQueryBuilder.getColumns() != null && updateQueryBuilder.getColumns().contains(Columns.id)) {
+            return new Response<StudentAttendance>().setError("'id' cannot be updated");
+        }
         return CommonService.update(updateQueryBuilder);
     }
 }

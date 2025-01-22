@@ -88,7 +88,7 @@ public class AuthenticationService {
 
             if (roles.contains(Role.ADMIN) && accessLevels != null) {
                 var admin = AdminService.select(new SearchQueryBuilder<>(Admin.class, AdminService.Columns.class, AdminService.class)
-                        .setSearchBy(List.of(AdminService.Columns.id)).setSearchByValues(List.of(auth.getUserId().toPlainString())));
+                        .setSearchBy(Set.of(AdminService.Columns.id)).setSearchByValues(List.of(auth.getUserId().toPlainString())));
                 var accessLevel = admin.getData().getFirst().getAccessLevel();
                 if (!accessLevel.containsAll(List.of(accessLevels))) {
                     return httpResponse.setStatusCode(HttpStatusCode.FORBIDDEN).addAuthentication(
@@ -250,15 +250,15 @@ public class AuthenticationService {
         Objects.requireNonNull(userId);
         return switch (role) {
             case ADMIN -> AdminService.select(new SearchQueryBuilder<>(Admin.class, AdminService.Columns.class, AdminService.class)
-                            .setSearchBy(List.of(AdminService.Columns.id))
+                            .setSearchBy(Set.of(AdminService.Columns.id))
                             .setSearchByValues(List.of(userId.toPlainString())))
                     .getData().getFirst().getDisabled();
             case TEACHER -> TeacherService.select(new SearchQueryBuilder<>(Teacher.class, TeacherService.Columns.class, TeacherService.class)
-                            .setSearchBy(List.of(TeacherService.Columns.id))
+                            .setSearchBy(Set.of(TeacherService.Columns.id))
                             .setSearchByValues(List.of(userId.toPlainString())))
                     .getData().getFirst().getDisabled();
             case STUDENT -> StudentService.select(new SearchQueryBuilder<>(Student.class, StudentService.Columns.class, StudentService.class)
-                            .setSearchBy(List.of(StudentService.Columns.id))
+                            .setSearchBy(Set.of(StudentService.Columns.id))
                             .setSearchByValues(List.of(userId.toPlainString())))
                     .getData().getFirst().getDisabled();
         };

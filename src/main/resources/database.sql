@@ -26,8 +26,9 @@ START TRANSACTION;
 CREATE TABLE admin
 (
     id          SERIAL PRIMARY KEY,
-    name        VARCHAR(100)                                                                                        NOT NULL,
-    accessLevel SET ('SUPERUSER', 'TEACHER_READ', 'TEACHER_WRITE', 'STUDENT_READ', 'STUDENT_WRITE', 'NOTIFICATION') NOT NULL,
+    name        VARCHAR(100)                                    NOT NULL,
+    accessLevel SET ('SUPERUSER', 'CLASSROOM', 'GUARDIAN', 'NOTIFICATION',
+        'RELIEF', 'STUDENT', 'SUBJECT', 'TEACHER', 'TIMETABLE') NOT NULL,
     disabled    BOOLEAN DEFAULT FALSE # Used for disabling without deleting
 );
 

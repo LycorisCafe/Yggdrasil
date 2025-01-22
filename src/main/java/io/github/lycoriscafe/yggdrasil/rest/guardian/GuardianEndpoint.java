@@ -42,7 +42,7 @@ public class GuardianEndpoint {
     public static HttpResponse read(HttpGetRequest req,
                                     HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN, Role.TEACHER, Role.STUDENT},
-                AccessLevel.SUPERUSER, AccessLevel.STUDENT_GUARDIAN);
+                AccessLevel.SUPERUSER, AccessLevel.GUARDIAN);
         if (auth != null) return auth;
 
         return res.setContent(GuardianService.select(SearchQueryBuilder.build(
@@ -56,7 +56,7 @@ public class GuardianEndpoint {
     public static HttpResponse create(HttpPostRequest req,
                                       HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN},
-                AccessLevel.SUPERUSER, AccessLevel.STUDENT_GUARDIAN);
+                AccessLevel.SUPERUSER, AccessLevel.GUARDIAN);
         if (auth != null) return auth;
 
         return res.setContent(GuardianService.insert(UpdateQueryBuilder.build(
@@ -70,7 +70,7 @@ public class GuardianEndpoint {
     public static HttpResponse update(HttpPostRequest req,
                                       HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN},
-                AccessLevel.SUPERUSER, AccessLevel.STUDENT_GUARDIAN);
+                AccessLevel.SUPERUSER, AccessLevel.GUARDIAN);
         if (auth != null) return auth;
 
         return res.setContent(GuardianService.update(UpdateQueryBuilder.build(
@@ -82,7 +82,7 @@ public class GuardianEndpoint {
     public static HttpResponse delete(HttpDeleteRequest req,
                                       HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN},
-                AccessLevel.SUPERUSER, AccessLevel.STUDENT_GUARDIAN);
+                AccessLevel.SUPERUSER, AccessLevel.GUARDIAN);
         if (auth != null) return auth;
 
         return res.setContent(GuardianService.delete(SearchQueryBuilder.build(

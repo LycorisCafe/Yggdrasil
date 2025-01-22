@@ -21,6 +21,7 @@ import io.github.lycoriscafe.yggdrasil.configuration.commons.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class SubjectService implements EntityService<Subject> {
     public enum Columns implements EntityColumn<Subject> {
@@ -60,14 +61,26 @@ public class SubjectService implements EntityService<Subject> {
     }
 
     public static Response<Subject> delete(SearchQueryBuilder<Subject, Columns, SubjectService> searchQueryBuilder) {
+        if (searchQueryBuilder.getSearchBy() == null || !searchQueryBuilder.getSearchBy().contains(Columns.id)) {
+            return new Response<Subject>().setError("Required parameters not found");
+        }
         return CommonService.delete(searchQueryBuilder);
     }
 
     public static Response<Subject> insert(UpdateQueryBuilder<Subject, Columns, SubjectService> updateQueryBuilder) {
+        if (updateQueryBuilder.getColumns() == null || !updateQueryBuilder.getColumns().containsAll(Set.of(Columns.grade, Columns.shortName))) {
+            return new Response<Subject>().setError("Required parameters not found");
+        }
         return CommonService.insert(updateQueryBuilder);
     }
 
     public static Response<Subject> update(UpdateQueryBuilder<Subject, Columns, SubjectService> updateQueryBuilder) {
+        if (updateQueryBuilder.getSearchBy() == null || !updateQueryBuilder.getSearchBy().contains(Columns.id)) {
+            return new Response<Subject>().setError("Required parameters not found");
+        }
+        if (updateQueryBuilder.getColumns() != null && updateQueryBuilder.getColumns().contains(Columns.id)) {
+            return new Response<Subject>().setError("'id' cannot be updated");
+        }
         return CommonService.update(updateQueryBuilder);
     }
 }

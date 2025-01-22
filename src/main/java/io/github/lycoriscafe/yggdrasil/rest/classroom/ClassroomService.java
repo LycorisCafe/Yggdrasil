@@ -21,6 +21,7 @@ import io.github.lycoriscafe.yggdrasil.configuration.commons.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class ClassroomService implements EntityService<Classroom> {
     public enum Columns implements EntityColumn<Classroom> {
@@ -58,14 +59,26 @@ public class ClassroomService implements EntityService<Classroom> {
     }
 
     public static Response<Classroom> delete(SearchQueryBuilder<Classroom, Columns, ClassroomService> searchQueryBuilder) {
+        if (searchQueryBuilder.getSearchBy() == null || !searchQueryBuilder.getSearchBy().contains(Columns.id)) {
+            return new Response<Classroom>().setError("Required parameters not found");
+        }
         return CommonService.delete(searchQueryBuilder);
     }
 
     public static Response<Classroom> insert(UpdateQueryBuilder<Classroom, Columns, ClassroomService> updateQueryBuilder) {
+        if (updateQueryBuilder.getColumns() == null || !updateQueryBuilder.getColumns().containsAll(Set.of(Columns.grade, Columns.name))) {
+            return new Response<Classroom>().setError("Required parameters not found");
+        }
         return CommonService.insert(updateQueryBuilder);
     }
 
     public static Response<Classroom> update(UpdateQueryBuilder<Classroom, Columns, ClassroomService> updateQueryBuilder) {
+        if (updateQueryBuilder.getSearchBy() == null || !updateQueryBuilder.getSearchBy().contains(Columns.id)) {
+            return new Response<Classroom>().setError("Required parameters not found");
+        }
+        if (updateQueryBuilder.getColumns() != null && updateQueryBuilder.getColumns().contains(Columns.id)) {
+            return new Response<Classroom>().setError("'id' cannot be updated");
+        }
         return CommonService.update(updateQueryBuilder);
     }
 }

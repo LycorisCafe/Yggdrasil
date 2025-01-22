@@ -24,9 +24,9 @@ public class UpdateQueryBuilder<T extends Entity, U extends Enum<U> & EntityColu
     private Class<T> entity;
     private Class<U> entityColumns;
     private Class<V> entityService;
-    private List<U> columns;
+    private Set<U> columns;
     private List<String> values;
-    private List<U> searchBy;
+    private Set<U> searchBy;
     private List<String> searchByValues;
     private List<Boolean> isCaseSensitive;
 
@@ -65,11 +65,11 @@ public class UpdateQueryBuilder<T extends Entity, U extends Enum<U> & EntityColu
         return this;
     }
 
-    public List<U> getColumns() {
+    public Set<U> getColumns() {
         return columns;
     }
 
-    public UpdateQueryBuilder<T, U, V> setColumns(List<U> columns) {
+    public UpdateQueryBuilder<T, U, V> setColumns(Set<U> columns) {
         this.columns = columns;
         return this;
     }
@@ -83,11 +83,11 @@ public class UpdateQueryBuilder<T extends Entity, U extends Enum<U> & EntityColu
         return this;
     }
 
-    public List<U> getSearchBy() {
+    public Set<U> getSearchBy() {
         return searchBy;
     }
 
-    public UpdateQueryBuilder<T, U, V> setSearchBy(List<U> searchBy) {
+    public UpdateQueryBuilder<T, U, V> setSearchBy(Set<U> searchBy) {
         this.searchBy = searchBy;
         return this;
     }
@@ -119,7 +119,7 @@ public class UpdateQueryBuilder<T extends Entity, U extends Enum<U> & EntityColu
                                                                           List<MultipartFormData> multipartFormData) {
         var updateQueryBuilder = new UpdateQueryBuilder<>(entity, entityColumns, entityService);
 
-        List<U> columns = new ArrayList<>();
+        Set<U> columns = new HashSet<>();
         List<String> values = new ArrayList<>();
         for (MultipartFormData formData : multipartFormData) {
             var col = Arrays.stream(entityColumns.getEnumConstants()).filter(e -> e.name().equalsIgnoreCase(formData.getName())).findAny()
@@ -132,7 +132,7 @@ public class UpdateQueryBuilder<T extends Entity, U extends Enum<U> & EntityColu
                 .setValues(values.isEmpty() ? null : values);
 
         if (parameters == null) return updateQueryBuilder;
-        List<U> searchBy = new ArrayList<>();
+        Set<U> searchBy = new HashSet<>();
         List<String> searchByValues = new ArrayList<>();
         List<Boolean> isCaseSensitive = new ArrayList<>();
         for (String key : parameters.keySet()) {

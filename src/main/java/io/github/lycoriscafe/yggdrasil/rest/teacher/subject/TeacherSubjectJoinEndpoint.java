@@ -42,7 +42,7 @@ public class TeacherSubjectJoinEndpoint {
     public static HttpResponse read(HttpGetRequest req,
                                     HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN, Role.TEACHER, Role.STUDENT},
-                AccessLevel.SUPERUSER, AccessLevel.TEACHER_RELIEF);
+                AccessLevel.SUPERUSER, AccessLevel.TEACHER);
         if (auth != null) return auth;
 
         return res.setContent(TeacherSubjectJoinService.select(SearchQueryBuilder.build(
@@ -56,7 +56,7 @@ public class TeacherSubjectJoinEndpoint {
     public static HttpResponse create(HttpPostRequest req,
                                       HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN},
-                AccessLevel.SUPERUSER, AccessLevel.TEACHER_RELIEF);
+                AccessLevel.SUPERUSER, AccessLevel.TEACHER);
         if (auth != null) return auth;
 
         return res.setContent(TeacherSubjectJoinService.insert(UpdateQueryBuilder.build(
@@ -70,7 +70,7 @@ public class TeacherSubjectJoinEndpoint {
     public static HttpResponse update(HttpPostRequest req,
                                       HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN},
-                AccessLevel.SUPERUSER, AccessLevel.TEACHER_RELIEF);
+                AccessLevel.SUPERUSER, AccessLevel.TEACHER);
         if (auth != null) return auth;
 
         return res.setContent(TeacherSubjectJoinService.update(UpdateQueryBuilder.build(
@@ -82,7 +82,7 @@ public class TeacherSubjectJoinEndpoint {
     public static HttpResponse delete(HttpDeleteRequest req,
                                       HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN},
-                AccessLevel.SUPERUSER, AccessLevel.TEACHER_RELIEF);
+                AccessLevel.SUPERUSER, AccessLevel.TEACHER);
         if (auth != null) return auth;
 
         return res.setContent(TeacherSubjectJoinService.delete(SearchQueryBuilder.build(

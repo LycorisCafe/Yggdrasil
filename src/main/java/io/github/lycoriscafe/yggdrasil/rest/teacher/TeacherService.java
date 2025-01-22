@@ -33,6 +33,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class TeacherService implements EntityService<Teacher> {
     public enum Columns implements EntityColumn<Teacher> {
@@ -82,12 +83,20 @@ public class TeacherService implements EntityService<Teacher> {
     }
 
     public static Response<Teacher> delete(SearchQueryBuilder<Teacher, Columns, TeacherService> searchQueryBuilder) {
+        if (searchQueryBuilder.getSearchBy() == null || !searchQueryBuilder.getSearchBy().contains(Columns.id)) {
+            return new Response<Teacher>().setError("Required parameters not found");
+        }
         var result = CommonService.delete(searchQueryBuilder);
         if (result.isSuccess()) AuthenticationService.deleteAuthentication(Role.TEACHER, result.getData().getFirst().getId());
         return result;
     }
 
     public static Response<Teacher> insert(UpdateQueryBuilder<Teacher, Columns, TeacherService> updateQueryBuilder) {
+        if (updateQueryBuilder.getColumns() == null ||
+                !updateQueryBuilder.getColumns().containsAll(Set.of(Columns.nic, Columns.initName, Columns.fullName, Columns.gender,
+                        Columns.dateOfBirth, Columns.email, Columns.contactNo))) {
+            return new Response<Teacher>().setError("Required parameters not found");
+        }
         var result = CommonService.insert(updateQueryBuilder);
         if (result.isSuccess()) {
             try {
@@ -98,7 +107,7 @@ public class TeacherService implements EntityService<Teacher> {
                                         "S" + result.getData().getFirst().getId().toPlainString())));
             } catch (SQLException | NoSuchAlgorithmException e) {
                 delete(new SearchQueryBuilder<>(Teacher.class, Columns.class, TeacherService.class)
-                        .setSearchBy(List.of(Columns.id))
+                        .setSearchBy(Set.of(Columns.id))
                         .setSearchByValues(List.of(result.getData().getFirst().getId().toPlainString())));
                 return new Response<Teacher>().setError(e.getMessage());
             }
@@ -107,6 +116,12 @@ public class TeacherService implements EntityService<Teacher> {
     }
 
     public static Response<Teacher> update(UpdateQueryBuilder<Teacher, Columns, TeacherService> updateQueryBuilder) {
+        if (updateQueryBuilder.getSearchBy() == null || !updateQueryBuilder.getSearchBy().contains(Columns.id)) {
+            return new Response<Teacher>().setError("Required parameters not found");
+        }
+        if (updateQueryBuilder.getColumns() != null && updateQueryBuilder.getColumns().contains(Columns.id)) {
+            return new Response<Teacher>().setError("'id' cannot be updated");
+        }
         return CommonService.update(updateQueryBuilder);
     }
 

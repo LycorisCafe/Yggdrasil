@@ -22,10 +22,10 @@ public class SearchQueryBuilder<T extends Entity, U extends Enum<U> & EntityColu
     private Class<T> entity;
     private Class<U> entityColumns;
     private Class<V> entityService;
-    private List<U> searchBy;
+    private Set<U> searchBy;
     private List<String> searchByValues;
     private List<Boolean> isCaseSensitive;
-    private List<U> orderBy;
+    private Set<U> orderBy;
     private Boolean isAscending;
     private Long resultsFrom;
     private Long resultsOffset;
@@ -65,11 +65,11 @@ public class SearchQueryBuilder<T extends Entity, U extends Enum<U> & EntityColu
         return this;
     }
 
-    public List<U> getSearchBy() {
+    public Set<U> getSearchBy() {
         return searchBy;
     }
 
-    public SearchQueryBuilder<T, U, V> setSearchBy(List<U> searchBy) {
+    public SearchQueryBuilder<T, U, V> setSearchBy(Set<U> searchBy) {
         this.searchBy = searchBy;
         return this;
     }
@@ -92,11 +92,11 @@ public class SearchQueryBuilder<T extends Entity, U extends Enum<U> & EntityColu
         return this;
     }
 
-    public List<U> getOrderBy() {
+    public Set<U> getOrderBy() {
         return orderBy;
     }
 
-    public SearchQueryBuilder<T, U, V> setOrderBy(List<U> orderBy) {
+    public SearchQueryBuilder<T, U, V> setOrderBy(Set<U> orderBy) {
         this.orderBy = orderBy;
         return this;
     }
@@ -137,7 +137,7 @@ public class SearchQueryBuilder<T extends Entity, U extends Enum<U> & EntityColu
         var searchQuery = new SearchQueryBuilder<>(entity, entityColumns, entityService);
         if (parameters == null) return searchQuery;
 
-        List<U> searchBy = new ArrayList<>();
+        Set<U> searchBy = new HashSet<>();
         List<String> searchByValues = new ArrayList<>();
         List<Boolean> isCaseSensitive = new ArrayList<>();
         for (String key : parameters.keySet()) {
@@ -152,7 +152,7 @@ public class SearchQueryBuilder<T extends Entity, U extends Enum<U> & EntityColu
                 .setSearchByValues(searchByValues.isEmpty() ? null : searchByValues)
                 .setIsCaseSensitive(isCaseSensitive.isEmpty() ? null : isCaseSensitive);
 
-        List<U> orderBy = new ArrayList<>();
+        Set<U> orderBy = new HashSet<>();
         parameters.keySet().stream().filter(p -> p.equalsIgnoreCase("orderBy")).findAny()
                 .ifPresent(key -> Arrays.stream(parameters.get(key).split(",", 0))
                         .forEach(value -> Arrays.stream(entityColumns.getEnumConstants()).filter(e -> e.name().equalsIgnoreCase(value))

@@ -47,7 +47,7 @@ public class StudentEndpoint {
     public static HttpResponse read(HttpGetRequest req,
                                     HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN, Role.TEACHER, Role.STUDENT},
-                AccessLevel.SUPERUSER, AccessLevel.STUDENT_GUARDIAN);
+                AccessLevel.SUPERUSER, AccessLevel.STUDENT);
         if (auth != null) return auth;
 
         return res.setContent(StudentService.select(SearchQueryBuilder.build(
@@ -61,7 +61,7 @@ public class StudentEndpoint {
     public static HttpResponse create(HttpPostRequest req,
                                       HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN},
-                AccessLevel.SUPERUSER, AccessLevel.STUDENT_GUARDIAN);
+                AccessLevel.SUPERUSER, AccessLevel.STUDENT);
         if (auth != null) return auth;
 
         return res.setContent(StudentService.insert(UpdateQueryBuilder.build(
@@ -75,7 +75,7 @@ public class StudentEndpoint {
     public static HttpResponse update(HttpPostRequest req,
                                       HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN},
-                AccessLevel.SUPERUSER, AccessLevel.STUDENT_GUARDIAN);
+                AccessLevel.SUPERUSER, AccessLevel.STUDENT);
         if (auth != null) return auth;
 
         return res.setContent(StudentService.update(UpdateQueryBuilder.build(
@@ -87,7 +87,7 @@ public class StudentEndpoint {
     public static HttpResponse delete(HttpDeleteRequest req,
                                       HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN},
-                AccessLevel.SUPERUSER, AccessLevel.STUDENT_GUARDIAN);
+                AccessLevel.SUPERUSER, AccessLevel.STUDENT);
         if (auth != null) return auth;
 
         return res.setContent(StudentService.delete(SearchQueryBuilder.build(
@@ -100,7 +100,7 @@ public class StudentEndpoint {
     public static HttpResponse resetPassword(HttpPatchRequest req,
                                              HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN, Role.STUDENT},
-                AccessLevel.SUPERUSER, AccessLevel.STUDENT_GUARDIAN);
+                AccessLevel.SUPERUSER, AccessLevel.STUDENT);
         if (auth != null) return auth;
 
         return res.setContent(StudentService.resetPassword((UrlEncodedData) req.getContent().getData()).parse());
@@ -111,7 +111,7 @@ public class StudentEndpoint {
     public static HttpResponse logout(HttpPatchRequest req,
                                       HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN, Role.STUDENT},
-                AccessLevel.SUPERUSER, AccessLevel.STUDENT_GUARDIAN);
+                AccessLevel.SUPERUSER, AccessLevel.STUDENT);
         if (auth != null) return auth;
 
         try {

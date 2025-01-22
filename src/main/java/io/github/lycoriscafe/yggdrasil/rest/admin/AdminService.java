@@ -72,12 +72,18 @@ public class AdminService implements EntityService<Admin> {
     }
 
     public static Response<Admin> delete(SearchQueryBuilder<Admin, Columns, AdminService> searchQueryBuilder) {
+        if (searchQueryBuilder.getSearchBy() == null || !searchQueryBuilder.getSearchBy().contains(Columns.id)) {
+            return new Response<Admin>().setError("Required parameters not found");
+        }
         var result = CommonService.delete(searchQueryBuilder);
         if (result.isSuccess()) AuthenticationService.deleteAuthentication(Role.ADMIN, result.getData().getFirst().getId());
         return result;
     }
 
     public static Response<Admin> insert(UpdateQueryBuilder<Admin, Columns, AdminService> updateQueryBuilder) {
+        if (updateQueryBuilder.getColumns() == null || !updateQueryBuilder.getColumns().containsAll(Set.of(Columns.name, Columns.accessLevel))) {
+            return new Response<Admin>().setError("Required parameters not found");
+        }
         var result = CommonService.insert(updateQueryBuilder);
         if (result.isSuccess()) {
             try {
@@ -88,7 +94,7 @@ public class AdminService implements EntityService<Admin> {
                                         "A" + result.getData().getFirst().getId().toPlainString())));
             } catch (SQLException | NoSuchAlgorithmException e) {
                 delete(new SearchQueryBuilder<>(Admin.class, Columns.class, AdminService.class)
-                        .setSearchBy(List.of(Columns.id))
+                        .setSearchBy(Set.of(Columns.id))
                         .setSearchByValues(List.of(result.getData().getFirst().getId().toPlainString())));
                 return new Response<Admin>().setError(e.getMessage());
             }
@@ -97,6 +103,12 @@ public class AdminService implements EntityService<Admin> {
     }
 
     public static Response<Admin> update(UpdateQueryBuilder<Admin, Columns, AdminService> updateQueryBuilder) {
+        if (updateQueryBuilder.getSearchBy() == null || !updateQueryBuilder.getSearchBy().contains(Columns.id)) {
+            return new Response<Admin>().setError("Required parameters not found");
+        }
+        if (updateQueryBuilder.getColumns() != null && updateQueryBuilder.getColumns().contains(Columns.id)) {
+            return new Response<Admin>().setError("'id' cannot be changed");
+        }
         return CommonService.update(updateQueryBuilder);
     }
 
@@ -110,8 +122,8 @@ public class AdminService implements EntityService<Admin> {
 
         String oldPassword = encodedData.get("oldPassword");
         String newPassword = encodedData.get("newPassword");
-        if (oldPassword == null) return new Response<Admin>().setError("oldPassword cannot be null");
-        if (newPassword == null) return new Response<Admin>().setError("newPassword cannot be null");
+        if (oldPassword == null) return new Response<Admin>().setError("oldPassword cannot be found");
+        if (newPassword == null) return new Response<Admin>().setError("newPassword cannot be found");
         if (newPassword.length() < YggdrasilConfig.getDefaultUserPasswordBoundary()[0] ||
                 newPassword.length() > YggdrasilConfig.getDefaultUserPasswordBoundary()[1]) {
             return new Response<Admin>().setError("Password length must between 8 and 50");

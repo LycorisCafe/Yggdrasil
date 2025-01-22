@@ -18,8 +18,12 @@ package io.github.lycoriscafe.yggdrasil.rest.admin;
 
 public enum AccessLevel {
     SUPERUSER,
-    TIMETABLE_CLASSROOM_SUBJECT,
+    CLASSROOM,
+    GUARDIAN,
     NOTIFICATION,
-    STUDENT_GUARDIAN,
-    TEACHER_RELIEF
+    RELIEF,
+    STUDENT,
+    SUBJECT,
+    TEACHER,
+    TIMETABLE
 }

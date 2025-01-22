@@ -24,6 +24,7 @@ import io.github.lycoriscafe.yggdrasil.rest.Gender;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class GuardianService implements EntityService<Guardian> {
     public enum Columns implements EntityColumn<Guardian> {
@@ -71,14 +72,28 @@ public class GuardianService implements EntityService<Guardian> {
     }
 
     public static Response<Guardian> delete(SearchQueryBuilder<Guardian, Columns, GuardianService> searchQueryBuilder) {
+        if (searchQueryBuilder.getSearchBy() == null || !searchQueryBuilder.getSearchBy().contains(Columns.id)) {
+            return new Response<Guardian>().setError("Required parameters not found");
+        }
         return CommonService.delete(searchQueryBuilder);
     }
 
     public static Response<Guardian> insert(UpdateQueryBuilder<Guardian, Columns, GuardianService> updateQueryBuilder) {
+        if (updateQueryBuilder.getColumns() == null ||
+                !updateQueryBuilder.getColumns().containsAll(Set.of(Columns.nic, Columns.initName, Columns.fullName, Columns.gender,
+                        Columns.dateOfBirth, Columns.address, Columns.contactNo))) {
+            return new Response<Guardian>().setError("Required parameters not found");
+        }
         return CommonService.insert(updateQueryBuilder);
     }
 
     public static Response<Guardian> update(UpdateQueryBuilder<Guardian, Columns, GuardianService> updateQueryBuilder) {
+        if (updateQueryBuilder.getSearchBy() == null || !updateQueryBuilder.getSearchBy().contains(Columns.id)) {
+            return new Response<Guardian>().setError("Required parameters not found");
+        }
+        if (updateQueryBuilder.getColumns() != null && updateQueryBuilder.getColumns().contains(Columns.id)) {
+            return new Response<Guardian>().setError("'id' cannot be updated");
+        }
         return CommonService.update(updateQueryBuilder);
     }
 }

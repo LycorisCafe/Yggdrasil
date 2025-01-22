@@ -21,6 +21,7 @@ import io.github.lycoriscafe.yggdrasil.configuration.commons.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class TeacherSubjectJoinService implements EntityService<TeacherSubjectJoin> {
     public enum Columns implements EntityColumn<TeacherSubjectJoin> {
@@ -56,14 +57,26 @@ public class TeacherSubjectJoinService implements EntityService<TeacherSubjectJo
     }
 
     public static Response<TeacherSubjectJoin> delete(SearchQueryBuilder<TeacherSubjectJoin, Columns, TeacherSubjectJoinService> searchQueryBuilder) {
+        if (searchQueryBuilder.getSearchBy() == null || !searchQueryBuilder.getSearchBy().contains(Columns.id)) {
+            return new Response<TeacherSubjectJoin>().setError("Required parameters not found");
+        }
         return CommonService.delete(searchQueryBuilder);
     }
 
     public static Response<TeacherSubjectJoin> insert(UpdateQueryBuilder<TeacherSubjectJoin, Columns, TeacherSubjectJoinService> updateQueryBuilder) {
+        if (updateQueryBuilder.getColumns() == null || !updateQueryBuilder.getColumns().containsAll(Set.of(Columns.teacherId, Columns.subjectId))) {
+            return new Response<TeacherSubjectJoin>().setError("Required parameters not found");
+        }
         return CommonService.insert(updateQueryBuilder);
     }
 
     public static Response<TeacherSubjectJoin> update(UpdateQueryBuilder<TeacherSubjectJoin, Columns, TeacherSubjectJoinService> updateQueryBuilder) {
+        if (updateQueryBuilder.getSearchBy() == null || !updateQueryBuilder.getSearchBy().contains(Columns.id)) {
+            return new Response<TeacherSubjectJoin>().setError("Required parameters not found");
+        }
+        if (updateQueryBuilder.getColumns() != null && updateQueryBuilder.getColumns().contains(Columns.id)) {
+            return new Response<TeacherSubjectJoin>().setError("'id' cannot be updated");
+        }
         return CommonService.update(updateQueryBuilder);
     }
 }

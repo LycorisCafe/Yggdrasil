@@ -24,6 +24,7 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 public class CommonService {
     public static class ResultSetHolder<T extends Entity> {
@@ -100,18 +101,20 @@ public class CommonService {
                 return new ResultSetHolder<T>().setResponse(new Response<T>().setError("searchBy != isCaseSensitive (length)"));
             }
             query.append(" WHERE ");
-            for (int i = 0; i < queryBuilder.getSearchBy().size(); i++) {
+            List<U> searchBy = queryBuilder.getSearchBy().stream().toList();
+            for (int i = 0; i < searchBy.size(); i++) {
                 if (i > 0) query.append(" AND ");
-                query.append(queryBuilder.getSearchBy().get(i)).append(" LIKE ");
+                query.append(searchBy.get(i)).append(" LIKE ");
                 if (queryBuilder.getIsCaseSensitive() != null) query.append(queryBuilder.getIsCaseSensitive().get(i) ? " BINARY " : "");
                 query.append("?");
             }
         }
         if (queryBuilder.getOrderBy() != null) {
             query.append(" ORDER BY ");
-            for (int i = 0; i < queryBuilder.getOrderBy().size(); i++) {
+            List<U> orderBy = queryBuilder.getOrderBy().stream().toList();
+            for (int i = 0; i < orderBy.size(); i++) {
                 if (i > 0) query.append(", ");
-                query.append(queryBuilder.getOrderBy().get(i));
+                query.append(orderBy.get(i));
             }
             if (queryBuilder.getAscending() != null) {
                 query.append(queryBuilder.getAscending() ? " ASC" : " DESC");
@@ -170,9 +173,10 @@ public class CommonService {
         }
 
         StringBuilder query = new StringBuilder("DELETE FROM ").append(queryBuilder.getEntity().getSimpleName().toLowerCase()).append(" WHERE ");
-        for (int i = 0; i < queryBuilder.getSearchBy().size(); i++) {
+        List<U> searchBy = queryBuilder.getSearchBy().stream().toList();
+        for (int i = 0; i < searchBy.size(); i++) {
             if (i > 0) query.append(" AND ");
-            query.append(queryBuilder.getSearchBy().get(i)).append(" LIKE ");
+            query.append(searchBy.get(i)).append(" LIKE ");
             if (queryBuilder.getIsCaseSensitive() != null) query.append(queryBuilder.getIsCaseSensitive().get(i) ? " BINARY " : "");
             query.append("?");
         }
@@ -203,9 +207,10 @@ public class CommonService {
         }
 
         StringBuilder query = new StringBuilder("INSERT INTO ").append(queryBuilder.getEntity().getSimpleName().toLowerCase()).append(" (");
-        for (int i = 0; i < queryBuilder.getColumns().size(); i++) {
+        List<U> columns = queryBuilder.getColumns().stream().toList();
+        for (int i = 0; i < columns.size(); i++) {
             if (i > 0) query.append(", ");
-            query.append(queryBuilder.getColumns().get(i));
+            query.append(columns.get(i));
         }
         query.append(") ").append("VALUES").append(" (");
         for (int i = 0; i < queryBuilder.getValues().size(); i++) {
@@ -226,7 +231,7 @@ public class CommonService {
             try (var resultSet = statement.getGeneratedKeys()) {
                 if (resultSet.next()) {
                     var searchQuery = new SearchQueryBuilder<>(queryBuilder.getEntity(), queryBuilder.getEntityColumns(), queryBuilder.getEntityService())
-                            .setSearchBy(List.of(Enum.valueOf(queryBuilder.getEntityColumns(), "id")))
+                            .setSearchBy(Set.of(Enum.valueOf(queryBuilder.getEntityColumns(), "id")))
                             .setSearchByValues(List.of(resultSet.getString(1)));
                     Class<? extends EntityService<T>> serviceClass = queryBuilder.getEntityService();
                     return (Response<T>) serviceClass.getDeclaredMethod("select", SearchQueryBuilder.class).invoke(null, searchQuery);
@@ -253,14 +258,16 @@ public class CommonService {
         }
 
         StringBuilder query = new StringBuilder("UPDATE ").append(queryBuilder.getEntity().getSimpleName().toLowerCase()).append(" SET ");
-        for (int i = 0; i < queryBuilder.getColumns().size(); i++) {
+        List<U> columns = queryBuilder.getColumns().stream().toList();
+        for (int i = 0; i < columns.size(); i++) {
             if (i > 0) query.append(", ");
-            query.append(queryBuilder.getColumns().get(i)).append(" = ").append("?");
+            query.append(columns.get(i)).append(" = ").append("?");
         }
         query.append(" WHERE ");
-        for (int i = 0; i < queryBuilder.getValues().size(); i++) {
+        List<U> searchBy = queryBuilder.getSearchBy().stream().toList();
+        for (int i = 0; i < searchBy.size(); i++) {
             if (i > 0) query.append(" AND ");
-            query.append(queryBuilder.getSearchBy().get(i)).append(" = ").append("?");
+            query.append(searchBy.get(i)).append(" = ").append("?");
         }
         try (var connection = Utils.getDatabaseConnection();
              var statement = connection.prepareStatement(query.toString())) {
@@ -278,7 +285,7 @@ public class CommonService {
             }
             connection.commit();
             var searchQuery = new SearchQueryBuilder<>(queryBuilder.getEntity(), queryBuilder.getEntityColumns(), queryBuilder.getEntityService())
-                    .setSearchBy(List.of(Enum.valueOf(queryBuilder.getEntityColumns(), "id")))
+                    .setSearchBy(Set.of(Enum.valueOf(queryBuilder.getEntityColumns(), "id")))
                     .setSearchByValues(List.of(queryBuilder.getSearchByValues().get(queryBuilder.getSearchByValues().indexOf("id"))));
             Class<? extends EntityService<T>> serviceClass = queryBuilder.getEntityService();
             return (Response<T>) serviceClass.getDeclaredMethod("select", SearchQueryBuilder.class).invoke(null, searchQuery);

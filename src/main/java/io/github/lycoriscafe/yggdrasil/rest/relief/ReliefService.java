@@ -23,6 +23,7 @@ import io.github.lycoriscafe.yggdrasil.configuration.commons.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class ReliefService implements EntityService<Relief> {
     public enum Columns implements EntityColumn<Relief> {
@@ -60,14 +61,27 @@ public class ReliefService implements EntityService<Relief> {
     }
 
     public static Response<Relief> delete(SearchQueryBuilder<Relief, Columns, ReliefService> searchQueryBuilder) {
+        if (searchQueryBuilder.getSearchBy() == null || !searchQueryBuilder.getSearchBy().contains(Columns.id)) {
+            return new Response<Relief>().setError("Required parameters not found");
+        }
         return CommonService.delete(searchQueryBuilder);
     }
 
     public static Response<Relief> insert(UpdateQueryBuilder<Relief, Columns, ReliefService> updateQueryBuilder) {
+        if (updateQueryBuilder.getColumns() == null ||
+                !updateQueryBuilder.getColumns().containsAll(Set.of(Columns.timetableId, Columns.teacherId, Columns.date))) {
+            return new Response<Relief>().setError("Required parameters not found");
+        }
         return CommonService.insert(updateQueryBuilder);
     }
 
     public static Response<Relief> update(UpdateQueryBuilder<Relief, Columns, ReliefService> updateQueryBuilder) {
+        if (updateQueryBuilder.getSearchBy() == null || !updateQueryBuilder.getSearchBy().contains(Columns.id)) {
+            return new Response<Relief>().setError("Required parameters not found");
+        }
+        if (updateQueryBuilder.getColumns() != null && updateQueryBuilder.getColumns().contains(Columns.id)) {
+            return new Response<Relief>().setError("'id' cannot be updated");
+        }
         return CommonService.update(updateQueryBuilder);
     }
 }

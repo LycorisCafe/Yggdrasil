@@ -42,7 +42,7 @@ public class SubjectEndpoint {
     public static HttpResponse read(HttpGetRequest req,
                                     HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN, Role.TEACHER, Role.STUDENT},
-                AccessLevel.SUPERUSER, AccessLevel.TIMETABLE_CLASSROOM_SUBJECT);
+                AccessLevel.SUPERUSER, AccessLevel.SUBJECT);
         if (auth != null) return auth;
 
         return res.setContent(SubjectService.select(SearchQueryBuilder.build(
@@ -56,7 +56,7 @@ public class SubjectEndpoint {
     public static HttpResponse create(HttpPostRequest req,
                                       HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN},
-                AccessLevel.SUPERUSER, AccessLevel.TIMETABLE_CLASSROOM_SUBJECT);
+                AccessLevel.SUPERUSER, AccessLevel.SUBJECT);
         if (auth != null) return auth;
 
         return res.setContent(SubjectService.insert(UpdateQueryBuilder.build(
@@ -70,7 +70,7 @@ public class SubjectEndpoint {
     public static HttpResponse update(HttpPostRequest req,
                                       HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN},
-                AccessLevel.SUPERUSER, AccessLevel.TIMETABLE_CLASSROOM_SUBJECT);
+                AccessLevel.SUPERUSER, AccessLevel.SUBJECT);
         if (auth != null) return auth;
 
         return res.setContent(SubjectService.update(UpdateQueryBuilder.build(
@@ -82,7 +82,7 @@ public class SubjectEndpoint {
     public static HttpResponse delete(HttpDeleteRequest req,
                                       HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN},
-                AccessLevel.SUPERUSER, AccessLevel.TIMETABLE_CLASSROOM_SUBJECT);
+                AccessLevel.SUPERUSER, AccessLevel.SUBJECT);
         if (auth != null) return auth;
 
         return res.setContent(SubjectService.delete(SearchQueryBuilder.build(

@@ -42,7 +42,7 @@ public class ReliefEndpoint {
     public static HttpResponse read(HttpGetRequest req,
                                     HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN, Role.TEACHER},
-                AccessLevel.SUPERUSER, AccessLevel.TEACHER_RELIEF);
+                AccessLevel.SUPERUSER, AccessLevel.RELIEF);
         if (auth != null) return auth;
 
         return res.setContent(ReliefService.select(SearchQueryBuilder.build(
@@ -56,7 +56,7 @@ public class ReliefEndpoint {
     public static HttpResponse create(HttpPostRequest req,
                                       HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN},
-                AccessLevel.SUPERUSER, AccessLevel.TEACHER_RELIEF);
+                AccessLevel.SUPERUSER, AccessLevel.RELIEF);
         if (auth != null) return auth;
 
         return res.setContent(ReliefService.insert(UpdateQueryBuilder.build(
@@ -70,7 +70,7 @@ public class ReliefEndpoint {
     public static HttpResponse update(HttpPostRequest req,
                                       HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN},
-                AccessLevel.SUPERUSER, AccessLevel.TEACHER_RELIEF);
+                AccessLevel.SUPERUSER, AccessLevel.RELIEF);
         if (auth != null) return auth;
 
         return res.setContent(ReliefService.update(UpdateQueryBuilder.build(
@@ -82,7 +82,7 @@ public class ReliefEndpoint {
     public static HttpResponse delete(HttpDeleteRequest req,
                                       HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN},
-                AccessLevel.SUPERUSER, AccessLevel.TEACHER_RELIEF);
+                AccessLevel.SUPERUSER, AccessLevel.RELIEF);
         if (auth != null) return auth;
 
         return res.setContent(ReliefService.delete(SearchQueryBuilder.build(

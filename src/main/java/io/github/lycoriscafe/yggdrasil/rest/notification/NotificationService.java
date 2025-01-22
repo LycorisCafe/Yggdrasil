@@ -23,6 +23,7 @@ import io.github.lycoriscafe.yggdrasil.configuration.commons.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class NotificationService implements EntityService<Notification> {
     public enum Columns implements EntityColumn<Notification> {
@@ -66,14 +67,26 @@ public class NotificationService implements EntityService<Notification> {
     }
 
     public static Response<Notification> delete(SearchQueryBuilder<Notification, Columns, NotificationService> searchQueryBuilder) {
+        if (searchQueryBuilder.getSearchBy() == null || !searchQueryBuilder.getSearchBy().contains(Columns.id)) {
+            return new Response<Notification>().setError("Required parameters not found");
+        }
         return CommonService.delete(searchQueryBuilder);
     }
 
     public static Response<Notification> insert(UpdateQueryBuilder<Notification, Columns, NotificationService> updateQueryBuilder) {
+        if (updateQueryBuilder.getColumns() == null || !updateQueryBuilder.getColumns().containsAll(Set.of(Columns.scope, Columns.message))) {
+            return new Response<Notification>().setError("Required parameters not found");
+        }
         return CommonService.insert(updateQueryBuilder);
     }
 
     public static Response<Notification> update(UpdateQueryBuilder<Notification, Columns, NotificationService> updateQueryBuilder) {
+        if (updateQueryBuilder.getSearchBy() == null || !updateQueryBuilder.getSearchBy().contains(Columns.id)) {
+            return new Response<Notification>().setError("Required parameters not found");
+        }
+        if (updateQueryBuilder.getColumns() != null && updateQueryBuilder.getColumns().contains(Columns.id)) {
+            return new Response<Notification>().setError("'id' cannot be updated");
+        }
         return CommonService.update(updateQueryBuilder);
     }
 }

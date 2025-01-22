@@ -22,6 +22,7 @@ import io.github.lycoriscafe.yggdrasil.configuration.commons.*;
 import java.time.DayOfWeek;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class TimetableService implements EntityService<Timetable> {
     public enum Columns implements EntityColumn<Timetable> {
@@ -63,14 +64,27 @@ public class TimetableService implements EntityService<Timetable> {
     }
 
     public static Response<Timetable> delete(SearchQueryBuilder<Timetable, Columns, TimetableService> searchQueryBuilder) {
+        if (searchQueryBuilder.getSearchBy() == null || !searchQueryBuilder.getSearchBy().contains(Columns.id)) {
+            return new Response<Timetable>().setError("Required parameters not found");
+        }
         return CommonService.delete(searchQueryBuilder);
     }
 
     public static Response<Timetable> insert(UpdateQueryBuilder<Timetable, Columns, TimetableService> updateQueryBuilder) {
+        if (updateQueryBuilder.getColumns() == null || !updateQueryBuilder.getColumns().containsAll(Set.of(Columns.teacherId, Columns.subjectId,
+                Columns.classroomId, Columns.day, Columns.timeslot))) {
+            return new Response<Timetable>().setError("Required parameters not found");
+        }
         return CommonService.insert(updateQueryBuilder);
     }
 
     public static Response<Timetable> update(UpdateQueryBuilder<Timetable, Columns, TimetableService> updateQueryBuilder) {
+        if (updateQueryBuilder.getSearchBy() == null || !updateQueryBuilder.getSearchBy().contains(Columns.id)) {
+            return new Response<Timetable>().setError("Required parameters not found");
+        }
+        if (updateQueryBuilder.getColumns() != null && updateQueryBuilder.getColumns().contains(Columns.id)) {
+            return new Response<Timetable>().setError("'id' cannot be updated");
+        }
         return CommonService.update(updateQueryBuilder);
     }
 }

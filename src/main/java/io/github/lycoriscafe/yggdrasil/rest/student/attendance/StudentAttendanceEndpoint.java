@@ -42,7 +42,7 @@ public class StudentAttendanceEndpoint {
     public static HttpResponse read(HttpGetRequest req,
                                     HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN, Role.TEACHER, Role.STUDENT},
-                AccessLevel.SUPERUSER, AccessLevel.STUDENT_GUARDIAN);
+                AccessLevel.SUPERUSER, AccessLevel.STUDENT);
         if (auth != null) return auth;
 
         return res.setContent(StudentAttendanceService.select(SearchQueryBuilder.build(
@@ -56,7 +56,7 @@ public class StudentAttendanceEndpoint {
     public static HttpResponse create(HttpPostRequest req,
                                       HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN, Role.TEACHER},
-                AccessLevel.SUPERUSER, AccessLevel.STUDENT_GUARDIAN);
+                AccessLevel.SUPERUSER, AccessLevel.STUDENT);
         if (auth != null) return auth;
 
         return res.setContent(StudentAttendanceService.insert(UpdateQueryBuilder.build(
@@ -70,7 +70,7 @@ public class StudentAttendanceEndpoint {
     public static HttpResponse update(HttpPostRequest req,
                                       HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN, Role.TEACHER},
-                AccessLevel.SUPERUSER, AccessLevel.STUDENT_GUARDIAN);
+                AccessLevel.SUPERUSER, AccessLevel.STUDENT);
         if (auth != null) return auth;
 
         return res.setContent(StudentAttendanceService.update(UpdateQueryBuilder.build(
@@ -82,7 +82,7 @@ public class StudentAttendanceEndpoint {
     public static HttpResponse delete(HttpDeleteRequest req,
                                       HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN, Role.TEACHER},
-                AccessLevel.SUPERUSER, AccessLevel.STUDENT_GUARDIAN);
+                AccessLevel.SUPERUSER, AccessLevel.STUDENT);
         if (auth != null) return auth;
 
         return res.setContent(StudentAttendanceService.delete(SearchQueryBuilder.build(
