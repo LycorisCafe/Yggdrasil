@@ -100,7 +100,6 @@ public class AdminEndpoint {
     }
 
     @PATCH("/logout")
-    @ExpectContent("application/x-www-form-urlencoded")
     public static HttpResponse logout(HttpPatchRequest req,
                                       HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN}, AccessLevel.SUPERUSER);
