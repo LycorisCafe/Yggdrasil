@@ -37,8 +37,8 @@ CREATE TABLE classroom
 (
     id        SERIAL PRIMARY KEY,
     teacherId BIGINT UNSIGNED UNIQUE,
-    grade     TINYINT(2)  NOT NULL,
-    name      VARCHAR(10) NOT NULL,
+    grade TINYINT(2) UNSIGNED NOT NULL,
+    name  VARCHAR(10)         NOT NULL,
     UNIQUE (grade, name)
 );
 
@@ -118,8 +118,8 @@ CREATE TABLE studentSubjectJoin
 CREATE TABLE subject
 (
     id        SERIAL PRIMARY KEY,
-    grade     TINYINT(2)  NOT NULL,
-    shortName VARCHAR(10) NOT NULL,
+    grade     TINYINT(2) UNSIGNED NOT NULL,
+    shortName VARCHAR(10)         NOT NULL,
     longName  VARCHAR(50),
     teacherId BIGINT UNSIGNED,
     UNIQUE (grade, shortName)
@@ -163,11 +163,11 @@ CREATE TABLE teacherSubjectJoin
 CREATE TABLE timetable
 (
     id          SERIAL PRIMARY KEY,
-    teacherId   BIGINT UNSIGNED NOT NULL,
-    subjectId   BIGINT UNSIGNED NOT NULL,
-    classroomId BIGINT UNSIGNED NOT NULL,
-    day         TINYINT(1)      NOT NULL,
-    timeslot TINYINT(1) NOT NULL # Typical 8 periods of daily timetable
+    teacherId   BIGINT UNSIGNED     NOT NULL,
+    subjectId   BIGINT UNSIGNED     NOT NULL,
+    classroomId BIGINT UNSIGNED     NOT NULL,
+    day         TINYINT(1) UNSIGNED NOT NULL,
+    timeslot    TINYINT(1) UNSIGNED NOT NULL # Typical 8 periods of daily timetable
 );
 
 ## AUTHENTICATION
