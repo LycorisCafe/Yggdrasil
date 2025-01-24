@@ -146,7 +146,7 @@ public class SearchQueryBuilder<T extends Entity, U extends Enum<U> & EntityColu
             searchBy.add(col);
             String[] values = parameters.get(key).split(",", 0);
             searchByValues.add(values[0]);
-            isCaseSensitive.add(values.length == 2 && Boolean.parseBoolean(values[1]));
+            isCaseSensitive.add(values.length > 1 && Boolean.parseBoolean(values[values.length - 1]));
         }
         searchQuery.setSearchBy(searchBy.isEmpty() ? null : searchBy)
                 .setSearchByValues(searchByValues.isEmpty() ? null : searchByValues)
