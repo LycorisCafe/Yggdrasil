@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.github.lycoriscafe.yggdrasil.configuration.commons;
+package io.github.lycoriscafe.yggdrasil.commons;
 
 import java.util.*;
 

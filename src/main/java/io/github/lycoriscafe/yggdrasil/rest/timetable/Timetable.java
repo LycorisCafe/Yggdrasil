@@ -16,7 +16,7 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.timetable;
 
-import io.github.lycoriscafe.yggdrasil.configuration.commons.Entity;
+import io.github.lycoriscafe.yggdrasil.commons.Entity;
 
 import java.math.BigDecimal;
 import java.time.DayOfWeek;

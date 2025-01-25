@@ -17,7 +17,7 @@
 package io.github.lycoriscafe.yggdrasil.configuration;
 
 import io.github.lycoriscafe.nexus.http.core.headers.content.Content;
-import io.github.lycoriscafe.yggdrasil.configuration.commons.Entity;
+import io.github.lycoriscafe.yggdrasil.commons.Entity;
 
 import java.time.LocalDateTime;
 import java.util.List;

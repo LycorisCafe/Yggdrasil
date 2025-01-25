@@ -16,7 +16,7 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.admin;
 
-import io.github.lycoriscafe.yggdrasil.configuration.commons.Entity;
+import io.github.lycoriscafe.yggdrasil.commons.Entity;
 
 import java.math.BigDecimal;
 import java.util.Objects;

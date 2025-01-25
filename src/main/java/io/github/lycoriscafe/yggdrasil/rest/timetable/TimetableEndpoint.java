@@ -29,8 +29,8 @@ import io.github.lycoriscafe.nexus.http.engine.ReqResManager.httpReq.HttpPostReq
 import io.github.lycoriscafe.nexus.http.engine.ReqResManager.httpRes.HttpResponse;
 import io.github.lycoriscafe.yggdrasil.authentication.AuthenticationService;
 import io.github.lycoriscafe.yggdrasil.authentication.Role;
-import io.github.lycoriscafe.yggdrasil.configuration.commons.SearchQueryBuilder;
-import io.github.lycoriscafe.yggdrasil.configuration.commons.UpdateQueryBuilder;
+import io.github.lycoriscafe.yggdrasil.commons.SearchQueryBuilder;
+import io.github.lycoriscafe.yggdrasil.commons.UpdateQueryBuilder;
 import io.github.lycoriscafe.yggdrasil.rest.admin.AccessLevel;
 
 import java.util.List;

@@ -25,7 +25,7 @@ import io.github.lycoriscafe.nexus.http.engine.ReqResManager.httpReq.HttpRequest
 import io.github.lycoriscafe.nexus.http.engine.ReqResManager.httpRes.HttpResponse;
 import io.github.lycoriscafe.yggdrasil.configuration.Response;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
-import io.github.lycoriscafe.yggdrasil.configuration.commons.SearchQueryBuilder;
+import io.github.lycoriscafe.yggdrasil.commons.SearchQueryBuilder;
 import io.github.lycoriscafe.yggdrasil.rest.admin.AccessLevel;
 import io.github.lycoriscafe.yggdrasil.rest.admin.Admin;
 import io.github.lycoriscafe.yggdrasil.rest.admin.AdminService;

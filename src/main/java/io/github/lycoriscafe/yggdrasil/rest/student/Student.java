@@ -16,7 +16,7 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.student;
 
-import io.github.lycoriscafe.yggdrasil.configuration.commons.Entity;
+import io.github.lycoriscafe.yggdrasil.commons.Entity;
 import io.github.lycoriscafe.yggdrasil.rest.Gender;
 
 import java.math.BigDecimal;

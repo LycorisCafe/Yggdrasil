@@ -33,8 +33,8 @@ import io.github.lycoriscafe.nexus.http.engine.ReqResManager.httpRes.HttpRespons
 import io.github.lycoriscafe.yggdrasil.authentication.AuthenticationService;
 import io.github.lycoriscafe.yggdrasil.authentication.Role;
 import io.github.lycoriscafe.yggdrasil.configuration.Response;
-import io.github.lycoriscafe.yggdrasil.configuration.commons.SearchQueryBuilder;
-import io.github.lycoriscafe.yggdrasil.configuration.commons.UpdateQueryBuilder;
+import io.github.lycoriscafe.yggdrasil.commons.SearchQueryBuilder;
+import io.github.lycoriscafe.yggdrasil.commons.UpdateQueryBuilder;
 
 import java.math.BigDecimal;
 import java.util.List;

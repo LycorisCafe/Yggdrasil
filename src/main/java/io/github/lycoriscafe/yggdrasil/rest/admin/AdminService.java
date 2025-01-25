@@ -20,9 +20,9 @@ import io.github.lycoriscafe.nexus.http.core.headers.content.UrlEncodedData;
 import io.github.lycoriscafe.yggdrasil.authentication.Authentication;
 import io.github.lycoriscafe.yggdrasil.authentication.AuthenticationService;
 import io.github.lycoriscafe.yggdrasil.authentication.Role;
+import io.github.lycoriscafe.yggdrasil.commons.*;
 import io.github.lycoriscafe.yggdrasil.configuration.Response;
 import io.github.lycoriscafe.yggdrasil.configuration.YggdrasilConfig;
-import io.github.lycoriscafe.yggdrasil.configuration.commons.*;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
