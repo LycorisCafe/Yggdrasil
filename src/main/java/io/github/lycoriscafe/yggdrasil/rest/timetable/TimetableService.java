@@ -17,7 +17,6 @@
 package io.github.lycoriscafe.yggdrasil.rest.timetable;
 
 import io.github.lycoriscafe.yggdrasil.commons.*;
-import io.github.lycoriscafe.yggdrasil.configuration.Response;
 
 import java.time.DayOfWeek;
 import java.util.ArrayList;

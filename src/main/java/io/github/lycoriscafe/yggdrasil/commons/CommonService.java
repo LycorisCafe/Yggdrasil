@@ -16,7 +16,6 @@
 
 package io.github.lycoriscafe.yggdrasil.commons;
 
-import io.github.lycoriscafe.yggdrasil.configuration.Response;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
 import io.github.lycoriscafe.yggdrasil.configuration.YggdrasilConfig;
 

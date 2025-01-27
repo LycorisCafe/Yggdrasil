@@ -21,11 +21,11 @@ import io.github.lycoriscafe.nexus.http.core.headers.auth.scheme.bearer.BearerAu
 import io.github.lycoriscafe.nexus.http.core.headers.auth.scheme.bearer.BearerAuthorization;
 import io.github.lycoriscafe.nexus.http.core.headers.auth.scheme.bearer.BearerAuthorizationError;
 import io.github.lycoriscafe.nexus.http.core.statusCodes.HttpStatusCode;
-import io.github.lycoriscafe.nexus.http.engine.ReqResManager.httpReq.HttpRequest;
-import io.github.lycoriscafe.nexus.http.engine.ReqResManager.httpRes.HttpResponse;
-import io.github.lycoriscafe.yggdrasil.configuration.Response;
-import io.github.lycoriscafe.yggdrasil.configuration.Utils;
+import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpRequest;
+import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpRes.HttpResponse;
+import io.github.lycoriscafe.yggdrasil.commons.Response;
 import io.github.lycoriscafe.yggdrasil.commons.SearchQueryBuilder;
+import io.github.lycoriscafe.yggdrasil.configuration.Utils;
 import io.github.lycoriscafe.yggdrasil.rest.admin.AccessLevel;
 import io.github.lycoriscafe.yggdrasil.rest.admin.Admin;
 import io.github.lycoriscafe.yggdrasil.rest.admin.AdminService;

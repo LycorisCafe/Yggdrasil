@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package io.github.lycoriscafe.yggdrasil.configuration;
+package io.github.lycoriscafe.yggdrasil.commons;
 
 import io.github.lycoriscafe.nexus.http.core.headers.content.Content;
-import io.github.lycoriscafe.yggdrasil.commons.Entity;
+import io.github.lycoriscafe.yggdrasil.configuration.Utils;
 
 import java.time.LocalDateTime;
 import java.util.List;

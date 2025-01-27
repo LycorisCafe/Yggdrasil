@@ -17,7 +17,6 @@
 package io.github.lycoriscafe.yggdrasil.rest.classroom;
 
 import io.github.lycoriscafe.yggdrasil.commons.*;
-import io.github.lycoriscafe.yggdrasil.configuration.Response;
 
 import java.util.ArrayList;
 import java.util.List;

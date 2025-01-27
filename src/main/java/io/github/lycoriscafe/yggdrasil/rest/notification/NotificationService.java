@@ -17,7 +17,6 @@
 package io.github.lycoriscafe.yggdrasil.rest.notification;
 
 import io.github.lycoriscafe.yggdrasil.commons.*;
-import io.github.lycoriscafe.yggdrasil.configuration.Response;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
 
 import java.time.LocalDateTime;

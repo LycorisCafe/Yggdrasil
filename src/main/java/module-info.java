@@ -2,11 +2,10 @@ module Yggdrasil {
     requires com.google.gson;
     requires com.zaxxer.hikari;
     requires java.sql;
-    requires nexus.http;
+    requires io.github.lycoriscafe.nexus.http;
     requires jdk.jshell;
     requires org.slf4j;
 
-    opens io.github.lycoriscafe.yggdrasil.authentication;
     opens io.github.lycoriscafe.yggdrasil.commons;
     opens io.github.lycoriscafe.yggdrasil.configuration;
     opens io.github.lycoriscafe.yggdrasil.rest.admin;
@@ -22,6 +21,4 @@ module Yggdrasil {
     opens io.github.lycoriscafe.yggdrasil.rest.teacher.attendance;
     opens io.github.lycoriscafe.yggdrasil.rest.teacher.subject;
     opens io.github.lycoriscafe.yggdrasil.rest.timetable;
-
-    exports io.github.lycoriscafe.yggdrasil;
 }
