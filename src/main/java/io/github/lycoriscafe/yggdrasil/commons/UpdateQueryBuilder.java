@@ -119,7 +119,7 @@ public class UpdateQueryBuilder<T extends Entity, U extends Enum<U> & EntityColu
                                                                           List<MultipartFormData> multipartFormData) {
         var updateQueryBuilder = new UpdateQueryBuilder<>(entity, entityColumns, entityService);
 
-        Set<U> columns = new HashSet<>();
+        Set<U> columns = new LinkedHashSet<>();
         List<String> values = new ArrayList<>();
         for (MultipartFormData formData : multipartFormData) {
             var col = Arrays.stream(entityColumns.getEnumConstants()).filter(e -> e.name().equalsIgnoreCase(formData.getName())).findAny()
@@ -132,7 +132,7 @@ public class UpdateQueryBuilder<T extends Entity, U extends Enum<U> & EntityColu
                 .setValues(values.isEmpty() ? null : values);
 
         if (parameters == null) return updateQueryBuilder;
-        Set<U> searchBy = new HashSet<>();
+        Set<U> searchBy = new LinkedHashSet<>();
         List<String> searchByValues = new ArrayList<>();
         List<Boolean> isCaseSensitive = new ArrayList<>();
         for (String key : parameters.keySet()) {

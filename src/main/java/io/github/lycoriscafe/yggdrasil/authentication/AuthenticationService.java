@@ -90,7 +90,7 @@ public class AuthenticationService {
                 var admin = AdminService.select(new SearchQueryBuilder<>(Admin.class, AdminService.Columns.class, AdminService.class)
                         .setSearchBy(Set.of(AdminService.Columns.id)).setSearchByValues(List.of(auth.getUserId().toPlainString())));
                 var accessLevel = admin.getData().getFirst().getAccessLevel();
-                if (!accessLevel.containsAll(List.of(accessLevels))) {
+                if (accessLevel.stream().noneMatch(accessLevel::contains)) {
                     return httpResponse.setStatusCode(HttpStatusCode.FORBIDDEN).addAuthentication(
                             new BearerAuthentication(BearerAuthorizationError.INSUFFICIENT_SCOPE)
                                     .setScope(Role.ADMIN + "#" + Arrays.toString(accessLevels))

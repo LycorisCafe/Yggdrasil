@@ -137,7 +137,7 @@ public class SearchQueryBuilder<T extends Entity, U extends Enum<U> & EntityColu
         var searchQuery = new SearchQueryBuilder<>(entity, entityColumns, entityService);
         if (parameters == null) return searchQuery;
 
-        Set<U> searchBy = new HashSet<>();
+        Set<U> searchBy = new LinkedHashSet<>();
         List<String> searchByValues = new ArrayList<>();
         List<Boolean> isCaseSensitive = new ArrayList<>();
         for (String key : parameters.keySet()) {
@@ -152,7 +152,7 @@ public class SearchQueryBuilder<T extends Entity, U extends Enum<U> & EntityColu
                 .setSearchByValues(searchByValues.isEmpty() ? null : searchByValues)
                 .setIsCaseSensitive(isCaseSensitive.isEmpty() ? null : isCaseSensitive);
 
-        Set<U> orderBy = new HashSet<>();
+        Set<U> orderBy = new LinkedHashSet<>();
         parameters.keySet().stream().filter(p -> p.equalsIgnoreCase("orderBy")).findAny()
                 .ifPresent(key -> Arrays.stream(parameters.get(key).split(",", 0))
                         .forEach(value -> Arrays.stream(entityColumns.getEnumConstants()).filter(e -> e.name().equalsIgnoreCase(value))
