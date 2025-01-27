@@ -23,13 +23,9 @@ import io.github.lycoriscafe.nexus.http.core.headers.auth.scheme.bearer.BearerAu
 import io.github.lycoriscafe.nexus.http.helper.configuration.HttpServerConfiguration;
 import io.github.lycoriscafe.nexus.http.helper.scanners.ScannerException;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.SQLException;
-import java.util.Objects;
 import java.util.Properties;
 
 public class YggdrasilConfig {
@@ -43,8 +39,7 @@ public class YggdrasilConfig {
         initializeDatabase();
         initializeHttpServer();
 
-        Path path = Paths.get(Objects.requireNonNull(YggdrasilConfig.class.getResource("/yggdrasil.properties")).toURI()).toAbsolutePath();
-        try (FileInputStream inputStream = new FileInputStream(path.toFile())) {
+        try (var inputStream = YggdrasilConfig.class.getResourceAsStream("/yggdrasil.properties")) {
             Properties properties = new Properties();
             properties.load(inputStream);
 
@@ -63,10 +58,13 @@ public class YggdrasilConfig {
         }
     }
 
-    private static void initializeDatabase() throws URISyntaxException {
-        Path path = Paths.get(Objects.requireNonNull(YggdrasilConfig.class.getResource("/hikari.properties")).toURI()).toAbsolutePath();
-        var hikariConfig = new HikariConfig(path.toString());
-        database = new HikariDataSource(hikariConfig);
+    private static void initializeDatabase() throws IOException {
+        try (var inputStream = YggdrasilConfig.class.getResourceAsStream("/hikari.properties")) {
+            Properties properties = new Properties();
+            properties.load(inputStream);
+            var hikariConfig = new HikariConfig(properties);
+            database = new HikariDataSource(hikariConfig);
+        }
     }
 
     private static void initializeHttpServer() throws ScannerException, SQLException, IOException {
