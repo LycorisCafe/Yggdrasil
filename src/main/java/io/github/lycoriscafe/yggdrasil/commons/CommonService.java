@@ -271,9 +271,8 @@ public class CommonService {
         try (var connection = Utils.getDatabaseConnection();
              var statement = connection.prepareStatement(query.toString())) {
             int nextParamIndex = 1;
-            for (int i = 1; i <= queryBuilder.getValues().size(); i++) {
-                statement.setString(i, queryBuilder.getValues().get(i - 1));
-                nextParamIndex++;
+            for (int i = 0; i < queryBuilder.getValues().size(); i++) {
+                statement.setString(nextParamIndex++, queryBuilder.getValues().get(i));
             }
             for (int i = 0; i < queryBuilder.getSearchByValues().size(); i++) {
                 statement.setString(nextParamIndex++, queryBuilder.getSearchByValues().get(i));
@@ -283,9 +282,10 @@ public class CommonService {
                 return new Response<T>().setError("Internal server error");
             }
             connection.commit();
+            U id = Enum.valueOf(queryBuilder.getEntityColumns(), "id");
             var searchQuery = new SearchQueryBuilder<>(queryBuilder.getEntity(), queryBuilder.getEntityColumns(), queryBuilder.getEntityService())
-                    .setSearchBy(Set.of(Enum.valueOf(queryBuilder.getEntityColumns(), "id")))
-                    .setSearchByValues(List.of(queryBuilder.getSearchByValues().get(queryBuilder.getSearchByValues().indexOf("id"))));
+                    .setSearchBy(Set.of(id))
+                    .setSearchByValues(List.of(queryBuilder.getSearchByValues().get(searchBy.indexOf(id))));
             Class<? extends EntityService<T>> serviceClass = queryBuilder.getEntityService();
             return (Response<T>) serviceClass.getDeclaredMethod("select", SearchQueryBuilder.class).invoke(null, searchQuery);
         } catch (Exception e) {
