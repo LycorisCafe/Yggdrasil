@@ -18,12 +18,12 @@ package io.github.lycoriscafe.yggdrasil.rest.admin;
 
 import io.github.lycoriscafe.yggdrasil.commons.Entity;
 
-import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Objects;
 import java.util.Set;
 
 public class Admin implements Entity {
-    private BigDecimal id;
+    private BigInteger id;
     private String name;
     private Set<AccessLevel> accessLevel;
     private Boolean disabled;
@@ -34,11 +34,11 @@ public class Admin implements Entity {
         this.accessLevel = Objects.requireNonNull(accessLevel);
     }
 
-    public BigDecimal getId() {
+    public BigInteger getId() {
         return id;
     }
 
-    public Admin setId(BigDecimal id) {
+    public Admin setId(BigInteger id) {
         this.id = id;
         return this;
     }

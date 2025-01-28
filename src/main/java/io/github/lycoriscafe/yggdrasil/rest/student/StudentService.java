@@ -20,12 +20,13 @@ import io.github.lycoriscafe.nexus.http.core.headers.content.UrlEncodedData;
 import io.github.lycoriscafe.yggdrasil.authentication.Authentication;
 import io.github.lycoriscafe.yggdrasil.authentication.AuthenticationService;
 import io.github.lycoriscafe.yggdrasil.authentication.Role;
-import io.github.lycoriscafe.yggdrasil.commons.*;
+import io.github.lycoriscafe.yggdrasil.commons.CommonService;
+import io.github.lycoriscafe.yggdrasil.commons.Response;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
 import io.github.lycoriscafe.yggdrasil.configuration.YggdrasilConfig;
 import io.github.lycoriscafe.yggdrasil.rest.Gender;
 
-import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
@@ -61,15 +62,15 @@ public class StudentService implements EntityService<Student> {
             try (var resultSet = results.getResultSet()) {
                 while (resultSet.next()) {
                     students.add(new Student(
-                            resultSet.getBigDecimal("guardianId"),
+                            resultSet.getBigInteger("guardianId"),
                             resultSet.getString("initName"),
                             resultSet.getString("fullName"),
                             Gender.valueOf(resultSet.getString("gender")),
                             LocalDate.parse(resultSet.getString("dateOfBirth"), Utils.getDateFormatter()),
                             resultSet.getString("address"),
                             Year.parse(resultSet.getString("regYear"))
-                    ).setId(resultSet.getBigDecimal("id"))
-                            .setClassroomId(resultSet.getBigDecimal("classroomId"))
+                    ).setId(resultSet.getBigInteger("id"))
+                            .setClassroomId(resultSet.getBigInteger("classroomId"))
                             .setNic(resultSet.getString("nic"))
                             .setContactNo(resultSet.getString("contactNo"))
                             .setEmail(resultSet.getString("email"))
@@ -132,9 +133,9 @@ public class StudentService implements EntityService<Student> {
     }
 
     public static Response<Student> resetPassword(UrlEncodedData encodedData) {
-        BigDecimal id = null;
+        BigInteger id = null;
         try {
-            id = new BigDecimal(encodedData.get("id"));
+            id = new BigInteger(encodedData.get("id"));
         } catch (Exception e) {
             new Response<Student>().setError("Invalid id");
         }

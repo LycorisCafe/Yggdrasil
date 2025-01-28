@@ -20,12 +20,13 @@ import io.github.lycoriscafe.nexus.http.core.headers.content.UrlEncodedData;
 import io.github.lycoriscafe.yggdrasil.authentication.Authentication;
 import io.github.lycoriscafe.yggdrasil.authentication.AuthenticationService;
 import io.github.lycoriscafe.yggdrasil.authentication.Role;
-import io.github.lycoriscafe.yggdrasil.commons.*;
+import io.github.lycoriscafe.yggdrasil.commons.CommonService;
+import io.github.lycoriscafe.yggdrasil.commons.Response;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
 import io.github.lycoriscafe.yggdrasil.configuration.YggdrasilConfig;
 import io.github.lycoriscafe.yggdrasil.rest.Gender;
 
-import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
@@ -65,7 +66,7 @@ public class TeacherService implements EntityService<Teacher> {
                             resultSet.getString("address"),
                             resultSet.getString("email"),
                             resultSet.getString("contactNo")
-                    ).setId(resultSet.getBigDecimal("id"))
+                    ).setId(resultSet.getBigInteger("id"))
                             .setDisabled(resultSet.getBoolean("disabled")));
                 }
             }
@@ -125,9 +126,9 @@ public class TeacherService implements EntityService<Teacher> {
     }
 
     public static Response<Teacher> resetPassword(UrlEncodedData encodedData) {
-        BigDecimal id = null;
+        BigInteger id = null;
         try {
-            id = new BigDecimal(encodedData.get("id"));
+            id = new BigInteger(encodedData.get("id"));
         } catch (Exception e) {
             new Response<Teacher>().setError("Invalid id");
         }

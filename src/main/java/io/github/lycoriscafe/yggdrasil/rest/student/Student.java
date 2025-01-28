@@ -19,15 +19,15 @@ package io.github.lycoriscafe.yggdrasil.rest.student;
 import io.github.lycoriscafe.yggdrasil.commons.Entity;
 import io.github.lycoriscafe.yggdrasil.rest.Gender;
 
-import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.Year;
 import java.util.Objects;
 
 public class Student implements Entity {
-    private BigDecimal id;
-    private BigDecimal guardianId;
-    private BigDecimal classroomId;
+    private BigInteger id;
+    private BigInteger guardianId;
+    private BigInteger classroomId;
     private String initName;
     private String fullName;
     private Gender gender;
@@ -39,7 +39,7 @@ public class Student implements Entity {
     private String email;
     private Boolean disabled;
 
-    public Student(BigDecimal guardianId,
+    public Student(BigInteger guardianId,
                    String initName,
                    String fullName,
                    Gender gender,
@@ -55,29 +55,29 @@ public class Student implements Entity {
         this.regYear = Objects.requireNonNull(regYear);
     }
 
-    public BigDecimal getId() {
+    public BigInteger getId() {
         return id;
     }
 
-    public Student setId(BigDecimal id) {
+    public Student setId(BigInteger id) {
         this.id = id;
         return this;
     }
 
-    public BigDecimal getGuardianId() {
+    public BigInteger getGuardianId() {
         return guardianId;
     }
 
-    public Student setGuardianId(BigDecimal guardianId) {
+    public Student setGuardianId(BigInteger guardianId) {
         this.guardianId = Objects.requireNonNull(guardianId);
         return this;
     }
 
-    public BigDecimal getClassroomId() {
+    public BigInteger getClassroomId() {
         return classroomId;
     }
 
-    public Student setClassroomId(BigDecimal classroomId) {
+    public Student setClassroomId(BigInteger classroomId) {
         this.classroomId = classroomId;
         return this;
     }

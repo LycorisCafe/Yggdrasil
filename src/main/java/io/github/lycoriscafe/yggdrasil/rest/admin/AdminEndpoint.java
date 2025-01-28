@@ -36,7 +36,7 @@ import io.github.lycoriscafe.yggdrasil.commons.Response;
 import io.github.lycoriscafe.yggdrasil.commons.SearchQueryBuilder;
 import io.github.lycoriscafe.yggdrasil.commons.UpdateQueryBuilder;
 
-import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.List;
 
 @HttpEndpoint("/admin")
@@ -106,7 +106,7 @@ public class AdminEndpoint {
         if (auth != null) return auth;
 
         try {
-            return res.setContent(AuthenticationService.logout(Role.ADMIN, new BigDecimal(req.getParameters().get("id"))).parse());
+            return res.setContent(AuthenticationService.logout(Role.ADMIN, new BigInteger(req.getParameters().get("id"))).parse());
         } catch (Exception e) {
             return res.setContent(new Response<>().setError("Unparseable id").parse());
         }

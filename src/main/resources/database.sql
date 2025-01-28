@@ -173,13 +173,20 @@ CREATE TABLE timetable
 ## AUTHENTICATION
 CREATE TABLE authentication
 (
+    role     ENUM ('STUDENT', 'TEACHER', 'ADMIN') NOT NULL,
+    userId   BIGINT UNSIGNED                      NOT NULL,
+    password VARBINARY(100)                       NOT NULL,
+    UNIQUE (role, userId)
+);
+
+## DEVICES
+CREATE TABLE devices
+(
     role         ENUM ('STUDENT', 'TEACHER', 'ADMIN') NOT NULL,
     userId       BIGINT UNSIGNED                      NOT NULL,
-    password     VARBINARY(100)                       NOT NULL,
     accessToken  VARBINARY(100) UNIQUE,
-    expires BIGINT,
-    refreshToken VARBINARY(100) UNIQUE,
-    UNIQUE (role, userId)
+    expires      BIGINT,
+    refreshToken VARBINARY(100) UNIQUE
 );
 
 ALTER TABLE classroom
@@ -238,12 +245,10 @@ COMMIT;
 ## INSERT SUPERUSER (DEFAULT)
 START TRANSACTION;
 
-INSERT INTO admin (name, accessLevel)
-VALUES ('SUPERUSER', 'SUPERUSER');
-
-SET @userId = LAST_INSERT_ID();
+INSERT INTO admin (id, name, accessLevel)
+VALUES (0, 'SUPERUSER', 'SUPERUSER');
 
 INSERT INTO authentication (role, userId, password) # password is SUPERUSER
-VALUES ('ADMIN', @userId, '0ah66cwBDYMR1Gft+FRFe4y02jwep3Mmrsx19TLlI+c');
+VALUES ('ADMIN', 0, '0ah66cwBDYMR1Gft+FRFe4y02jwep3Mmrsx19TLlI+c');
 
 COMMIT;

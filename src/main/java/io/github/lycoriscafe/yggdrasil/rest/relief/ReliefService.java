@@ -16,7 +16,8 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.relief;
 
-import io.github.lycoriscafe.yggdrasil.commons.*;
+import io.github.lycoriscafe.yggdrasil.commons.CommonService;
+import io.github.lycoriscafe.yggdrasil.commons.Response;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
 
 import java.time.LocalDate;
@@ -41,10 +42,10 @@ public class ReliefService implements EntityService<Relief> {
             try (var resultSet = results.getResultSet()) {
                 while (resultSet.next()) {
                     reliefs.add(new Relief(
-                            resultSet.getBigDecimal("timetableId"),
-                            resultSet.getBigDecimal("teacherId"),
+                            resultSet.getBigInteger("timetableId"),
+                            resultSet.getBigInteger("teacherId"),
                             LocalDate.parse(resultSet.getString("date"), Utils.getDateFormatter())
-                    ).setId(resultSet.getBigDecimal("id")));
+                    ).setId(resultSet.getBigInteger("id")));
                 }
             }
 

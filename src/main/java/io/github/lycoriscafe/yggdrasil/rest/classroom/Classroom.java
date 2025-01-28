@@ -18,12 +18,12 @@ package io.github.lycoriscafe.yggdrasil.rest.classroom;
 
 import io.github.lycoriscafe.yggdrasil.commons.Entity;
 
-import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Objects;
 
 public class Classroom implements Entity {
-    private BigDecimal id;
-    private BigDecimal teacherId;
+    private BigInteger id;
+    private BigInteger teacherId;
     private Integer grade;
     private String name;
 
@@ -33,20 +33,20 @@ public class Classroom implements Entity {
         this.name = Objects.requireNonNull(name);
     }
 
-    public BigDecimal getId() {
+    public BigInteger getId() {
         return id;
     }
 
-    public Classroom setId(BigDecimal id) {
+    public Classroom setId(BigInteger id) {
         this.id = id;
         return this;
     }
 
-    public BigDecimal getTeacherId() {
+    public BigInteger getTeacherId() {
         return teacherId;
     }
 
-    public Classroom setTeacherId(BigDecimal teacherId) {
+    public Classroom setTeacherId(BigInteger teacherId) {
         this.teacherId = teacherId;
         return this;
     }

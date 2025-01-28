@@ -17,6 +17,7 @@
 package io.github.lycoriscafe.yggdrasil.configuration;
 
 import com.google.gson.GsonBuilder;
+import io.github.lycoriscafe.yggdrasil.commons.Entity;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -42,6 +43,17 @@ public class Utils {
                 .registerTypeAdapter(LocalTime.class, new GsonTypeAdapters.Time())
                 .registerTypeAdapter(LocalDateTime.class, new GsonTypeAdapters.DateTime())
                 .create().toJson(obj);
+    }
+
+    public static <T extends Entity> T fromJson(Class<T> clazz,
+                                                String json) {
+        return new GsonBuilder()
+                .serializeNulls()
+                .setDateFormat(DATE_TIME_FORMAT)
+                .registerTypeAdapter(LocalDate.class, new GsonTypeAdapters.Date())
+                .registerTypeAdapter(LocalTime.class, new GsonTypeAdapters.Time())
+                .registerTypeAdapter(LocalDateTime.class, new GsonTypeAdapters.DateTime())
+                .create().fromJson(json, clazz);
     }
 
     public static DateTimeFormatter getDateTimeFormatter() {

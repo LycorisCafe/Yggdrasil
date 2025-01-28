@@ -16,5 +16,10 @@
 
 package io.github.lycoriscafe.yggdrasil.commons;
 
-public interface EntityColumn<T extends Entity> {
+public enum ResponseError {
+    INTERNAL_SYSTEM_ERROR,
+    INVALID_RESULTS_FROM,
+    INVALID_RESULTS_OFFSET,
+    INVALID_SEARCH_PARAMETER,
+    INVALID_CONTENT_PARAMETER
 }

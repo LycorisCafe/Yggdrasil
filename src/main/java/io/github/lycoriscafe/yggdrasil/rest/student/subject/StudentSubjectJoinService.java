@@ -16,7 +16,8 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.student.subject;
 
-import io.github.lycoriscafe.yggdrasil.commons.*;
+import io.github.lycoriscafe.yggdrasil.commons.CommonService;
+import io.github.lycoriscafe.yggdrasil.commons.Response;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,9 +39,9 @@ public class StudentSubjectJoinService implements EntityService<StudentSubjectJo
             try (var resultSet = results.getResultSet()) {
                 while (resultSet.next()) {
                     studentSubjectJoins.add(new StudentSubjectJoin(
-                            resultSet.getBigDecimal("studentId"),
-                            resultSet.getBigDecimal("subjectId")
-                    ).setId(resultSet.getBigDecimal("id")));
+                            resultSet.getBigInteger("studentId"),
+                            resultSet.getBigInteger("subjectId")
+                    ).setId(resultSet.getBigInteger("id")));
                 }
             }
 

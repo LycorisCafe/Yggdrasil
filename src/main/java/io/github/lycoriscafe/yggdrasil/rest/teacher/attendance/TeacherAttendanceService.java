@@ -16,7 +16,8 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.teacher.attendance;
 
-import io.github.lycoriscafe.yggdrasil.commons.*;
+import io.github.lycoriscafe.yggdrasil.commons.CommonService;
+import io.github.lycoriscafe.yggdrasil.commons.Response;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
 
 import java.time.LocalDate;
@@ -41,8 +42,8 @@ public class TeacherAttendanceService implements EntityService<TeacherAttendance
             try (var resultSet = results.getResultSet()) {
                 while (resultSet.next()) {
                     teacherAttendances.add(new TeacherAttendance(
-                            resultSet.getBigDecimal("teacherId")
-                    ).setId(resultSet.getBigDecimal("id"))
+                            resultSet.getBigInteger("teacherId")
+                    ).setId(resultSet.getBigInteger("id"))
                             .setDate(LocalDate.parse(resultSet.getString("date"), Utils.getDateFormatter()))
                             .setTime(LocalTime.parse(resultSet.getString("time"), Utils.getTimeFormatter())));
                 }

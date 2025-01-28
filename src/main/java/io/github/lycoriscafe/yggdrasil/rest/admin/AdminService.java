@@ -20,10 +20,11 @@ import io.github.lycoriscafe.nexus.http.core.headers.content.UrlEncodedData;
 import io.github.lycoriscafe.yggdrasil.authentication.Authentication;
 import io.github.lycoriscafe.yggdrasil.authentication.AuthenticationService;
 import io.github.lycoriscafe.yggdrasil.authentication.Role;
-import io.github.lycoriscafe.yggdrasil.commons.*;
+import io.github.lycoriscafe.yggdrasil.commons.CommonService;
+import io.github.lycoriscafe.yggdrasil.commons.Response;
 import io.github.lycoriscafe.yggdrasil.configuration.YggdrasilConfig;
 
-import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
@@ -54,7 +55,7 @@ public class AdminService implements EntityService<Admin> {
                         accessLevels.add(AccessLevel.valueOf(accessLevel));
                     }
                     admins.add(new Admin(resultSet.getString("name"), accessLevels)
-                            .setId(resultSet.getBigDecimal("id"))
+                            .setId(resultSet.getBigInteger("id"))
                             .setDisabled(resultSet.getBoolean("disabled")));
                 }
             }
@@ -112,9 +113,9 @@ public class AdminService implements EntityService<Admin> {
     }
 
     public static Response<Admin> resetPassword(UrlEncodedData encodedData) {
-        BigDecimal id = null;
+        BigInteger id = null;
         try {
-            id = new BigDecimal(encodedData.get("id"));
+            id = new BigInteger(encodedData.get("id"));
         } catch (Exception e) {
             new Response<Admin>().setError("Invalid id");
         }

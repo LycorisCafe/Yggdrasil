@@ -19,12 +19,12 @@ package io.github.lycoriscafe.yggdrasil.rest.teacher;
 import io.github.lycoriscafe.yggdrasil.commons.Entity;
 import io.github.lycoriscafe.yggdrasil.rest.Gender;
 
-import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.LocalDate;
 import java.util.Objects;
 
 public class Teacher implements Entity {
-    private BigDecimal id;
+    private BigInteger id;
     private String nic;
     private String initName;
     private String fullName;
@@ -53,11 +53,11 @@ public class Teacher implements Entity {
         this.contactNo = Objects.requireNonNull(contactNo);
     }
 
-    public BigDecimal getId() {
+    public BigInteger getId() {
         return id;
     }
 
-    public Teacher setId(BigDecimal id) {
+    public Teacher setId(BigInteger id) {
         this.id = id;
         return this;
     }

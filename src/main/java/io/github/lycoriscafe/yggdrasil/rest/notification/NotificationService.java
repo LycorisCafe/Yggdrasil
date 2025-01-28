@@ -16,7 +16,8 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.notification;
 
-import io.github.lycoriscafe.yggdrasil.commons.*;
+import io.github.lycoriscafe.yggdrasil.commons.CommonService;
+import io.github.lycoriscafe.yggdrasil.commons.Response;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
 
 import java.time.LocalDateTime;
@@ -45,7 +46,7 @@ public class NotificationService implements EntityService<Notification> {
                     notifications.add(new Notification(
                             Scope.valueOf(resultSet.getString("scope")),
                             resultSet.getString("message")
-                    ).setId(resultSet.getBigDecimal("id"))
+                    ).setId(resultSet.getBigInteger("id"))
                             .setCreateTimestamp(resultSet.getString("createTimestamp") == null ?
                                     null : LocalDateTime.parse(resultSet.getString("createTimestamp"), Utils.getDateTimeFormatter()))
                             .setUpdateTimestamp(resultSet.getString("updateTimestamp") == null ?

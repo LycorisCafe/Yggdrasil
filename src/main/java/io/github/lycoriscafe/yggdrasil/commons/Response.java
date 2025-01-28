@@ -19,16 +19,17 @@ package io.github.lycoriscafe.yggdrasil.commons;
 import io.github.lycoriscafe.nexus.http.core.headers.content.Content;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
 
+import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.List;
 
 public class Response<T extends Entity> {
     private boolean success;
     private LocalDateTime timestamp;
-    private String error;
-    private Long generableResults;
-    private Long resultsFrom;
-    private Long resultsOffset;
+    private ResponseError error;
+    private BigInteger generableResults;
+    private BigInteger resultsFrom;
+    private BigInteger resultsOffset;
     private List<T> data;
 
     public Response() {
@@ -53,38 +54,38 @@ public class Response<T extends Entity> {
         return this;
     }
 
-    public String getError() {
+    public ResponseError getError() {
         return error;
     }
 
-    public Response<T> setError(String error) {
+    public Response<T> setError(ResponseError error) {
         this.error = error;
         return this;
     }
 
-    public Long getGenerableResults() {
+    public BigInteger getGenerableResults() {
         return generableResults;
     }
 
-    public Response<T> setGenerableResults(Long generableResults) {
+    public Response<T> setGenerableResults(BigInteger generableResults) {
         this.generableResults = generableResults;
         return this;
     }
 
-    public Long getResultsFrom() {
+    public BigInteger getResultsFrom() {
         return resultsFrom;
     }
 
-    public Response<T> setResultsFrom(Long resultsFrom) {
-        this.resultsFrom = (resultsFrom == null ? 0L : resultsFrom);
+    public Response<T> setResultsFrom(BigInteger resultsFrom) {
+        this.resultsFrom = resultsFrom;
         return this;
     }
 
-    public Long getResultsOffset() {
+    public BigInteger getResultsOffset() {
         return resultsOffset;
     }
 
-    public Response<T> setResultsOffset(Long resultsOffset) {
+    public Response<T> setResultsOffset(BigInteger resultsOffset) {
         this.resultsOffset = resultsOffset;
         return this;
     }

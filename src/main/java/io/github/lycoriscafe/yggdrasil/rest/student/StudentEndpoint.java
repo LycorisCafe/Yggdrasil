@@ -37,7 +37,7 @@ import io.github.lycoriscafe.yggdrasil.commons.SearchQueryBuilder;
 import io.github.lycoriscafe.yggdrasil.commons.UpdateQueryBuilder;
 import io.github.lycoriscafe.yggdrasil.rest.admin.AccessLevel;
 
-import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.List;
 
 @HttpEndpoint("/student")
@@ -114,7 +114,7 @@ public class StudentEndpoint {
         if (auth != null) return auth;
 
         try {
-            return res.setContent(AuthenticationService.logout(Role.STUDENT, new BigDecimal(req.getParameters().get("id"))).parse());
+            return res.setContent(AuthenticationService.logout(Role.STUDENT, new BigInteger(req.getParameters().get("id"))).parse());
         } catch (Exception e) {
             return res.setContent(new Response<>().setError("Unparseable id").parse());
         }

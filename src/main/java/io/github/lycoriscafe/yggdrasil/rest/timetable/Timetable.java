@@ -18,21 +18,21 @@ package io.github.lycoriscafe.yggdrasil.rest.timetable;
 
 import io.github.lycoriscafe.yggdrasil.commons.Entity;
 
-import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.DayOfWeek;
 import java.util.Objects;
 
 public class Timetable implements Entity {
-    private BigDecimal id;
-    private BigDecimal teacherId;
-    private BigDecimal subjectId;
-    private BigDecimal classroomId;
+    private BigInteger id;
+    private BigInteger teacherId;
+    private BigInteger subjectId;
+    private BigInteger classroomId;
     private DayOfWeek day;
     private Integer timeslot;
 
-    public Timetable(BigDecimal teacherId,
-                     BigDecimal subjectId,
-                     BigDecimal classroomId,
+    public Timetable(BigInteger teacherId,
+                     BigInteger subjectId,
+                     BigInteger classroomId,
                      DayOfWeek day,
                      Integer timeslot) {
         this.teacherId = Objects.requireNonNull(teacherId);
@@ -42,38 +42,38 @@ public class Timetable implements Entity {
         this.timeslot = Objects.requireNonNull(timeslot);
     }
 
-    public BigDecimal getId() {
+    public BigInteger getId() {
         return id;
     }
 
-    public Timetable setId(BigDecimal id) {
+    public Timetable setId(BigInteger id) {
         this.id = id;
         return this;
     }
 
-    public BigDecimal getTeacherId() {
+    public BigInteger getTeacherId() {
         return teacherId;
     }
 
-    public Timetable setTeacherId(BigDecimal teacherId) {
+    public Timetable setTeacherId(BigInteger teacherId) {
         this.teacherId = Objects.requireNonNull(teacherId);
         return this;
     }
 
-    public BigDecimal getSubjectId() {
+    public BigInteger getSubjectId() {
         return subjectId;
     }
 
-    public Timetable setSubjectId(BigDecimal subjectId) {
+    public Timetable setSubjectId(BigInteger subjectId) {
         this.subjectId = Objects.requireNonNull(subjectId);
         return this;
     }
 
-    public BigDecimal getClassroomId() {
+    public BigInteger getClassroomId() {
         return classroomId;
     }
 
-    public Timetable setClassroomId(BigDecimal classroomId) {
+    public Timetable setClassroomId(BigInteger classroomId) {
         this.classroomId = Objects.requireNonNull(classroomId);
         return this;
     }

@@ -16,7 +16,8 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.subject;
 
-import io.github.lycoriscafe.yggdrasil.commons.*;
+import io.github.lycoriscafe.yggdrasil.commons.CommonService;
+import io.github.lycoriscafe.yggdrasil.commons.Response;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,9 +43,9 @@ public class SubjectService implements EntityService<Subject> {
                     subjects.add(new Subject(
                             resultSet.getInt("grade"),
                             resultSet.getString("shortName")
-                    ).setId(resultSet.getBigDecimal("id"))
+                    ).setId(resultSet.getBigInteger("id"))
                             .setLongName(resultSet.getString("longName"))
-                            .setTeacherId(resultSet.getBigDecimal("teacherId")));
+                            .setTeacherId(resultSet.getBigInteger("teacherId")));
                 }
             }
 

@@ -16,7 +16,8 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.guardian;
 
-import io.github.lycoriscafe.yggdrasil.commons.*;
+import io.github.lycoriscafe.yggdrasil.commons.CommonService;
+import io.github.lycoriscafe.yggdrasil.commons.Response;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
 import io.github.lycoriscafe.yggdrasil.rest.Gender;
 
@@ -54,7 +55,7 @@ public class GuardianService implements EntityService<Guardian> {
                             LocalDate.parse(resultSet.getString("dateOfBirth"), Utils.getDateFormatter()),
                             resultSet.getString("address"),
                             resultSet.getString("contactNo")
-                    ).setId(resultSet.getBigDecimal("id"))
+                    ).setId(resultSet.getBigInteger("id"))
                             .setEmail(resultSet.getString("email")));
                 }
             }

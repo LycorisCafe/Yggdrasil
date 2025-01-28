@@ -18,12 +18,12 @@ package io.github.lycoriscafe.yggdrasil.rest.notification;
 
 import io.github.lycoriscafe.yggdrasil.commons.Entity;
 
-import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class Notification implements Entity {
-    private BigDecimal id;
+    private BigInteger id;
     private LocalDateTime createTimestamp;
     private LocalDateTime updateTimestamp;
     private Scope scope;
@@ -36,11 +36,11 @@ public class Notification implements Entity {
         this.message = Objects.requireNonNull(message);
     }
 
-    public BigDecimal getId() {
+    public BigInteger getId() {
         return id;
     }
 
-    public Notification setId(BigDecimal id) {
+    public Notification setId(BigInteger id) {
         this.id = id;
         return this;
     }

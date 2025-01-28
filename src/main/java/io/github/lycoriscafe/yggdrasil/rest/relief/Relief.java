@@ -18,47 +18,47 @@ package io.github.lycoriscafe.yggdrasil.rest.relief;
 
 import io.github.lycoriscafe.yggdrasil.commons.Entity;
 
-import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.LocalDate;
 import java.util.Objects;
 
 public class Relief implements Entity {
-    private BigDecimal id;
-    private BigDecimal timetableId;
-    private BigDecimal teacherId;
+    private BigInteger id;
+    private BigInteger timetableId;
+    private BigInteger teacherId;
     private LocalDate date;
 
-    public Relief(BigDecimal timetableId,
-                  BigDecimal teacherId,
+    public Relief(BigInteger timetableId,
+                  BigInteger teacherId,
                   LocalDate date) {
         this.timetableId = Objects.requireNonNull(timetableId);
         this.teacherId = Objects.requireNonNull(teacherId);
         this.date = Objects.requireNonNull(date);
     }
 
-    public BigDecimal getId() {
+    public BigInteger getId() {
         return id;
     }
 
-    public Relief setId(BigDecimal id) {
+    public Relief setId(BigInteger id) {
         this.id = id;
         return this;
     }
 
-    public BigDecimal getTimetableId() {
+    public BigInteger getTimetableId() {
         return timetableId;
     }
 
-    public Relief setTimetableId(BigDecimal timetableId) {
+    public Relief setTimetableId(BigInteger timetableId) {
         this.timetableId = Objects.requireNonNull(timetableId);
         return this;
     }
 
-    public BigDecimal getTeacherId() {
+    public BigInteger getTeacherId() {
         return teacherId;
     }
 
-    public Relief setTeacherId(BigDecimal teacherId) {
+    public Relief setTeacherId(BigInteger teacherId) {
         this.teacherId = Objects.requireNonNull(teacherId);
         return this;
     }

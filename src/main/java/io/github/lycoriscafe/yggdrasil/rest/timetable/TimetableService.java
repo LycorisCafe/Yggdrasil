@@ -16,7 +16,8 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.timetable;
 
-import io.github.lycoriscafe.yggdrasil.commons.*;
+import io.github.lycoriscafe.yggdrasil.commons.CommonService;
+import io.github.lycoriscafe.yggdrasil.commons.Response;
 
 import java.time.DayOfWeek;
 import java.util.ArrayList;
@@ -42,12 +43,12 @@ public class TimetableService implements EntityService<Timetable> {
             try (var resultSet = results.getResultSet()) {
                 while (resultSet.next()) {
                     timetables.add(new Timetable(
-                            resultSet.getBigDecimal("teacherId"),
-                            resultSet.getBigDecimal("subjectId"),
-                            resultSet.getBigDecimal("classroomId"),
+                            resultSet.getBigInteger("teacherId"),
+                            resultSet.getBigInteger("subjectId"),
+                            resultSet.getBigInteger("classroomId"),
                             DayOfWeek.of(resultSet.getInt("day")),
                             resultSet.getInt("timeslot")
-                    ).setId(resultSet.getBigDecimal("id")));
+                    ).setId(resultSet.getBigInteger("id")));
                 }
             }
 
