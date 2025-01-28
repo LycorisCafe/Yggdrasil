@@ -42,6 +42,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.time.Instant;
 import java.util.*;
 
@@ -175,7 +176,9 @@ public class AuthenticationService {
                      "WHERE role = ? AND userId = ?")) {
             statement.setString(1, authentication.getPassword());
             statement.setString(2, authentication.getAccessToken());
-            statement.setLong(3, authentication.getExpires());
+            if (authentication.getExpires() == null) {
+                statement.setNull(3, Types.BIGINT);
+            } else {statement.setLong(3, authentication.getExpires());}
             statement.setString(4, authentication.getRefreshToken());
             statement.setString(5, authentication.getRole().toString());
             statement.setBigDecimal(6, authentication.getUserId());
