@@ -19,8 +19,6 @@ package io.github.lycoriscafe.yggdrasil.rest.admin;
 import io.github.lycoriscafe.yggdrasil.commons.Entity;
 
 import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
@@ -61,18 +59,7 @@ public class Admin implements Entity {
     }
 
     public Admin setAccessLevel(Set<AccessLevel> accessLevel) {
-        Objects.requireNonNull(accessLevel);
-        if (accessLevel.isEmpty()) throw new NullPointerException("empty accessLevel set");
         this.accessLevel = accessLevel;
-        return this;
-    }
-
-    public Admin setAccessLevel(String accessLevel) {
-        Objects.requireNonNull(accessLevel);
-        String[] values = accessLevel.split(",", 0);
-        Set<AccessLevel> accessLevels = new HashSet<>();
-        Arrays.stream(values).forEach(e -> accessLevels.add(AccessLevel.valueOf(e)));
-        this.accessLevel = accessLevels;
         return this;
     }
 

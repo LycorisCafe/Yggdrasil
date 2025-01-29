@@ -16,8 +16,14 @@
 
 package io.github.lycoriscafe.yggdrasil.configuration;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
 public class Utils {
@@ -39,5 +45,15 @@ public class Utils {
 
     public static DateTimeFormatter getTimeFormatter() {
         return DateTimeFormatter.ofPattern(TIME_FORMAT);
+    }
+
+    public static Gson getGson() {
+        return new GsonBuilder()
+                .serializeNulls()
+                .setDateFormat(Utils.DATE_TIME_FORMAT)
+                .registerTypeAdapter(LocalDate.class, new GsonTypeAdapters.Date())
+                .registerTypeAdapter(LocalTime.class, new GsonTypeAdapters.Time())
+                .registerTypeAdapter(LocalDateTime.class, new GsonTypeAdapters.DateTime())
+                .create();
     }
 }

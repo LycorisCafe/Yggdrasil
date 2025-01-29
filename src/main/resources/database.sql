@@ -30,23 +30,6 @@
  * limitations under the License.
  */
 
-/*
- * Copyright 2025 Lycoris Café
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
-
 # Create the database
 # CREATE DATABASE yggdrasil CHARACTER SET 'utf8mb4';
 
@@ -198,8 +181,8 @@ CREATE TABLE timetable
     teacherId   BIGINT UNSIGNED     NOT NULL,
     subjectId   BIGINT UNSIGNED     NOT NULL,
     classroomId BIGINT UNSIGNED     NOT NULL,
-    day         TINYINT(1) UNSIGNED NOT NULL,
-    timeslot    TINYINT(1) UNSIGNED NOT NULL # Typical 8 periods of daily timetable
+    day      TINYINT(1) UNSIGNED NOT NULL, # Days begin as MONDAY = 1
+    timeslot TINYINT(1) UNSIGNED NOT NULL  # Typical 8 periods of daily timetable
 );
 
 ## AUTHENTICATION
@@ -257,22 +240,6 @@ ALTER TABLE timetable
 
 ALTER TABLE devices
     ADD FOREIGN KEY (role, userId) REFERENCES authentication (role, userId) ON UPDATE CASCADE ON DELETE CASCADE;
-
-/*
- * Copyright 2025 Lycoris Café
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 
 # End the constructions of the structure
 COMMIT;

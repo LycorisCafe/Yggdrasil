@@ -28,12 +28,6 @@ public class StudentSubjectJoin implements Entity {
 
     public StudentSubjectJoin() {}
 
-    public StudentSubjectJoin(BigInteger studentId,
-                              BigInteger subjectId) {
-        this.studentId = Objects.requireNonNull(studentId);
-        this.subjectId = Objects.requireNonNull(subjectId);
-    }
-
     public BigInteger getId() {
         return id;
     }

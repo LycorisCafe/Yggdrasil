@@ -27,14 +27,17 @@ import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpRequest
 import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpRes.HttpResponse;
 import io.github.lycoriscafe.yggdrasil.commons.CommonService;
 import io.github.lycoriscafe.yggdrasil.commons.Entity;
-import io.github.lycoriscafe.yggdrasil.commons.RequestModel;
-import io.github.lycoriscafe.yggdrasil.commons.Response;
+import io.github.lycoriscafe.yggdrasil.commons.ResponseModel;
+import io.github.lycoriscafe.yggdrasil.commons.SearchModel;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
 import io.github.lycoriscafe.yggdrasil.configuration.YggdrasilConfig;
 import io.github.lycoriscafe.yggdrasil.rest.admin.AccessLevel;
 import io.github.lycoriscafe.yggdrasil.rest.admin.Admin;
+import io.github.lycoriscafe.yggdrasil.rest.admin.AdminService;
 import io.github.lycoriscafe.yggdrasil.rest.student.Student;
+import io.github.lycoriscafe.yggdrasil.rest.student.StudentService;
 import io.github.lycoriscafe.yggdrasil.rest.teacher.Teacher;
+import io.github.lycoriscafe.yggdrasil.rest.teacher.TeacherService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -96,8 +99,8 @@ public class AuthenticationService {
             }
 
             if (targetRoles.contains(Role.ADMIN) && accessLevels != null) {
-                var admin = CommonService.read(Admin.class, new RequestModel<Admin>()
-                        .setSearchBy(Map.of("id", Map.of(device.getFirst().getUserId(), false))));
+                var admin = CommonService.read(Admin.class, AdminService.class, new SearchModel()
+                        .setSearchBy(Map.of("id", Map.of(device.getFirst().getUserId().toString(), false))));
                 var accessLevel = admin.getData().getFirst().getAccessLevel();
                 if (accessLevel.stream().noneMatch(accessLevel::contains)) {
                     return httpResponse.setStatusCode(HttpStatusCode.FORBIDDEN).addAuthentication(
@@ -143,11 +146,11 @@ public class AuthenticationService {
         }
     }
 
-    public static <T extends Entity> Response<T> updateAuthentication(HttpPostRequest req) {
+    public static <T extends Entity> ResponseModel<T> updateAuthentication(HttpPostRequest req) {
         Objects.requireNonNull(req);
         UrlEncodedData data = (UrlEncodedData) req.getContent().getData();
         if (!data.containsKey("oldPassword") || !data.containsKey("newPassword")) {
-            return new Response<T>().setError("Required parameters missing");
+            return new ResponseModel<T>().setError("Required parameters missing");
         }
 
         var oldPassword = data.get("oldPassword");
@@ -155,7 +158,7 @@ public class AuthenticationService {
 
         if (newPassword.length() < YggdrasilConfig.getDefaultUserPasswordBoundary()[0]
                 || newPassword.length() > YggdrasilConfig.getDefaultUserPasswordBoundary()[1]) {
-            return new Response<T>().setError("Password length out of bound " + Arrays.toString(YggdrasilConfig.getDefaultUserPasswordBoundary()));
+            return new ResponseModel<T>().setError("Password length out of bound " + Arrays.toString(YggdrasilConfig.getDefaultUserPasswordBoundary()));
         }
 
         try {
@@ -163,7 +166,7 @@ public class AuthenticationService {
             var authentication = AuthenticationService.getAuthentication(devices.getFirst().getRole(), devices.getFirst().getUserId());
 
             if (authentication.getPassword().equals(AuthenticationService.encryptData(oldPassword.getBytes(StandardCharsets.UTF_8)))) {
-                return new Response<T>().setError("oldPassword doesn't match");
+                return new ResponseModel<T>().setError("oldPassword doesn't match");
             }
             authentication.setPassword(newPassword);
 
@@ -174,14 +177,14 @@ public class AuthenticationService {
                 statement.setString(3, authentication.getUserId().toString());
                 if (statement.executeUpdate() != 1) {
                     connection.rollback();
-                    return new Response<T>().setError("Internal system error");
+                    return new ResponseModel<T>().setError("Internal system error");
                 }
                 connection.commit();
-                return new Response<T>().setSuccess(true);
+                return new ResponseModel<T>().setSuccess(true);
             }
         } catch (SQLException | NoSuchAlgorithmException e) {
             logger.atError().log(e.getMessage());
-            return new Response<T>().setError("Internal system error");
+            return new ResponseModel<T>().setError("Internal system error");
         }
     }
 
@@ -239,18 +242,18 @@ public class AuthenticationService {
         Objects.requireNonNull(userId);
         return switch (role) {
             case ADMIN -> {
-                var response = CommonService.read(Admin.class, new RequestModel<Admin>()
-                        .setSearchBy(Map.of("id", Map.of(userId, false))));
+                var response = CommonService.read(Admin.class, AdminService.class, new SearchModel()
+                        .setSearchBy(Map.of("id", Map.of(userId.toString(), false))));
                 yield (response.isSuccess() && !response.getData().isEmpty()) ? response.getData().getFirst().getDisabled() : true;
             }
             case TEACHER -> {
-                var response = CommonService.read(Teacher.class, new RequestModel<Teacher>()
-                        .setSearchBy(Map.of("id", Map.of(userId, false))));
+                var response = CommonService.read(Teacher.class, TeacherService.class, new SearchModel()
+                        .setSearchBy(Map.of("id", Map.of(userId.toString(), false))));
                 yield (response.isSuccess() && !response.getData().isEmpty()) ? response.getData().getFirst().getDisabled() : true;
             }
             case STUDENT -> {
-                var response = CommonService.read(Student.class, new RequestModel<Student>()
-                        .setSearchBy(Map.of("id", Map.of(userId, false))));
+                var response = CommonService.read(Student.class, StudentService.class, new SearchModel()
+                        .setSearchBy(Map.of("id", Map.of(userId.toString(), false))));
                 yield (response.isSuccess() && !response.getData().isEmpty()) ? response.getData().getFirst().getDisabled() : true;
             }
         };

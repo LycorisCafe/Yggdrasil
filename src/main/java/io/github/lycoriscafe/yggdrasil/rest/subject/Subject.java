@@ -30,12 +30,6 @@ public class Subject implements Entity {
 
     public Subject() {}
 
-    public Subject(Integer grade,
-                   String shortName) {
-        this.grade = Objects.requireNonNull(grade);
-        this.shortName = Objects.requireNonNull(shortName);
-    }
-
     public BigInteger getId() {
         return id;
     }

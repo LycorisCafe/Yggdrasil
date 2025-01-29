@@ -74,12 +74,6 @@ public class Notification implements Entity {
         return this;
     }
 
-    public Notification setScope(String scope) {
-        Objects.requireNonNull(scope);
-        this.scope = Scope.valueOf(scope);
-        return this;
-    }
-
     public String getMessage() {
         return message;
     }

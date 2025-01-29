@@ -5,6 +5,7 @@ module Yggdrasil {
     requires io.github.lycoriscafe.nexus.http;
     requires jdk.jshell;
     requires org.slf4j;
+    requires mysql.connector.j;
 
     opens io.github.lycoriscafe.yggdrasil.authentication;
     opens io.github.lycoriscafe.yggdrasil.commons;

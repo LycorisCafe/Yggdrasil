@@ -41,22 +41,6 @@ public class Student implements Entity {
 
     public Student() {}
 
-    public Student(BigInteger guardianId,
-                   String initName,
-                   String fullName,
-                   Gender gender,
-                   LocalDate dateOfBirth,
-                   String address,
-                   Year regYear) {
-        this.guardianId = Objects.requireNonNull(guardianId);
-        this.initName = Objects.requireNonNull(initName);
-        this.fullName = Objects.requireNonNull(fullName);
-        this.gender = Objects.requireNonNull(gender);
-        this.dateOfBirth = Objects.requireNonNull(dateOfBirth);
-        this.address = Objects.requireNonNull(address);
-        this.regYear = Objects.requireNonNull(regYear);
-    }
-
     public BigInteger getId() {
         return id;
     }
@@ -108,12 +92,6 @@ public class Student implements Entity {
 
     public Student setGender(Gender gender) {
         this.gender = Objects.requireNonNull(gender);
-        return this;
-    }
-
-    public Student setGender(String gender) {
-        Objects.requireNonNull(gender);
-        this.gender = Gender.valueOf(gender);
         return this;
     }
 

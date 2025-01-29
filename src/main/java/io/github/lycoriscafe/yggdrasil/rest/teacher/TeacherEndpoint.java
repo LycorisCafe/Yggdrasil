@@ -19,19 +19,28 @@ package io.github.lycoriscafe.yggdrasil.rest.teacher;
 import io.github.lycoriscafe.nexus.http.core.HttpEndpoint;
 import io.github.lycoriscafe.nexus.http.core.headers.auth.Authenticated;
 import io.github.lycoriscafe.nexus.http.core.headers.content.ExpectContent;
+import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.DELETE;
+import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.PATCH;
 import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.POST;
+import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.PUT;
+import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpDeleteRequest;
+import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpPatchRequest;
 import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpPostRequest;
+import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpPutRequest;
 import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpRes.HttpResponse;
+import io.github.lycoriscafe.yggdrasil.authentication.Authentication;
 import io.github.lycoriscafe.yggdrasil.authentication.AuthenticationService;
 import io.github.lycoriscafe.yggdrasil.authentication.DeviceService;
 import io.github.lycoriscafe.yggdrasil.authentication.Role;
 import io.github.lycoriscafe.yggdrasil.commons.CommonService;
-import io.github.lycoriscafe.yggdrasil.commons.RequestModel;
-import io.github.lycoriscafe.yggdrasil.commons.Response;
+import io.github.lycoriscafe.yggdrasil.commons.ResponseModel;
+import io.github.lycoriscafe.yggdrasil.commons.SearchModel;
+import io.github.lycoriscafe.yggdrasil.configuration.Utils;
 import io.github.lycoriscafe.yggdrasil.rest.admin.AccessLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigInteger;
 import java.util.Set;
 
 @HttpEndpoint("/teacher")
@@ -47,11 +56,11 @@ public class TeacherEndpoint {
         if (auth != null) return auth;
 
         try {
-            RequestModel<Teacher> requestModel = RequestModel.fromJson(Teacher.class, new String((byte[]) req.getContent().getData()));
-            return res.setContent(CommonService.read(Teacher.class, requestModel).parse());
+            SearchModel searchModel = SearchModel.fromJson(new String((byte[]) req.getContent().getData()));
+            return res.setContent(CommonService.read(Teacher.class, TeacherService.class, searchModel).parse());
         } catch (Exception e) {
             logger.atError().log(e.getMessage());
-            return res.setContent(new Response<Teacher>().setError(e.getMessage()).parse());
+            return res.setContent(new ResponseModel<Teacher>().setError(e.getMessage()).parse());
         }
     }
 
@@ -63,49 +72,60 @@ public class TeacherEndpoint {
         if (auth != null) return auth;
 
         try {
-            RequestModel<Teacher> requestModel = RequestModel.fromJson(Teacher.class, new String((byte[]) req.getContent().getData()));
-            return res.setContent(CommonService.create(Teacher.class, requestModel).parse());
+            Teacher instance = Utils.getGson().fromJson(new String((byte[]) req.getContent().getData()), Teacher.class);
+            ResponseModel<Teacher> response = CommonService.create(Teacher.class, TeacherService.class, instance);
+            if (response.isSuccess()) {
+                AuthenticationService.addAuthentication(
+                        new Authentication(Role.TEACHER, response.getData().getFirst().getId(), "T" + response.getData().getFirst().getId()));
+            }
+            return res.setContent(response.parse());
         } catch (Exception e) {
             logger.atError().log(e.getMessage());
-            return res.setContent(new Response<Teacher>().setError(e.getMessage()).parse());
+            return res.setContent(new ResponseModel<Teacher>().setError(e.getMessage()).parse());
         }
     }
 
-    @POST("/update")
+    @PUT("/update")
     @ExpectContent("application/json")
-    public static HttpResponse update(HttpPostRequest req,
+    public static HttpResponse update(HttpPutRequest req,
                                       HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN), Set.of(AccessLevel.SUPERUSER, AccessLevel.TEACHER));
         if (auth != null) return auth;
 
         try {
-            RequestModel<Teacher> requestModel = RequestModel.fromJson(Teacher.class, new String((byte[]) req.getContent().getData()));
-            return res.setContent(CommonService.update(Teacher.class, requestModel).parse());
+            Teacher instance = Utils.getGson().fromJson(new String((byte[]) req.getContent().getData()), Teacher.class);
+            return res.setContent(CommonService.update(Teacher.class, TeacherService.class, instance).parse());
         } catch (Exception e) {
             logger.atError().log(e.getMessage());
-            return res.setContent(new Response<Teacher>().setError(e.getMessage()).parse());
+            return res.setContent(new ResponseModel<Teacher>().setError(e.getMessage()).parse());
         }
     }
 
-    @POST("/delete")
-    @ExpectContent("application/json")
-    public static HttpResponse delete(HttpPostRequest req,
+    @DELETE("/delete")
+    public static HttpResponse delete(HttpDeleteRequest req,
                                       HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN), Set.of(AccessLevel.SUPERUSER, AccessLevel.TEACHER));
         if (auth != null) return auth;
 
+        if (req.getParameters() == null || !req.getParameters().containsKey("id")) {
+            return res.setContent(new ResponseModel<Teacher>().setError("Required parameter 'id' is missing").parse());
+        }
         try {
-            RequestModel<Teacher> requestModel = RequestModel.fromJson(Teacher.class, new String((byte[]) req.getContent().getData()));
-            return res.setContent(CommonService.delete(Teacher.class, requestModel).parse());
+            BigInteger id = new BigInteger(req.getParameters().get("id"));
+            ResponseModel<Teacher> response = CommonService.delete(Teacher.class, id);
+            if (response.isSuccess()) {
+                AuthenticationService.deleteAuthentication(Role.TEACHER, id);
+            }
+            return res.setContent(response.parse());
         } catch (Exception e) {
             logger.atError().log(e.getMessage());
-            return res.setContent(new Response<Teacher>().setError(e.getMessage()).parse());
+            return res.setContent(new ResponseModel<Teacher>().setError(e.getMessage()).parse());
         }
     }
 
-    @POST("/resetPassword")
+    @PATCH("/resetPassword")
     @ExpectContent("application/x-www-form-urlencoded")
-    public static HttpResponse resetPassword(HttpPostRequest req,
+    public static HttpResponse resetPassword(HttpPatchRequest req,
                                              HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN, Role.TEACHER),
                 Set.of(AccessLevel.SUPERUSER, AccessLevel.TEACHER));
@@ -113,12 +133,11 @@ public class TeacherEndpoint {
         return res.setContent(AuthenticationService.updateAuthentication(req).parse());
     }
 
-    @POST("/logout")
+    @PATCH("/logout")
     @ExpectContent("none")
-    public static HttpResponse logout(HttpPostRequest req,
+    public static HttpResponse logout(HttpPatchRequest req,
                                       HttpResponse res) {
-        var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN, Role.TEACHER),
-                Set.of(AccessLevel.SUPERUSER, AccessLevel.TEACHER));
+        var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN, Role.TEACHER), Set.of(AccessLevel.SUPERUSER, AccessLevel.TEACHER));
         if (auth != null) return auth;
         return res.setContent(DeviceService.removeDevice(req).parse());
     }

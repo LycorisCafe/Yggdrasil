@@ -16,18 +16,14 @@
 
 package io.github.lycoriscafe.yggdrasil.commons;
 
-import com.google.gson.GsonBuilder;
 import io.github.lycoriscafe.nexus.http.core.headers.content.Content;
-import io.github.lycoriscafe.yggdrasil.configuration.GsonTypeAdapters;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
 
 import java.math.BigInteger;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 
-public class Response<T extends Entity> {
+public class ResponseModel<T extends Entity> {
     private boolean success;
     private LocalDateTime timestamp;
     private String error;
@@ -36,7 +32,7 @@ public class Response<T extends Entity> {
     private BigInteger resultsOffset;
     private List<T> data;
 
-    public Response() {
+    public ResponseModel() {
         timestamp = LocalDateTime.now();
     }
 
@@ -44,7 +40,7 @@ public class Response<T extends Entity> {
         return success;
     }
 
-    public Response<T> setSuccess(boolean success) {
+    public ResponseModel<T> setSuccess(boolean success) {
         this.success = success;
         return this;
     }
@@ -53,7 +49,7 @@ public class Response<T extends Entity> {
         return timestamp;
     }
 
-    public Response<T> setTimestamp(LocalDateTime timestamp) {
+    public ResponseModel<T> setTimestamp(LocalDateTime timestamp) {
         this.timestamp = timestamp;
         return this;
     }
@@ -62,7 +58,7 @@ public class Response<T extends Entity> {
         return error;
     }
 
-    public Response<T> setError(String error) {
+    public ResponseModel<T> setError(String error) {
         this.error = error;
         return this;
     }
@@ -71,7 +67,7 @@ public class Response<T extends Entity> {
         return generableResults;
     }
 
-    public Response<T> setGenerableResults(BigInteger generableResults) {
+    public ResponseModel<T> setGenerableResults(BigInteger generableResults) {
         this.generableResults = generableResults;
         return this;
     }
@@ -80,7 +76,7 @@ public class Response<T extends Entity> {
         return resultsFrom;
     }
 
-    public Response<T> setResultsFrom(BigInteger resultsFrom) {
+    public ResponseModel<T> setResultsFrom(BigInteger resultsFrom) {
         this.resultsFrom = resultsFrom;
         return this;
     }
@@ -89,7 +85,7 @@ public class Response<T extends Entity> {
         return resultsOffset;
     }
 
-    public Response<T> setResultsOffset(BigInteger resultsOffset) {
+    public ResponseModel<T> setResultsOffset(BigInteger resultsOffset) {
         this.resultsOffset = resultsOffset;
         return this;
     }
@@ -98,18 +94,12 @@ public class Response<T extends Entity> {
         return data;
     }
 
-    public Response<T> setData(List<T> data) {
+    public ResponseModel<T> setData(List<T> data) {
         this.data = data;
         return this;
     }
 
     public Content parse() {
-        return new Content("application/json", new GsonBuilder()
-                .serializeNulls()
-                .setDateFormat(Utils.DATE_TIME_FORMAT)
-                .registerTypeAdapter(LocalDate.class, new GsonTypeAdapters.Date())
-                .registerTypeAdapter(LocalTime.class, new GsonTypeAdapters.Time())
-                .registerTypeAdapter(LocalDateTime.class, new GsonTypeAdapters.DateTime())
-                .create().toJson(this));
+        return new Content("application/json", Utils.getGson().toJson(this));
     }
 }

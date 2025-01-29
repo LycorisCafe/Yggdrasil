@@ -110,8 +110,9 @@ public class Teacher implements Entity {
         return dateOfBirth;
     }
 
-    public void setDateOfBirth(LocalDate dateOfBirth) {
+    public Teacher setDateOfBirth(LocalDate dateOfBirth) {
         this.dateOfBirth = Objects.requireNonNull(dateOfBirth);
+        return this;
     }
 
     public String getAddress() {
