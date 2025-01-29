@@ -29,6 +29,8 @@ public class TeacherAttendance implements Entity {
     private LocalDate date;
     private LocalTime time;
 
+    public TeacherAttendance() {}
+
     public TeacherAttendance(BigInteger teacherId) {
         this.teacherId = Objects.requireNonNull(teacherId);
     }

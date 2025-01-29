@@ -26,6 +26,8 @@ public class StudentSubjectJoin implements Entity {
     private BigInteger studentId;
     private BigInteger subjectId;
 
+    public StudentSubjectJoin() {}
+
     public StudentSubjectJoin(BigInteger studentId,
                               BigInteger subjectId) {
         this.studentId = Objects.requireNonNull(studentId);

@@ -35,6 +35,8 @@ public class Teacher implements Entity {
     private String contactNo;
     private Boolean disabled;
 
+    public Teacher() {}
+
     public Teacher(String nic,
                    String initName,
                    String fullName,

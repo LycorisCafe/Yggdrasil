@@ -17,42 +17,40 @@
 package io.github.lycoriscafe.yggdrasil.commons;
 
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import io.github.lycoriscafe.yggdrasil.configuration.GsonTypeAdapters;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
-import io.github.lycoriscafe.yggdrasil.rest.admin.AccessLevel;
 import io.github.lycoriscafe.yggdrasil.rest.admin.Admin;
 
-import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class RequestModel<T extends Entity> {
-    private Map<Field, Map<Object, Boolean>> searchBy;
-    private List<Field> orderBy;
+    private Map<String, Map<Object, Boolean>> searchBy;
+    private List<String> orderBy;
     private Boolean isAscending;
     private BigInteger resultsFrom;
     private BigInteger resultsOffset;
     private T entityInstance;
 
-    public Map<Field, Map<Object, Boolean>> getSearchBy() {
+    public Map<String, Map<Object, Boolean>> getSearchBy() {
         return searchBy;
     }
 
-    public RequestModel<T> setSearchBy(Map<Field, Map<Object, Boolean>> searchBy) {
+    public RequestModel<T> setSearchBy(Map<String, Map<Object, Boolean>> searchBy) {
         this.searchBy = searchBy;
         return this;
     }
 
-    public List<Field> getOrderBy() {
+    public List<String> getOrderBy() {
         return orderBy;
     }
 
-    public RequestModel<T> setOrderBy(List<Field> orderBy) {
+    public RequestModel<T> setOrderBy(List<String> orderBy) {
         this.orderBy = orderBy;
         return this;
     }
@@ -101,15 +99,11 @@ public class RequestModel<T extends Entity> {
                 .registerTypeAdapter(LocalDate.class, new GsonTypeAdapters.Date())
                 .registerTypeAdapter(LocalTime.class, new GsonTypeAdapters.Time())
                 .registerTypeAdapter(LocalDateTime.class, new GsonTypeAdapters.DateTime())
-                .create().fromJson(json, entity.getGenericSuperclass());
+                .create().fromJson(json, TypeToken.getParameterized(RequestModel.class, entity).getType());
     }
 
-    public static void main(String[] args) throws NoSuchFieldException {
-        var reqm = new RequestModel<Admin>()
-                .setSearchBy(Map.of(Admin.class.getDeclaredField("id"), Map.of(1, true)))
-                .setOrderBy(List.of(Admin.class.getDeclaredField("id"), Admin.class.getDeclaredField("name")))
-                .setAscending(true).setResultsFrom(new BigInteger("5")).setResultsOffset(new BigInteger("5"))
-                .setEntityInstance(new Admin("anme", Set.of(AccessLevel.TIMETABLE)));
+    public static void main(String[] args) {
+        var reqm = fromJson(Admin.class, "{\"searchBy\":{\"id\":{\"1\":true, \"2\":false}},\"orderBy\":[\"id\",\"name\"],\"isAscending\":true,\"resultsFrom\":5,\"resultsOffset\":5,\"entityInstance\":{\"id\":null,\"name\":\"anme\",\"accessLevel\":[\"TIMETABLE\"],\"disabled\":null}}");
         System.out.println(new GsonBuilder()
                 .serializeNulls()
                 .setDateFormat(Utils.DATE_TIME_FORMAT)

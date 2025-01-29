@@ -28,6 +28,8 @@ public class Admin implements Entity {
     private Set<AccessLevel> accessLevel;
     private Boolean disabled;
 
+    public Admin() {}
+
     public Admin(String name,
                  Set<AccessLevel> accessLevel) {
         this.name = Objects.requireNonNull(name);

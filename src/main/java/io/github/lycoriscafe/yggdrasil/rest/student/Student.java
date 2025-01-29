@@ -39,6 +39,8 @@ public class Student implements Entity {
     private String email;
     private Boolean disabled;
 
+    public Student() {}
+
     public Student(BigInteger guardianId,
                    String initName,
                    String fullName,

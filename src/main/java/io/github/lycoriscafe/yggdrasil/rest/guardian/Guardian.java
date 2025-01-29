@@ -34,6 +34,8 @@ public class Guardian implements Entity {
     private String email;
     private String contactNo;
 
+    public Guardian() {}
+
     public Guardian(String nic,
                     String initName,
                     String fullName,

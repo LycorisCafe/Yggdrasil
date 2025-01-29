@@ -30,6 +30,8 @@ public class Timetable implements Entity {
     private DayOfWeek day;
     private Integer timeslot;
 
+    public Timetable() {}
+
     public Timetable(BigInteger teacherId,
                      BigInteger subjectId,
                      BigInteger classroomId,

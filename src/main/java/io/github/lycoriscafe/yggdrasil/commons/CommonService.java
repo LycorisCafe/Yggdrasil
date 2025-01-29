@@ -57,30 +57,29 @@ public class CommonService {
                 statement.setObject(i + 1, obj);
             }
 
-            if (statement.executeUpdate() != 1) return new Response<T>().setError(ResponseError.INTERNAL_SYSTEM_ERROR);
+            if (statement.executeUpdate() != 1) return new Response<T>().setError("Internal system error");
             try (var resultSet = statement.getGeneratedKeys()) {
-                if (!resultSet.next()) return new Response<T>().setError(ResponseError.INTERNAL_SYSTEM_ERROR);
-                return read(entity, new RequestModel<T>().setSearchBy(
-                        Map.of(entity.getDeclaredField("id"), Map.of(resultSet.getString(1), false))));
+                if (!resultSet.next()) return new Response<T>().setError("Internal system error");
+                return read(entity, new RequestModel<T>().setSearchBy(Map.of("id", Map.of(resultSet.getString(1), false))));
             }
         } catch (Exception e) {
             logger.atError().log(e.getMessage());
-            return new Response<T>().setError(ResponseError.INTERNAL_SYSTEM_ERROR);
+            return new Response<T>().setError("Internal system error");
         }
     }
 
     public static <T extends Entity> Response<T> read(Class<T> entity,
                                                       RequestModel<T> requestModel) {
-        if (entity == null) return new Response<T>().setError(ResponseError.INTERNAL_SYSTEM_ERROR);
+        if (entity == null) return new Response<T>().setError("Internal system error");
         if (requestModel.getResultsFrom() == null) requestModel.setResultsFrom(new BigInteger("0"));
         if (requestModel.getResultsOffset() == null) {
             requestModel.setResultsOffset(new BigInteger(String.valueOf(YggdrasilConfig.getDefaultResultsOffset())));
         }
         if (requestModel.getResultsFrom().compareTo(new BigInteger("0")) < 0) {
-            return new Response<T>().setError(ResponseError.INVALID_RESULTS_FROM);
+            return new Response<T>().setError("Invalid resultsFrom");
         }
         if (requestModel.getResultsOffset().compareTo(new BigInteger("0")) < 0) {
-            return new Response<T>().setError(ResponseError.INVALID_RESULTS_OFFSET);
+            return new Response<T>().setError("Invalid resultsOffset");
         }
 
         String generableResultsQuery;
@@ -88,13 +87,13 @@ public class CommonService {
         StringBuilder query = new StringBuilder("SELECT * FROM ").append(entity.getSimpleName());
         if (requestModel.getSearchBy() != null) {
             query.append(" WHERE ");
-            List<Field> fields = requestModel.getSearchBy().keySet().stream().toList();
+            List<String> fields = requestModel.getSearchBy().keySet().stream().toList();
             for (int i = 0; i < fields.size(); i++) {
                 if (i > 0) query.append(" AND ");
                 List<Object> objects = requestModel.getSearchBy().get(fields.get(i)).keySet().stream().toList();
                 for (int j = 0; j < objects.size(); j++) {
                     if (j > 0) query.append(" OR ");
-                    query.append(fields.get(i).getName()).append(" LIKE ")
+                    query.append(fields.get(i)).append(" LIKE ")
                             .append(requestModel.getSearchBy().get(fields.get(i)).get(objects.get(j)) ? " BINARY " : "")
                             .append("?");
                 }
@@ -104,7 +103,7 @@ public class CommonService {
             query.append(" ORDER BY ");
             for (int i = 0; i < requestModel.getOrderBy().size(); i++) {
                 if (i > 0) query.append(", ");
-                query.append(requestModel.getOrderBy().get(i).getName());
+                query.append(requestModel.getOrderBy().get(i));
             }
         }
         if (requestModel.getAscending() != null) {
@@ -120,7 +119,7 @@ public class CommonService {
              var resultsOffsetStatement = connection.prepareStatement(resultsOffsetQuery)) {
             int nextParamIndex = 1;
             if (requestModel.getSearchBy() != null) {
-                for (Field field : requestModel.getSearchBy().keySet()) {
+                for (String field : requestModel.getSearchBy().keySet()) {
                     for (Object obj : requestModel.getSearchBy().get(field).keySet()) {
                         statement.setObject(nextParamIndex, obj);
                         generableResultsStatement.setObject(nextParamIndex, obj);
@@ -150,22 +149,22 @@ public class CommonService {
                 }
                 response.setData(data);
 
-                if (!generableResultsResultSet.next()) return new Response<T>().setError(ResponseError.INTERNAL_SYSTEM_ERROR);
+                if (!generableResultsResultSet.next()) return new Response<T>().setError("Internal system error");
                 response.setGenerableResults(new BigInteger(generableResultsResultSet.getString(1)));
-                if (!resultsOffsetResultSet.next()) return new Response<T>().setError(ResponseError.INTERNAL_SYSTEM_ERROR);
+                if (!resultsOffsetResultSet.next()) return new Response<T>().setError("Internal system error");
                 response.setResultsOffset(new BigInteger(resultsOffsetResultSet.getString(1)));
             }
             return response.setSuccess(true);
         } catch (Exception e) {
             logger.atError().log(e.getMessage());
-            return new Response<T>().setError(ResponseError.INTERNAL_SYSTEM_ERROR);
+            return new Response<T>().setError("Internal system error");
         }
     }
 
     public static <T extends Entity> Response<T> update(Class<T> entity,
                                                         RequestModel<T> requestModel) {
-        if (entity == null || requestModel.getEntityInstance() == null) return new Response<T>().setError(ResponseError.INTERNAL_SYSTEM_ERROR);
-        if (requestModel.getSearchBy() == null) return new Response<T>().setError(ResponseError.INVALID_SEARCH_PARAMETER);
+        if (entity == null || requestModel.getEntityInstance() == null) return new Response<T>().setError("Internal system error");
+        if (requestModel.getSearchBy() == null) return new Response<T>().setError("Search parameters cannot be null");
 
         StringBuilder query = new StringBuilder("UPDATE ").append(entity.getSimpleName()).append(" SET ");
         for (int i = 0; i < entity.getDeclaredFields().length; i++) {
@@ -174,13 +173,13 @@ public class CommonService {
             query.append(entity.getDeclaredFields()[i].getName()).append(" = ?");
         }
         query.append(" WHERE ");
-        List<Field> fields = requestModel.getSearchBy().keySet().stream().toList();
+        List<String> fields = requestModel.getSearchBy().keySet().stream().toList();
         for (int i = 0; i < fields.size(); i++) {
             if (i > 0) query.append(" AND ");
             List<Object> objects = requestModel.getSearchBy().get(fields.get(i)).keySet().stream().toList();
             for (int j = 0; j < objects.size(); j++) {
                 if (j > 0) query.append(" OR ");
-                query.append(fields.get(i).getName()).append(" LIKE ")
+                query.append(fields.get(i)).append(" LIKE ")
                         .append(requestModel.getSearchBy().get(fields.get(i)).get(j) ? " BINARY " : "")
                         .append("?");
             }
@@ -196,35 +195,34 @@ public class CommonService {
                 Object obj = entity.getMethod(getterName).invoke(requestModel.getEntityInstance());
                 statement.setObject(nextParamIndex++, obj);
             }
-            for (Field field : requestModel.getSearchBy().keySet()) {
+            for (String field : requestModel.getSearchBy().keySet()) {
                 for (Object obj : requestModel.getSearchBy().get(field).keySet()) {
                     statement.setObject(nextParamIndex++, obj);
                 }
             }
 
-            if (statement.executeUpdate() != 1) return new Response<T>().setError(ResponseError.INTERNAL_SYSTEM_ERROR);
+            if (statement.executeUpdate() != 1) return new Response<T>().setError("Internal system error");
             return read(entity, new RequestModel<T>().setSearchBy(
-                    Map.of(entity.getDeclaredField("id"),
-                            Map.of(entity.getMethod("getId").invoke(requestModel.getEntityInstance()), false))));
+                    Map.of("id", Map.of(entity.getMethod("getId").invoke(requestModel.getEntityInstance()), false))));
         } catch (Exception e) {
             logger.atError().log(e.getMessage());
-            return new Response<T>().setError(ResponseError.INTERNAL_SYSTEM_ERROR);
+            return new Response<T>().setError("Internal system error");
         }
     }
 
     public static <T extends Entity> Response<T> delete(Class<T> entity,
                                                         RequestModel<T> requestModel) {
-        if (entity == null) return new Response<T>().setError(ResponseError.INTERNAL_SYSTEM_ERROR);
-        if (requestModel.getSearchBy() == null) return new Response<T>().setError(ResponseError.INVALID_SEARCH_PARAMETER);
+        if (entity == null) return new Response<T>().setError("Internal system error");
+        if (requestModel.getSearchBy() == null) return new Response<T>().setError("Search parameters cannot be null");
 
         StringBuilder query = new StringBuilder("DELETE FROM ").append(entity.getSimpleName()).append(" WHERE ");
-        List<Field> fields = requestModel.getSearchBy().keySet().stream().toList();
+        List<String> fields = requestModel.getSearchBy().keySet().stream().toList();
         for (int i = 0; i < fields.size(); i++) {
             if (i > 0) query.append(" AND ");
             List<Object> objects = requestModel.getSearchBy().get(fields.get(i)).keySet().stream().toList();
             for (int j = 0; j < objects.size(); j++) {
                 if (j > 0) query.append(" OR ");
-                query.append(fields.get(i).getName()).append(" LIKE ")
+                query.append(fields.get(i)).append(" LIKE ")
                         .append(requestModel.getSearchBy().get(fields.get(i)).get(j) ? " BINARY " : "")
                         .append("?");
             }
@@ -233,17 +231,17 @@ public class CommonService {
         try (var connection = Utils.getDatabaseConnection();
              var statement = connection.prepareStatement(query.toString())) {
             int nextParamIndex = 1;
-            for (Field field : requestModel.getSearchBy().keySet()) {
+            for (String field : requestModel.getSearchBy().keySet()) {
                 for (Object obj : requestModel.getSearchBy().get(field).keySet()) {
                     statement.setObject(nextParamIndex++, obj);
                 }
             }
 
-            if (statement.executeUpdate() != 1) return new Response<T>().setError(ResponseError.INTERNAL_SYSTEM_ERROR);
+            if (statement.executeUpdate() != 1) return new Response<T>().setError("Internal system error");
             return new Response<T>().setSuccess(true);
         } catch (Exception e) {
             logger.atError().log(e.getMessage());
-            return new Response<T>().setError(ResponseError.INTERNAL_SYSTEM_ERROR);
+            return new Response<T>().setError("Internal system error");
         }
     }
 }

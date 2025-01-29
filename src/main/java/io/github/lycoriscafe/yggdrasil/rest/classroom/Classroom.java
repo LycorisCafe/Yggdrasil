@@ -27,6 +27,8 @@ public class Classroom implements Entity {
     private Integer grade;
     private String name;
 
+    public Classroom() {}
+
     public Classroom(Integer grade,
                      String name) {
         this.grade = Objects.requireNonNull(grade);

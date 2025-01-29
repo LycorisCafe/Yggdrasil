@@ -30,7 +30,7 @@ import java.util.List;
 public class Response<T extends Entity> {
     private boolean success;
     private LocalDateTime timestamp;
-    private ResponseError error;
+    private String error;
     private BigInteger generableResults;
     private BigInteger resultsFrom;
     private BigInteger resultsOffset;
@@ -58,11 +58,11 @@ public class Response<T extends Entity> {
         return this;
     }
 
-    public ResponseError getError() {
+    public String getError() {
         return error;
     }
 
-    public Response<T> setError(ResponseError error) {
+    public Response<T> setError(String error) {
         this.error = error;
         return this;
     }

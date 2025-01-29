@@ -28,6 +28,8 @@ public class Subject implements Entity {
     private String longName;
     private BigInteger teacherId;
 
+    public Subject() {}
+
     public Subject(Integer grade,
                    String shortName) {
         this.grade = Objects.requireNonNull(grade);

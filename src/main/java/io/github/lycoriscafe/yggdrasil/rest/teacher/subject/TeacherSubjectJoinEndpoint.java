@@ -27,7 +27,6 @@ import io.github.lycoriscafe.yggdrasil.authentication.Role;
 import io.github.lycoriscafe.yggdrasil.commons.CommonService;
 import io.github.lycoriscafe.yggdrasil.commons.RequestModel;
 import io.github.lycoriscafe.yggdrasil.commons.Response;
-import io.github.lycoriscafe.yggdrasil.commons.ResponseError;
 import io.github.lycoriscafe.yggdrasil.rest.admin.AccessLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +51,7 @@ public class TeacherSubjectJoinEndpoint {
             return res.setContent(CommonService.read(TeacherSubjectJoin.class, requestModel).parse());
         } catch (Exception e) {
             logger.atError().log(e.getMessage());
-            return res.setContent(new Response<TeacherSubjectJoin>().setError(ResponseError.JSON_PARSE_ERROR).parse());
+            return res.setContent(new Response<TeacherSubjectJoin>().setError(e.getMessage()).parse());
         }
     }
 
@@ -69,7 +68,7 @@ public class TeacherSubjectJoinEndpoint {
             return res.setContent(CommonService.create(TeacherSubjectJoin.class, requestModel).parse());
         } catch (Exception e) {
             logger.atError().log(e.getMessage());
-            return res.setContent(new Response<TeacherSubjectJoin>().setError(ResponseError.JSON_PARSE_ERROR).parse());
+            return res.setContent(new Response<TeacherSubjectJoin>().setError(e.getMessage()).parse());
         }
     }
 
@@ -86,7 +85,7 @@ public class TeacherSubjectJoinEndpoint {
             return res.setContent(CommonService.update(TeacherSubjectJoin.class, requestModel).parse());
         } catch (Exception e) {
             logger.atError().log(e.getMessage());
-            return res.setContent(new Response<TeacherSubjectJoin>().setError(ResponseError.JSON_PARSE_ERROR).parse());
+            return res.setContent(new Response<TeacherSubjectJoin>().setError(e.getMessage()).parse());
         }
     }
 
@@ -103,7 +102,7 @@ public class TeacherSubjectJoinEndpoint {
             return res.setContent(CommonService.delete(TeacherSubjectJoin.class, requestModel).parse());
         } catch (Exception e) {
             logger.atError().log(e.getMessage());
-            return res.setContent(new Response<TeacherSubjectJoin>().setError(ResponseError.JSON_PARSE_ERROR).parse());
+            return res.setContent(new Response<TeacherSubjectJoin>().setError(e.getMessage()).parse());
         }
     }
 }

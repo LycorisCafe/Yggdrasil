@@ -28,6 +28,8 @@ public class Relief implements Entity {
     private BigInteger teacherId;
     private LocalDate date;
 
+    public Relief() {}
+
     public Relief(BigInteger timetableId,
                   BigInteger teacherId,
                   LocalDate date) {

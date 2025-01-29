@@ -20,7 +20,6 @@ import io.github.lycoriscafe.nexus.http.core.headers.auth.scheme.bearer.BearerAu
 import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpPostRequest;
 import io.github.lycoriscafe.yggdrasil.commons.Entity;
 import io.github.lycoriscafe.yggdrasil.commons.Response;
-import io.github.lycoriscafe.yggdrasil.commons.ResponseError;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
 
 import java.math.BigInteger;
@@ -117,17 +116,17 @@ public class DeviceService {
             if (req.getParameters() != null && req.getParameters().containsKey("fromAll")) {
                 var devices = DeviceService.getDevices(TokenType.ACCESS_TOKEN, ((BearerAuthorization) req.getAuthorization()).getAccessToken());
                 if (!DeviceService.removeDevices(devices.getFirst().getRole(), devices.getFirst().getUserId())) {
-                    return new Response<T>().setError(ResponseError.INTERNAL_SYSTEM_ERROR);
+                    return new Response<T>().setError("Internal system error");
                 }
                 return new Response<T>().setSuccess(true);
             }
 
             if (!DeviceService.removeDevice(((BearerAuthorization) req.getAuthorization()).getAccessToken())) {
-                return new Response<T>().setError(ResponseError.INTERNAL_SYSTEM_ERROR);
+                return new Response<T>().setError("Internal system error");
             }
             return new Response<T>().setSuccess(true);
         } catch (SQLException e) {
-            return new Response<T>().setError(ResponseError.INTERNAL_SYSTEM_ERROR);
+            return new Response<T>().setError("Internal system error");
         }
     }
 

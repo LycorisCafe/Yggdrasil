@@ -30,6 +30,8 @@ public class Notification implements Entity {
     private String message;
     private Boolean draft;
 
+    public Notification() {}
+
     public Notification(Scope scope,
                         String message) {
         this.scope = Objects.requireNonNull(scope);

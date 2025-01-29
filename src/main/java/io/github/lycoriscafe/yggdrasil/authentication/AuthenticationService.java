@@ -25,7 +25,10 @@ import io.github.lycoriscafe.nexus.http.core.statusCodes.HttpStatusCode;
 import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpPostRequest;
 import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpRequest;
 import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpRes.HttpResponse;
-import io.github.lycoriscafe.yggdrasil.commons.*;
+import io.github.lycoriscafe.yggdrasil.commons.CommonService;
+import io.github.lycoriscafe.yggdrasil.commons.Entity;
+import io.github.lycoriscafe.yggdrasil.commons.RequestModel;
+import io.github.lycoriscafe.yggdrasil.commons.Response;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
 import io.github.lycoriscafe.yggdrasil.configuration.YggdrasilConfig;
 import io.github.lycoriscafe.yggdrasil.rest.admin.AccessLevel;
@@ -94,7 +97,7 @@ public class AuthenticationService {
 
             if (targetRoles.contains(Role.ADMIN) && accessLevels != null) {
                 var admin = CommonService.read(Admin.class, new RequestModel<Admin>()
-                        .setSearchBy(Map.of(Admin.class.getDeclaredField("id"), Map.of(device.getFirst().getUserId(), false))));
+                        .setSearchBy(Map.of("id", Map.of(device.getFirst().getUserId(), false))));
                 var accessLevel = admin.getData().getFirst().getAccessLevel();
                 if (accessLevel.stream().noneMatch(accessLevel::contains)) {
                     return httpResponse.setStatusCode(HttpStatusCode.FORBIDDEN).addAuthentication(
@@ -144,7 +147,7 @@ public class AuthenticationService {
         Objects.requireNonNull(req);
         UrlEncodedData data = (UrlEncodedData) req.getContent().getData();
         if (!data.containsKey("oldPassword") || !data.containsKey("newPassword")) {
-            return new Response<T>().setError(ResponseError.INVALID_CONTENT_PARAMETER);
+            return new Response<T>().setError("Required parameters missing");
         }
 
         var oldPassword = data.get("oldPassword");
@@ -152,7 +155,7 @@ public class AuthenticationService {
 
         if (newPassword.length() < YggdrasilConfig.getDefaultUserPasswordBoundary()[0]
                 || newPassword.length() > YggdrasilConfig.getDefaultUserPasswordBoundary()[1]) {
-            return new Response<T>().setError(ResponseError.INVALID_PASSWORD_LENGTH);
+            return new Response<T>().setError("Password length out of bound " + Arrays.toString(YggdrasilConfig.getDefaultUserPasswordBoundary()));
         }
 
         try {
@@ -160,7 +163,7 @@ public class AuthenticationService {
             var authentication = AuthenticationService.getAuthentication(devices.getFirst().getRole(), devices.getFirst().getUserId());
 
             if (authentication.getPassword().equals(AuthenticationService.encryptData(oldPassword.getBytes(StandardCharsets.UTF_8)))) {
-                return new Response<T>().setError(ResponseError.INVALID_OLD_PASSWORD);
+                return new Response<T>().setError("oldPassword doesn't match");
             }
             authentication.setPassword(newPassword);
 
@@ -171,14 +174,14 @@ public class AuthenticationService {
                 statement.setString(3, authentication.getUserId().toString());
                 if (statement.executeUpdate() != 1) {
                     connection.rollback();
-                    return new Response<T>().setError(ResponseError.INTERNAL_SYSTEM_ERROR);
+                    return new Response<T>().setError("Internal system error");
                 }
                 connection.commit();
                 return new Response<T>().setSuccess(true);
             }
         } catch (SQLException | NoSuchAlgorithmException e) {
             logger.atError().log(e.getMessage());
-            return new Response<T>().setError(ResponseError.INTERNAL_SYSTEM_ERROR);
+            return new Response<T>().setError("Internal system error");
         }
     }
 
@@ -237,17 +240,17 @@ public class AuthenticationService {
         return switch (role) {
             case ADMIN -> {
                 var response = CommonService.read(Admin.class, new RequestModel<Admin>()
-                        .setSearchBy(Map.of(Admin.class.getDeclaredField("id"), Map.of(userId, false))));
+                        .setSearchBy(Map.of("id", Map.of(userId, false))));
                 yield (response.isSuccess() && !response.getData().isEmpty()) ? response.getData().getFirst().getDisabled() : true;
             }
             case TEACHER -> {
                 var response = CommonService.read(Teacher.class, new RequestModel<Teacher>()
-                        .setSearchBy(Map.of(Teacher.class.getDeclaredField("id"), Map.of(userId, false))));
+                        .setSearchBy(Map.of("id", Map.of(userId, false))));
                 yield (response.isSuccess() && !response.getData().isEmpty()) ? response.getData().getFirst().getDisabled() : true;
             }
             case STUDENT -> {
                 var response = CommonService.read(Student.class, new RequestModel<Student>()
-                        .setSearchBy(Map.of(Student.class.getDeclaredField("id"), Map.of(userId, false))));
+                        .setSearchBy(Map.of("id", Map.of(userId, false))));
                 yield (response.isSuccess() && !response.getData().isEmpty()) ? response.getData().getFirst().getDisabled() : true;
             }
         };
