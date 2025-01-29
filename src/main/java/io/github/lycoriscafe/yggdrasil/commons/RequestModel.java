@@ -19,6 +19,8 @@ package io.github.lycoriscafe.yggdrasil.commons;
 import com.google.gson.GsonBuilder;
 import io.github.lycoriscafe.yggdrasil.configuration.GsonTypeAdapters;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
+import io.github.lycoriscafe.yggdrasil.rest.admin.AccessLevel;
+import io.github.lycoriscafe.yggdrasil.rest.admin.Admin;
 
 import java.lang.reflect.Field;
 import java.math.BigInteger;
@@ -27,6 +29,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class RequestModel<T extends Entity> {
     private Map<Field, Map<Object, Boolean>> searchBy;
@@ -99,5 +102,20 @@ public class RequestModel<T extends Entity> {
                 .registerTypeAdapter(LocalTime.class, new GsonTypeAdapters.Time())
                 .registerTypeAdapter(LocalDateTime.class, new GsonTypeAdapters.DateTime())
                 .create().fromJson(json, entity.getGenericSuperclass());
+    }
+
+    public static void main(String[] args) throws NoSuchFieldException {
+        var reqm = new RequestModel<Admin>()
+                .setSearchBy(Map.of(Admin.class.getDeclaredField("id"), Map.of(1, true)))
+                .setOrderBy(List.of(Admin.class.getDeclaredField("id"), Admin.class.getDeclaredField("name")))
+                .setAscending(true).setResultsFrom(new BigInteger("5")).setResultsOffset(new BigInteger("5"))
+                .setEntityInstance(new Admin("anme", Set.of(AccessLevel.TIMETABLE)));
+        System.out.println(new GsonBuilder()
+                .serializeNulls()
+                .setDateFormat(Utils.DATE_TIME_FORMAT)
+                .registerTypeAdapter(LocalDate.class, new GsonTypeAdapters.Date())
+                .registerTypeAdapter(LocalTime.class, new GsonTypeAdapters.Time())
+                .registerTypeAdapter(LocalDateTime.class, new GsonTypeAdapters.DateTime())
+                .create().toJson(reqm));
     }
 }
