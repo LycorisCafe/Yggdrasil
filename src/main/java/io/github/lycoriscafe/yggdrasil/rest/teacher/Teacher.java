@@ -100,6 +100,12 @@ public class Teacher implements Entity {
         return this;
     }
 
+    public Teacher setGender(String gender) {
+        Objects.requireNonNull(gender);
+        this.gender = Gender.valueOf(gender);
+        return this;
+    }
+
     public LocalDate getDateOfBirth() {
         return dateOfBirth;
     }

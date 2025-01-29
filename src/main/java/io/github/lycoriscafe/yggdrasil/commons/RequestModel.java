@@ -20,7 +20,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import io.github.lycoriscafe.yggdrasil.configuration.GsonTypeAdapters;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
-import io.github.lycoriscafe.yggdrasil.rest.admin.Admin;
 
 import java.math.BigInteger;
 import java.time.LocalDate;
@@ -100,16 +99,5 @@ public class RequestModel<T extends Entity> {
                 .registerTypeAdapter(LocalTime.class, new GsonTypeAdapters.Time())
                 .registerTypeAdapter(LocalDateTime.class, new GsonTypeAdapters.DateTime())
                 .create().fromJson(json, TypeToken.getParameterized(RequestModel.class, entity).getType());
-    }
-
-    public static void main(String[] args) {
-        var reqm = fromJson(Admin.class, "{\"searchBy\":{\"id\":{\"1\":true, \"2\":false}},\"orderBy\":[\"id\",\"name\"],\"isAscending\":true,\"resultsFrom\":5,\"resultsOffset\":5,\"entityInstance\":{\"id\":null,\"name\":\"anme\",\"accessLevel\":[\"TIMETABLE\"],\"disabled\":null}}");
-        System.out.println(new GsonBuilder()
-                .serializeNulls()
-                .setDateFormat(Utils.DATE_TIME_FORMAT)
-                .registerTypeAdapter(LocalDate.class, new GsonTypeAdapters.Date())
-                .registerTypeAdapter(LocalTime.class, new GsonTypeAdapters.Time())
-                .registerTypeAdapter(LocalDateTime.class, new GsonTypeAdapters.DateTime())
-                .create().toJson(reqm));
     }
 }

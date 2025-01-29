@@ -131,7 +131,7 @@ public class CommonService {
             resultsOffsetStatement.setString(nextParamIndex++, requestModel.getResultsFrom().toString());
             statement.setString(nextParamIndex, requestModel.getResultsOffset().toString());
             resultsOffsetStatement.setString(nextParamIndex, requestModel.getResultsOffset().toString());
-
+            
             var response = new Response<T>();
             try (var resultSet = statement.executeQuery();
                  var generableResultsResultSet = generableResultsStatement.executeQuery();

@@ -113,7 +113,7 @@ public class DeviceService {
 
     public static <T extends Entity> Response<T> removeDevice(HttpPostRequest req) {
         try {
-            if (req.getParameters() != null && req.getParameters().containsKey("fromAll")) {
+            if (req.getParameters() != null && req.getParameters().containsKey("all")) {
                 var devices = DeviceService.getDevices(TokenType.ACCESS_TOKEN, ((BearerAuthorization) req.getAuthorization()).getAccessToken());
                 if (!DeviceService.removeDevices(devices.getFirst().getRole(), devices.getFirst().getUserId())) {
                     return new Response<T>().setError("Internal system error");

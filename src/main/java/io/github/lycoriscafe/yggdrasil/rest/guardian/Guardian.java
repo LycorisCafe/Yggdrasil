@@ -97,6 +97,12 @@ public class Guardian implements Entity {
         return this;
     }
 
+    public Guardian setGender(String gender) {
+        Objects.requireNonNull(gender);
+        this.gender = Gender.valueOf(gender);
+        return this;
+    }
+
     public LocalDate getDateOfBirth() {
         return dateOfBirth;
     }
