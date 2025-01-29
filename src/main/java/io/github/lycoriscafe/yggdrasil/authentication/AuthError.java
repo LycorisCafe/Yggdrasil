@@ -14,13 +14,20 @@
  * limitations under the License.
  */
 
-package io.github.lycoriscafe.yggdrasil.commons;
+package io.github.lycoriscafe.yggdrasil.authentication;
 
-public enum ResponseError {
-    INTERNAL_SYSTEM_ERROR,
-    INVALID_RESULTS_FROM,
-    INVALID_RESULTS_OFFSET,
-    INVALID_SEARCH_PARAMETER,
-    INVALID_CONTENT_PARAMETER,
-    JSON_PARSE_ERROR
+public enum AuthError {
+    UNSUPPORTED_AUTHENTICATION,
+    INVALID_ACCESS_TOKEN,
+    ACCESS_TOKEN_EXPIRED,
+    INSUFFICIENT_SCOPE,
+    ACCOUNT_DISABLED,
+    INVALID_PARAMETERS,
+    REQUIRED_PARAMETER_MISSING,
+    INVALID_USERNAME_FORMAT,
+    CLIENT_NOT_FOUND,
+    INVALID_PASSWORD,
+    MAX_DEVICES_EXCEEDED,
+    INVALID_REFRESH_TOKEN,
+    UNSUPPORTED_GRANT_TYPE
 }

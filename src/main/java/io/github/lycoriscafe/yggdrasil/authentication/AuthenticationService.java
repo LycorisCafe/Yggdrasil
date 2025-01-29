@@ -23,211 +23,162 @@ import io.github.lycoriscafe.nexus.http.core.headers.auth.scheme.bearer.BearerAu
 import io.github.lycoriscafe.nexus.http.core.statusCodes.HttpStatusCode;
 import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpRequest;
 import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpRes.HttpResponse;
-import io.github.lycoriscafe.yggdrasil.commons.Response;
-import io.github.lycoriscafe.yggdrasil.commons.SearchQueryBuilder;
+import io.github.lycoriscafe.yggdrasil.commons.CommonService;
+import io.github.lycoriscafe.yggdrasil.commons.RequestModel;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
 import io.github.lycoriscafe.yggdrasil.rest.admin.AccessLevel;
 import io.github.lycoriscafe.yggdrasil.rest.admin.Admin;
-import io.github.lycoriscafe.yggdrasil.rest.admin.AdminService;
 import io.github.lycoriscafe.yggdrasil.rest.student.Student;
-import io.github.lycoriscafe.yggdrasil.rest.student.StudentService;
 import io.github.lycoriscafe.yggdrasil.rest.teacher.Teacher;
-import io.github.lycoriscafe.yggdrasil.rest.teacher.TeacherService;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.time.Instant;
 import java.util.*;
 
 public class AuthenticationService {
     public static HttpResponse authenticate(HttpRequest httpRequest,
-                                            Role[] targetRoles,
-                                            AccessLevel... accessLevels) {
+                                            Set<Role> targetRoles,
+                                            Set<AccessLevel> accessLevels) {
         Objects.requireNonNull(httpRequest);
         Objects.requireNonNull(targetRoles);
-        Set<Role> roles = new HashSet<>(Arrays.asList(targetRoles));
+
         var httpResponse = new HttpResponse(httpRequest.getRequestId(), httpRequest.getRequestConsumer());
         if (httpRequest.getAuthorization() == null || httpRequest.getAuthorization().getAuthScheme() != AuthScheme.BEARER) {
             return httpResponse.setStatusCode(HttpStatusCode.BAD_REQUEST).addAuthentication(
                     new BearerAuthentication(BearerAuthorizationError.INVALID_REQUEST)
-                            .setErrorDescription("Unsupported authentication method. Only supported 'Bearer'."));
+                            .setErrorDescription(AuthError.UNSUPPORTED_AUTHENTICATION.toString()));
         }
+
         var authRequest = (BearerAuthorization) httpRequest.getAuthorization();
         try {
-            var auth = getAuthentication(TokenType.ACCESS_TOKEN, authRequest.getAccessToken());
-            if (auth == null) {
+            var device = DeviceService.getDevices(TokenType.ACCESS_TOKEN, authRequest.getAccessToken());
+            if (device == null || device.isEmpty()) {
                 return httpResponse.setStatusCode(HttpStatusCode.UNAUTHORIZED).addAuthentication(
                         new BearerAuthentication(BearerAuthorizationError.INVALID_TOKEN)
-                                .setErrorDescription("Invalid access token. Try again."));
+                                .setErrorDescription(AuthError.INVALID_ACCESS_TOKEN.toString()));
             }
-            if (Instant.now().getEpochSecond() > auth.getExpires()) {
+            if (Instant.now().getEpochSecond() > device.getFirst().getExpires()) {
                 return httpResponse.setStatusCode(HttpStatusCode.UNAUTHORIZED).addAuthentication(
                         new BearerAuthentication(BearerAuthorizationError.INVALID_TOKEN)
-                                .setErrorDescription("Invalid access token. Token expired."));
+                                .setErrorDescription(AuthError.ACCESS_TOKEN_EXPIRED.toString()));
             }
-            if (!roles.contains(auth.getRole())) {
+
+            if (!targetRoles.contains(device.getFirst().getRole())) {
                 StringBuilder scope = new StringBuilder("[");
-                roles.forEach(role -> scope.append(role.toString()).append(","));
+                targetRoles.forEach(role -> scope.append(role.toString()).append(","));
                 scope.deleteCharAt(scope.length() - 1).append("]");
                 return httpResponse.setStatusCode(HttpStatusCode.FORBIDDEN).addAuthentication(
                         new BearerAuthentication(BearerAuthorizationError.INSUFFICIENT_SCOPE).setScope(scope.toString())
-                                .setErrorDescription("Insufficient scope. Contact your system admin for more details."));
+                                .setErrorDescription(AuthError.INSUFFICIENT_SCOPE.toString()));
             }
 
-            if (AuthenticationService.getIsAccountDisabled(auth.getRole(), auth.getUserId())) {
+            if (AuthenticationService.isAccountDisabled(device.getFirst().getRole(), device.getFirst().getUserId())) {
                 return httpResponse.setStatusCode(HttpStatusCode.UNAUTHORIZED).addAuthentication(
                         new BearerAuthentication(BearerAuthorizationError.INVALID_TOKEN)
-                                .setErrorDescription("Target account is disabled. Contact your system admin for more details."));
+                                .setErrorDescription(AuthError.ACCOUNT_DISABLED.toString()));
             }
 
-            if (roles.contains(Role.ADMIN) && accessLevels != null) {
-                var admin = AdminService.select(new SearchQueryBuilder<>(Admin.class, AdminService.Columns.class, AdminService.class)
-                        .setSearchBy(Set.of(AdminService.Columns.id)).setSearchByValues(List.of(auth.getUserId().toPlainString())));
+            if (targetRoles.contains(Role.ADMIN) && accessLevels != null) {
+                var admin = CommonService.read(Admin.class, new RequestModel<Admin>()
+                        .setSearchBy(Map.of(Admin.class.getDeclaredField("id"), Map.of(device.getFirst().getUserId(), false))));
                 var accessLevel = admin.getData().getFirst().getAccessLevel();
                 if (accessLevel.stream().noneMatch(accessLevel::contains)) {
                     return httpResponse.setStatusCode(HttpStatusCode.FORBIDDEN).addAuthentication(
                             new BearerAuthentication(BearerAuthorizationError.INSUFFICIENT_SCOPE)
-                                    .setScope(Role.ADMIN + "#" + Arrays.toString(accessLevels))
-                                    .setErrorDescription("Insufficient scope. Contact your system admin for more details."));
+                                    .setScope(Role.ADMIN + "#" + accessLevels)
+                                    .setErrorDescription(AuthError.INSUFFICIENT_SCOPE.toString()));
                 }
             }
             return null;
-        } catch (SQLException e) {
+        } catch (SQLException | NoSuchFieldException e) {
             return httpResponse.setStatusCode(HttpStatusCode.INTERNAL_SERVER_ERROR);
         }
     }
 
-    public static Authentication getAuthentication(TokenType tokenType,
-                                                   String token) throws SQLException {
-        Objects.requireNonNull(tokenType);
-        Objects.requireNonNull(token);
-        try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement("SELECT * FROM authentication WHERE " + tokenType.toString()
-                     .toLowerCase() + " LIKE BINARY ?")) {
-            statement.setString(1, token);
-            try (var resultSet = statement.executeQuery()) {
-                connection.commit();
-                if (resultSet.next()) {
-                    return new Authentication(
-                            Role.valueOf(resultSet.getString("role")),
-                            resultSet.getBigDecimal("userId"),
-                            resultSet.getString("password"))
-                            .setAccessToken(resultSet.getString("accessToken"))
-                            .setExpires(resultSet.getLong("expires"))
-                            .setRefreshToken(resultSet.getString("refreshToken"));
-                }
-                return null;
-            }
-        }
-    }
-
     public static Authentication getAuthentication(Role role,
-                                                   BigDecimal userId) throws SQLException {
+                                                   BigInteger userId) throws SQLException {
         Objects.requireNonNull(role);
         Objects.requireNonNull(userId);
+        Authentication auth;
         try (var connection = Utils.getDatabaseConnection();
              var statement = connection.prepareStatement("SELECT * FROM authentication WHERE role = ? AND userId = ?")) {
             statement.setString(1, role.toString());
-            statement.setBigDecimal(2, userId);
-            Authentication authentication = null;
-            try (var resultSet = statement.executeQuery()) {
-                connection.commit();
-                if (resultSet.next()) {
-                    authentication = new Authentication(
-                            Role.valueOf(resultSet.getString("role")),
-                            resultSet.getBigDecimal("userId"),
-                            resultSet.getString("password"))
-                            .setAccessToken(resultSet.getString("accessToken"))
-                            .setExpires(resultSet.getLong("expires"))
-                            .setRefreshToken(resultSet.getString("refreshToken"));
-                }
-            }
-            return authentication;
-        }
-    }
-
-    public static Authentication createAuthentication(Authentication authentication) throws SQLException {
-        Objects.requireNonNull(authentication);
-        try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement("INSERT INTO authentication (role, userId, password) VALUES (?, ?, ?)")) {
-            statement.setString(1, authentication.getRole().toString());
-            statement.setBigDecimal(2, authentication.getUserId());
-            statement.setString(3, authentication.getPassword());
-            if (statement.executeUpdate() != 1) {
-                connection.rollback();
-                return null;
-            }
+            statement.setString(2, userId.toString());
+            auth = deserialize(statement.executeQuery());
             connection.commit();
         }
-        return getAuthentication(authentication.getRole(), authentication.getUserId());
+        return auth;
     }
 
-    public static Authentication updateAuthentication(Authentication authentication) throws SQLException {
-        Objects.requireNonNull(authentication);
+    public static boolean addAuthentication(Authentication auth) throws SQLException, NoSuchAlgorithmException {
+        Objects.requireNonNull(auth);
         try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement("UPDATE authentication SET password = ?, accessToken = ?, expires = ?, refreshToken = ? " +
-                     "WHERE role = ? AND userId = ?")) {
-            statement.setString(1, authentication.getPassword());
-            statement.setString(2, authentication.getAccessToken());
-            if (authentication.getExpires() == null) {
-                statement.setNull(3, Types.BIGINT);
-            } else {statement.setLong(3, authentication.getExpires());}
-            statement.setString(4, authentication.getRefreshToken());
-            statement.setString(5, authentication.getRole().toString());
-            statement.setBigDecimal(6, authentication.getUserId());
+             var statement = connection.prepareStatement("INSERT INTO authentication VALUES(?, ?, ?)")) {
+            statement.setString(1, auth.getRole().toString());
+            statement.setString(2, auth.getUserId().toString());
+            statement.setString(3, encryptData(auth.getPassword().getBytes(StandardCharsets.UTF_8)));
             if (statement.executeUpdate() != 1) {
                 connection.rollback();
-                return null;
+                return false;
             }
             connection.commit();
+            return true;
         }
-        return getAuthentication(authentication.getRole(), authentication.getUserId());
     }
 
-    public static void deleteAuthentication(Role role,
-                                            BigDecimal userId) {
+    public static boolean updateAuthentication(Authentication auth) throws SQLException, NoSuchAlgorithmException {
+        Objects.requireNonNull(auth);
+        try (var connection = Utils.getDatabaseConnection();
+             var statement = connection.prepareStatement("UPDATE authentication SET password = ? WHERE role = ? AND userId = ?")) {
+            statement.setString(1, encryptData(auth.getPassword().getBytes(StandardCharsets.UTF_8)));
+            statement.setString(2, auth.getRole().toString());
+            statement.setString(3, auth.getUserId().toString());
+            if (statement.executeUpdate() != 1) {
+                connection.rollback();
+                return false;
+            }
+            connection.commit();
+            return true;
+        }
+    }
+
+    public static boolean deleteAuthentication(Role role,
+                                               BigInteger userId) throws SQLException {
         Objects.requireNonNull(role);
         Objects.requireNonNull(userId);
         try (var connection = Utils.getDatabaseConnection();
              var statement = connection.prepareStatement("DELETE FROM authentication WHERE role = ? AND userId = ?")) {
             statement.setString(1, role.toString());
-            statement.setBigDecimal(2, userId);
+            statement.setString(2, userId.toString());
             if (statement.executeUpdate() != 1) {
                 connection.rollback();
+                return false;
             }
             connection.commit();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+            return true;
         }
     }
 
-    public static Authentication updatePassword(Authentication authentication) throws SQLException, NoSuchAlgorithmException {
-        Objects.requireNonNull(authentication);
-        authentication.setPassword(encryptData(authentication.getPassword().getBytes(StandardCharsets.UTF_8)));
-        return updateAuthentication(authentication);
-    }
-
-    public static Response<?> logout(Role role,
-                                     BigDecimal userId) {
-        Objects.requireNonNull(role);
-        Objects.requireNonNull(userId);
-        try {
-            var auth = AuthenticationService.getAuthentication(role, userId);
-            if (auth == null) return new Response<>().setError("Invalid ID");
-            if (AuthenticationService.updateAuthentication(auth.setAccessToken(null).setExpires(null).setRefreshToken(null)) == null) {
-                return new Response<>().setError("Internal server error");
+    private static Authentication deserialize(ResultSet resultSet) throws SQLException {
+        Authentication auth = null;
+        try (resultSet) {
+            if (resultSet.next()) {
+                auth = new Authentication(
+                        Role.valueOf(resultSet.getString("role")),
+                        new BigInteger(resultSet.getString("userId")),
+                        resultSet.getString("password")
+                );
             }
-            return new Response<>().setSuccess(true);
-        } catch (Exception e) {
-            return new Response<>().setError(e.getMessage());
         }
+        return auth;
     }
 
     public static String generateToken() throws IOException, NoSuchAlgorithmException {
@@ -247,23 +198,26 @@ public class AuthenticationService {
         return Base64.getEncoder().withoutPadding().encodeToString(MessageDigest.getInstance("SHA-256").digest(data));
     }
 
-    public static boolean getIsAccountDisabled(Role role,
-                                               BigDecimal userId) {
+    public static boolean isAccountDisabled(Role role,
+                                            BigInteger userId) throws NoSuchFieldException {
         Objects.requireNonNull(role);
         Objects.requireNonNull(userId);
         return switch (role) {
-            case ADMIN -> AdminService.select(new SearchQueryBuilder<>(Admin.class, AdminService.Columns.class, AdminService.class)
-                            .setSearchBy(Set.of(AdminService.Columns.id))
-                            .setSearchByValues(List.of(userId.toPlainString())))
-                    .getData().getFirst().getDisabled();
-            case TEACHER -> TeacherService.select(new SearchQueryBuilder<>(Teacher.class, TeacherService.Columns.class, TeacherService.class)
-                            .setSearchBy(Set.of(TeacherService.Columns.id))
-                            .setSearchByValues(List.of(userId.toPlainString())))
-                    .getData().getFirst().getDisabled();
-            case STUDENT -> StudentService.select(new SearchQueryBuilder<>(Student.class, StudentService.Columns.class, StudentService.class)
-                            .setSearchBy(Set.of(StudentService.Columns.id))
-                            .setSearchByValues(List.of(userId.toPlainString())))
-                    .getData().getFirst().getDisabled();
+            case ADMIN -> {
+                var response = CommonService.read(Admin.class, new RequestModel<Admin>()
+                        .setSearchBy(Map.of(Admin.class.getDeclaredField("id"), Map.of(userId, false))));
+                yield (response.isSuccess() && !response.getData().isEmpty()) ? response.getData().getFirst().getDisabled() : true;
+            }
+            case TEACHER -> {
+                var response = CommonService.read(Teacher.class, new RequestModel<Teacher>()
+                        .setSearchBy(Map.of(Teacher.class.getDeclaredField("id"), Map.of(userId, false))));
+                yield (response.isSuccess() && !response.getData().isEmpty()) ? response.getData().getFirst().getDisabled() : true;
+            }
+            case STUDENT -> {
+                var response = CommonService.read(Student.class, new RequestModel<Student>()
+                        .setSearchBy(Map.of(Student.class.getDeclaredField("id"), Map.of(userId, false))));
+                yield (response.isSuccess() && !response.getData().isEmpty()) ? response.getData().getFirst().getDisabled() : true;
+            }
         };
     }
 }

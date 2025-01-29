@@ -16,8 +16,15 @@
 
 package io.github.lycoriscafe.yggdrasil.commons;
 
+import com.google.gson.GsonBuilder;
+import io.github.lycoriscafe.yggdrasil.configuration.GsonTypeAdapters;
+import io.github.lycoriscafe.yggdrasil.configuration.Utils;
+
 import java.lang.reflect.Field;
 import java.math.BigInteger;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 
@@ -81,5 +88,16 @@ public class RequestModel<T extends Entity> {
     public RequestModel<T> setEntityInstance(T entityInstance) {
         this.entityInstance = entityInstance;
         return this;
+    }
+
+    public static <T extends Entity> RequestModel<T> fromJson(Class<T> entity,
+                                                              String json) {
+        return new GsonBuilder()
+                .serializeNulls()
+                .setDateFormat(Utils.DATE_TIME_FORMAT)
+                .registerTypeAdapter(LocalDate.class, new GsonTypeAdapters.Date())
+                .registerTypeAdapter(LocalTime.class, new GsonTypeAdapters.Time())
+                .registerTypeAdapter(LocalDateTime.class, new GsonTypeAdapters.DateTime())
+                .create().fromJson(json, entity.getGenericSuperclass());
     }
 }

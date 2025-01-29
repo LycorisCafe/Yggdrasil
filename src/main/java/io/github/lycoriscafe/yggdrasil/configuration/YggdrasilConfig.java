@@ -24,7 +24,6 @@ import io.github.lycoriscafe.nexus.http.helper.configuration.HttpServerConfigura
 import io.github.lycoriscafe.nexus.http.helper.scanners.ScannerException;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.sql.SQLException;
 import java.util.Properties;
 
@@ -34,8 +33,9 @@ public class YggdrasilConfig {
     private static Long defaultResultsOffset = 50L;
     private static Long defaultAuthTimeout = 3600L;
     private static Integer[] defaultUserPasswordBoundary = {8, 50};
+    private static Integer maxLoginDevices = 3;
 
-    public static void initialize() throws IOException, ScannerException, SQLException, URISyntaxException {
+    public static void initialize() throws IOException, ScannerException, SQLException {
         initializeDatabase();
         initializeHttpServer();
 
@@ -55,6 +55,9 @@ public class YggdrasilConfig {
                 if (userPasswordBoundary.length != 2) throw new IllegalArgumentException("Invalid defaultUserPasswordBoundary");
                 defaultUserPasswordBoundary = new Integer[]{Integer.parseInt(userPasswordBoundary[0]), Integer.parseInt(userPasswordBoundary[1])};
             }
+
+            String maxLoginDevicesString = properties.getProperty("maxLoginDevices");
+            if (maxLoginDevicesString != null) maxLoginDevices = Integer.parseInt(maxLoginDevicesString);
         }
     }
 
@@ -92,5 +95,9 @@ public class YggdrasilConfig {
 
     public static Integer[] getDefaultUserPasswordBoundary() {
         return defaultUserPasswordBoundary;
+    }
+
+    public static Integer getMaxLoginDevices() {
+        return maxLoginDevices;
     }
 }

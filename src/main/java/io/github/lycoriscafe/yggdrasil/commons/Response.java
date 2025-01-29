@@ -16,11 +16,15 @@
 
 package io.github.lycoriscafe.yggdrasil.commons;
 
+import com.google.gson.GsonBuilder;
 import io.github.lycoriscafe.nexus.http.core.headers.content.Content;
+import io.github.lycoriscafe.yggdrasil.configuration.GsonTypeAdapters;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
 
 import java.math.BigInteger;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 public class Response<T extends Entity> {
@@ -100,6 +104,12 @@ public class Response<T extends Entity> {
     }
 
     public Content parse() {
-        return new Content("application/json", Utils.toJson(this));
+        return new Content("application/json", new GsonBuilder()
+                .serializeNulls()
+                .setDateFormat(Utils.DATE_TIME_FORMAT)
+                .registerTypeAdapter(LocalDate.class, new GsonTypeAdapters.Date())
+                .registerTypeAdapter(LocalTime.class, new GsonTypeAdapters.Time())
+                .registerTypeAdapter(LocalDateTime.class, new GsonTypeAdapters.DateTime())
+                .create().toJson(this));
     }
 }

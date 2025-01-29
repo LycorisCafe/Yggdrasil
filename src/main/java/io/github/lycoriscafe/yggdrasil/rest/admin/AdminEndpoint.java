@@ -19,96 +19,80 @@ package io.github.lycoriscafe.yggdrasil.rest.admin;
 import io.github.lycoriscafe.nexus.http.core.HttpEndpoint;
 import io.github.lycoriscafe.nexus.http.core.headers.auth.Authenticated;
 import io.github.lycoriscafe.nexus.http.core.headers.content.ExpectContent;
-import io.github.lycoriscafe.nexus.http.core.headers.content.MultipartFormData;
-import io.github.lycoriscafe.nexus.http.core.headers.content.UrlEncodedData;
-import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.DELETE;
-import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.GET;
-import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.PATCH;
 import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.POST;
 import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpDeleteRequest;
-import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpGetRequest;
 import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpPatchRequest;
 import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpPostRequest;
 import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpRes.HttpResponse;
 import io.github.lycoriscafe.yggdrasil.authentication.AuthenticationService;
 import io.github.lycoriscafe.yggdrasil.authentication.Role;
+import io.github.lycoriscafe.yggdrasil.commons.CommonService;
+import io.github.lycoriscafe.yggdrasil.commons.RequestModel;
 import io.github.lycoriscafe.yggdrasil.commons.Response;
-import io.github.lycoriscafe.yggdrasil.commons.SearchQueryBuilder;
-import io.github.lycoriscafe.yggdrasil.commons.UpdateQueryBuilder;
+import io.github.lycoriscafe.yggdrasil.commons.ResponseError;
 
-import java.math.BigInteger;
-import java.util.List;
+import java.util.Set;
 
 @HttpEndpoint("/admin")
 @Authenticated
 public class AdminEndpoint {
-    @GET("/read")
-    public static HttpResponse read(HttpGetRequest req,
+    @POST("/read")
+    @ExpectContent("application/json")
+    public static HttpResponse read(HttpPostRequest req,
                                     HttpResponse res) {
-        var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN}, AccessLevel.SUPERUSER);
-        if (auth != null) return auth;
-
-        return res.setContent(AdminService.select(SearchQueryBuilder.build(
-                Admin.class, AdminService.Columns.class, AdminService.class,
-                req.getParameters())).parse());
-    }
-
-    @POST("/create")
-    @ExpectContent("multipart/form-data")
-    @SuppressWarnings("unchecked")
-    public static HttpResponse create(HttpPostRequest req,
-                                      HttpResponse res) {
-        var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN}, AccessLevel.SUPERUSER);
-        if (auth != null) return auth;
-
-        return res.setContent(AdminService.insert(UpdateQueryBuilder.build(
-                Admin.class, AdminService.Columns.class, AdminService.class,
-                req.getParameters(), (List<MultipartFormData>) req.getContent().getData())).parse());
-    }
-
-    @POST("/update")
-    @ExpectContent("multipart/form-data")
-    @SuppressWarnings("unchecked")
-    public static HttpResponse update(HttpPostRequest req,
-                                      HttpResponse res) {
-        var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN}, AccessLevel.SUPERUSER);
-        if (auth != null) return auth;
-
-        return res.setContent(AdminService.update(UpdateQueryBuilder.build(
-                Admin.class, AdminService.Columns.class, AdminService.class,
-                req.getParameters(), (List<MultipartFormData>) req.getContent().getData())).parse());
-    }
-
-    @DELETE("/delete")
-    public static HttpResponse delete(HttpDeleteRequest req,
-                                      HttpResponse res) {
-        var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN}, AccessLevel.SUPERUSER);
-        if (auth != null) return auth;
-
-        return res.setContent(AdminService.delete(SearchQueryBuilder.build(Admin.class, AdminService.Columns.class, AdminService.class,
-                req.getParameters())).parse());
-    }
-
-    @PATCH("/resetPassword")
-    @ExpectContent("application/x-www-form-urlencoded")
-    public static HttpResponse resetPassword(HttpPatchRequest req,
-                                             HttpResponse res) {
-        var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN}, AccessLevel.SUPERUSER);
-        if (auth != null) return auth;
-
-        return res.setContent(AdminService.resetPassword((UrlEncodedData) req.getContent().getData()).parse());
-    }
-
-    @PATCH("/logout")
-    public static HttpResponse logout(HttpPatchRequest req,
-                                      HttpResponse res) {
-        var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN}, AccessLevel.SUPERUSER);
+        var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN), Set.of(AccessLevel.SUPERUSER));
         if (auth != null) return auth;
 
         try {
-            return res.setContent(AuthenticationService.logout(Role.ADMIN, new BigInteger(req.getParameters().get("id"))).parse());
+            RequestModel<Admin> requestModel = RequestModel.fromJson(Admin.class, new String((byte[]) req.getContent().getData()));
         } catch (Exception e) {
-            return res.setContent(new Response<>().setError("Unparseable id").parse());
+            return new Response<Admin>().setError(ResponseError.JSON_PARSE_ERROR);
         }
+        return res.setContent(CommonService.read(Admin.class, RequestModel.fromJson(Admin.class, new String((byte[]) req.getContent().getData())))
+                .parse());
+    }
+
+    @POST("/create")
+    @ExpectContent("application/json")
+    public static HttpResponse create(HttpPostRequest req,
+                                      HttpResponse res) {
+        var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN), Set.of(AccessLevel.SUPERUSER));
+        if (auth != null) return auth;
+
+    }
+
+    @POST("/update")
+    @ExpectContent("application/json")
+    public static HttpResponse update(HttpPostRequest req,
+                                      HttpResponse res) {
+        var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN), Set.of(AccessLevel.SUPERUSER));
+        if (auth != null) return auth;
+
+    }
+
+    @POST("/delete")
+    @ExpectContent("application/json")
+    public static HttpResponse delete(HttpDeleteRequest req,
+                                      HttpResponse res) {
+        var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN), Set.of(AccessLevel.SUPERUSER));
+        if (auth != null) return auth;
+
+    }
+
+    @POST("/resetPassword")
+    @ExpectContent("application/x-www-form-urlencoded")
+    public static HttpResponse resetPassword(HttpPatchRequest req,
+                                             HttpResponse res) {
+        var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN), Set.of(AccessLevel.SUPERUSER));
+        if (auth != null) return auth;
+
+    }
+
+    @POST("/logout")
+    public static HttpResponse logout(HttpPatchRequest req,
+                                      HttpResponse res) {
+        var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN), Set.of(AccessLevel.SUPERUSER));
+        if (auth != null) return auth;
+
     }
 }

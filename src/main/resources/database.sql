@@ -184,9 +184,11 @@ CREATE TABLE devices
 (
     role         ENUM ('STUDENT', 'TEACHER', 'ADMIN') NOT NULL,
     userId       BIGINT UNSIGNED                      NOT NULL,
-    accessToken  VARBINARY(100) UNIQUE,
-    expires      BIGINT,
-    refreshToken VARBINARY(100) UNIQUE
+    name         VARCHAR(20)           NOT NULL,
+    accessToken  VARBINARY(100) UNIQUE NOT NULL,
+    expires      BIGINT                NOT NULL,
+    refreshToken VARBINARY(100) UNIQUE NOT NULL,
+    UNIQUE (role, userId, name)
 );
 
 ALTER TABLE classroom
