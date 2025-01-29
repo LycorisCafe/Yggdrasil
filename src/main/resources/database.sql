@@ -12,6 +12,22 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ */
+
+/*
+ * Copyright 2025 Lycoris Café
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  *
  */
 
@@ -176,7 +192,7 @@ CREATE TABLE authentication
     role     ENUM ('STUDENT', 'TEACHER', 'ADMIN') NOT NULL,
     userId   BIGINT UNSIGNED                      NOT NULL,
     password VARBINARY(100)                       NOT NULL,
-    UNIQUE (role, userId)
+    PRIMARY KEY (role, userId)
 );
 
 ## DEVICES
@@ -222,6 +238,9 @@ ALTER TABLE timetable
     ADD FOREIGN KEY (teacherId) REFERENCES teacher (id) ON UPDATE CASCADE ON DELETE CASCADE,
     ADD FOREIGN KEY (subjectId) REFERENCES subject (id) ON UPDATE CASCADE ON DELETE CASCADE,
     ADD FOREIGN KEY (classroomId) REFERENCES classroom (id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+ALTER TABLE devices
+    ADD FOREIGN KEY (role, userId) REFERENCES authentication (role, userId) ON UPDATE CASCADE ON DELETE CASCADE;
 
 /*
  * Copyright 2025 Lycoris Café

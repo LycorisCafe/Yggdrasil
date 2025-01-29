@@ -20,16 +20,20 @@ import io.github.lycoriscafe.nexus.http.core.headers.auth.AuthScheme;
 import io.github.lycoriscafe.nexus.http.core.headers.auth.scheme.bearer.BearerAuthentication;
 import io.github.lycoriscafe.nexus.http.core.headers.auth.scheme.bearer.BearerAuthorization;
 import io.github.lycoriscafe.nexus.http.core.headers.auth.scheme.bearer.BearerAuthorizationError;
+import io.github.lycoriscafe.nexus.http.core.headers.content.UrlEncodedData;
 import io.github.lycoriscafe.nexus.http.core.statusCodes.HttpStatusCode;
+import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpPostRequest;
 import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpRequest;
 import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpRes.HttpResponse;
-import io.github.lycoriscafe.yggdrasil.commons.CommonService;
-import io.github.lycoriscafe.yggdrasil.commons.RequestModel;
+import io.github.lycoriscafe.yggdrasil.commons.*;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
+import io.github.lycoriscafe.yggdrasil.configuration.YggdrasilConfig;
 import io.github.lycoriscafe.yggdrasil.rest.admin.AccessLevel;
 import io.github.lycoriscafe.yggdrasil.rest.admin.Admin;
 import io.github.lycoriscafe.yggdrasil.rest.student.Student;
 import io.github.lycoriscafe.yggdrasil.rest.teacher.Teacher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -44,6 +48,8 @@ import java.time.Instant;
 import java.util.*;
 
 public class AuthenticationService {
+    private static final Logger logger = LoggerFactory.getLogger(AuthenticationService.class);
+
     public static HttpResponse authenticate(HttpRequest httpRequest,
                                             Set<Role> targetRoles,
                                             Set<AccessLevel> accessLevels) {
@@ -134,19 +140,45 @@ public class AuthenticationService {
         }
     }
 
-    public static boolean updateAuthentication(Authentication auth) throws SQLException, NoSuchAlgorithmException {
-        Objects.requireNonNull(auth);
-        try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement("UPDATE authentication SET password = ? WHERE role = ? AND userId = ?")) {
-            statement.setString(1, encryptData(auth.getPassword().getBytes(StandardCharsets.UTF_8)));
-            statement.setString(2, auth.getRole().toString());
-            statement.setString(3, auth.getUserId().toString());
-            if (statement.executeUpdate() != 1) {
-                connection.rollback();
-                return false;
+    public static <T extends Entity> Response<T> updateAuthentication(HttpPostRequest req) {
+        Objects.requireNonNull(req);
+        UrlEncodedData data = (UrlEncodedData) req.getContent().getData();
+        if (!data.containsKey("oldPassword") || !data.containsKey("newPassword")) {
+            return new Response<T>().setError(ResponseError.INVALID_CONTENT_PARAMETER);
+        }
+
+        var oldPassword = data.get("oldPassword");
+        var newPassword = data.get("newPassword");
+
+        if (newPassword.length() < YggdrasilConfig.getDefaultUserPasswordBoundary()[0]
+                || newPassword.length() > YggdrasilConfig.getDefaultUserPasswordBoundary()[1]) {
+            return new Response<T>().setError(ResponseError.INVALID_PASSWORD_LENGTH);
+        }
+
+        try {
+            var devices = DeviceService.getDevices(TokenType.ACCESS_TOKEN, ((BearerAuthorization) req.getAuthorization()).getAccessToken());
+            var authentication = AuthenticationService.getAuthentication(devices.getFirst().getRole(), devices.getFirst().getUserId());
+
+            if (authentication.getPassword().equals(AuthenticationService.encryptData(oldPassword.getBytes(StandardCharsets.UTF_8)))) {
+                return new Response<T>().setError(ResponseError.INVALID_OLD_PASSWORD);
             }
-            connection.commit();
-            return true;
+            authentication.setPassword(newPassword);
+
+            try (var connection = Utils.getDatabaseConnection();
+                 var statement = connection.prepareStatement("UPDATE authentication SET password = ? WHERE role = ? AND userId = ?")) {
+                statement.setString(1, encryptData(authentication.getPassword().getBytes(StandardCharsets.UTF_8)));
+                statement.setString(2, authentication.getRole().toString());
+                statement.setString(3, authentication.getUserId().toString());
+                if (statement.executeUpdate() != 1) {
+                    connection.rollback();
+                    return new Response<T>().setError(ResponseError.INTERNAL_SYSTEM_ERROR);
+                }
+                connection.commit();
+                return new Response<T>().setSuccess(true);
+            }
+        } catch (SQLException | NoSuchAlgorithmException e) {
+            logger.atError().log(e.getMessage());
+            return new Response<T>().setError(ResponseError.INTERNAL_SYSTEM_ERROR);
         }
     }
 

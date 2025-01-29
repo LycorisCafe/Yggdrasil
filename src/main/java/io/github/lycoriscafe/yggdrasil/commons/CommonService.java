@@ -163,10 +163,9 @@ public class CommonService {
     }
 
     public static <T extends Entity> Response<T> update(Class<T> entity,
-                                                        Map<Field, Map<Object, Boolean>> searchBy,
-                                                        T entityInstance) {
-        if (entity == null || entityInstance == null) return new Response<T>().setError(ResponseError.INTERNAL_SYSTEM_ERROR);
-        if (searchBy == null) return new Response<T>().setError(ResponseError.INVALID_SEARCH_PARAMETER);
+                                                        RequestModel<T> requestModel) {
+        if (entity == null || requestModel.getEntityInstance() == null) return new Response<T>().setError(ResponseError.INTERNAL_SYSTEM_ERROR);
+        if (requestModel.getSearchBy() == null) return new Response<T>().setError(ResponseError.INVALID_SEARCH_PARAMETER);
 
         StringBuilder query = new StringBuilder("UPDATE ").append(entity.getSimpleName()).append(" SET ");
         for (int i = 0; i < entity.getDeclaredFields().length; i++) {
@@ -175,14 +174,14 @@ public class CommonService {
             query.append(entity.getDeclaredFields()[i].getName()).append(" = ?");
         }
         query.append(" WHERE ");
-        List<Field> fields = searchBy.keySet().stream().toList();
+        List<Field> fields = requestModel.getSearchBy().keySet().stream().toList();
         for (int i = 0; i < fields.size(); i++) {
             if (i > 0) query.append(" AND ");
-            List<Object> objects = searchBy.get(fields.get(i)).keySet().stream().toList();
+            List<Object> objects = requestModel.getSearchBy().get(fields.get(i)).keySet().stream().toList();
             for (int j = 0; j < objects.size(); j++) {
                 if (j > 0) query.append(" OR ");
                 query.append(fields.get(i).getName()).append(" LIKE ")
-                        .append(searchBy.get(fields.get(i)).get(j) ? " BINARY " : "")
+                        .append(requestModel.getSearchBy().get(fields.get(i)).get(j) ? " BINARY " : "")
                         .append("?");
             }
         }
@@ -194,18 +193,19 @@ public class CommonService {
                 if (field.getName().equals("id")) continue;
                 String firstChar = String.valueOf(field.getName().charAt(0));
                 String getterName = "get" + field.getName().replaceFirst(firstChar, firstChar.toUpperCase(Locale.ROOT));
-                Object obj = entity.getMethod(getterName).invoke(entityInstance);
+                Object obj = entity.getMethod(getterName).invoke(requestModel.getEntityInstance());
                 statement.setObject(nextParamIndex++, obj);
             }
-            for (Field field : searchBy.keySet()) {
-                for (Object obj : searchBy.get(field).keySet()) {
+            for (Field field : requestModel.getSearchBy().keySet()) {
+                for (Object obj : requestModel.getSearchBy().get(field).keySet()) {
                     statement.setObject(nextParamIndex++, obj);
                 }
             }
 
             if (statement.executeUpdate() != 1) return new Response<T>().setError(ResponseError.INTERNAL_SYSTEM_ERROR);
             return read(entity, new RequestModel<T>().setSearchBy(
-                    Map.of(entity.getDeclaredField("id"), Map.of(entity.getMethod("getId").invoke(entityInstance), false))));
+                    Map.of(entity.getDeclaredField("id"),
+                            Map.of(entity.getMethod("getId").invoke(requestModel.getEntityInstance()), false))));
         } catch (Exception e) {
             logger.atError().log(e.getMessage());
             return new Response<T>().setError(ResponseError.INTERNAL_SYSTEM_ERROR);
@@ -213,19 +213,19 @@ public class CommonService {
     }
 
     public static <T extends Entity> Response<T> delete(Class<T> entity,
-                                                        Map<Field, Map<Object, Boolean>> searchBy) {
+                                                        RequestModel<T> requestModel) {
         if (entity == null) return new Response<T>().setError(ResponseError.INTERNAL_SYSTEM_ERROR);
-        if (searchBy == null) return new Response<T>().setError(ResponseError.INVALID_SEARCH_PARAMETER);
+        if (requestModel.getSearchBy() == null) return new Response<T>().setError(ResponseError.INVALID_SEARCH_PARAMETER);
 
         StringBuilder query = new StringBuilder("DELETE FROM ").append(entity.getSimpleName()).append(" WHERE ");
-        List<Field> fields = searchBy.keySet().stream().toList();
+        List<Field> fields = requestModel.getSearchBy().keySet().stream().toList();
         for (int i = 0; i < fields.size(); i++) {
             if (i > 0) query.append(" AND ");
-            List<Object> objects = searchBy.get(fields.get(i)).keySet().stream().toList();
+            List<Object> objects = requestModel.getSearchBy().get(fields.get(i)).keySet().stream().toList();
             for (int j = 0; j < objects.size(); j++) {
                 if (j > 0) query.append(" OR ");
                 query.append(fields.get(i).getName()).append(" LIKE ")
-                        .append(searchBy.get(fields.get(i)).get(j) ? " BINARY " : "")
+                        .append(requestModel.getSearchBy().get(fields.get(i)).get(j) ? " BINARY " : "")
                         .append("?");
             }
         }
@@ -233,8 +233,8 @@ public class CommonService {
         try (var connection = Utils.getDatabaseConnection();
              var statement = connection.prepareStatement(query.toString())) {
             int nextParamIndex = 1;
-            for (Field field : searchBy.keySet()) {
-                for (Object obj : searchBy.get(field).keySet()) {
+            for (Field field : requestModel.getSearchBy().keySet()) {
+                for (Object obj : requestModel.getSearchBy().get(field).keySet()) {
                     statement.setObject(nextParamIndex++, obj);
                 }
             }

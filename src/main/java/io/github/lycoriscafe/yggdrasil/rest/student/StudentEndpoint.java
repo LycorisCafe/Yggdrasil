@@ -19,104 +19,108 @@ package io.github.lycoriscafe.yggdrasil.rest.student;
 import io.github.lycoriscafe.nexus.http.core.HttpEndpoint;
 import io.github.lycoriscafe.nexus.http.core.headers.auth.Authenticated;
 import io.github.lycoriscafe.nexus.http.core.headers.content.ExpectContent;
-import io.github.lycoriscafe.nexus.http.core.headers.content.MultipartFormData;
-import io.github.lycoriscafe.nexus.http.core.headers.content.UrlEncodedData;
-import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.DELETE;
-import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.GET;
-import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.PATCH;
 import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.POST;
-import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpDeleteRequest;
-import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpGetRequest;
-import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpPatchRequest;
 import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpPostRequest;
 import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpRes.HttpResponse;
 import io.github.lycoriscafe.yggdrasil.authentication.AuthenticationService;
+import io.github.lycoriscafe.yggdrasil.authentication.DeviceService;
 import io.github.lycoriscafe.yggdrasil.authentication.Role;
+import io.github.lycoriscafe.yggdrasil.commons.CommonService;
+import io.github.lycoriscafe.yggdrasil.commons.RequestModel;
 import io.github.lycoriscafe.yggdrasil.commons.Response;
-import io.github.lycoriscafe.yggdrasil.commons.SearchQueryBuilder;
-import io.github.lycoriscafe.yggdrasil.commons.UpdateQueryBuilder;
+import io.github.lycoriscafe.yggdrasil.commons.ResponseError;
 import io.github.lycoriscafe.yggdrasil.rest.admin.AccessLevel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.math.BigInteger;
-import java.util.List;
+import java.util.Set;
 
 @HttpEndpoint("/student")
 @Authenticated
 public class StudentEndpoint {
-    @GET("/read")
-    public static HttpResponse read(HttpGetRequest req,
+    private static final Logger logger = LoggerFactory.getLogger(StudentEndpoint.class);
+
+    @POST("/read")
+    @ExpectContent("application/json")
+    public static HttpResponse read(HttpPostRequest req,
                                     HttpResponse res) {
-        var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN, Role.TEACHER, Role.STUDENT},
-                AccessLevel.SUPERUSER, AccessLevel.STUDENT);
-        if (auth != null) return auth;
-
-        return res.setContent(StudentService.select(SearchQueryBuilder.build(
-                Student.class, StudentService.Columns.class, StudentService.class,
-                req.getParameters())).parse());
-    }
-
-    @POST("/create")
-    @ExpectContent("multipart/form-data")
-    @SuppressWarnings("unchecked")
-    public static HttpResponse create(HttpPostRequest req,
-                                      HttpResponse res) {
-        var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN},
-                AccessLevel.SUPERUSER, AccessLevel.STUDENT);
-        if (auth != null) return auth;
-
-        return res.setContent(StudentService.insert(UpdateQueryBuilder.build(
-                Student.class, StudentService.Columns.class, StudentService.class,
-                req.getParameters(), (List<MultipartFormData>) req.getContent().getData())).parse());
-    }
-
-    @POST("/update")
-    @ExpectContent("multipart/form-data")
-    @SuppressWarnings("unchecked")
-    public static HttpResponse update(HttpPostRequest req,
-                                      HttpResponse res) {
-        var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN},
-                AccessLevel.SUPERUSER, AccessLevel.STUDENT);
-        if (auth != null) return auth;
-
-        return res.setContent(StudentService.update(UpdateQueryBuilder.build(
-                Student.class, StudentService.Columns.class, StudentService.class,
-                req.getParameters(), (List<MultipartFormData>) req.getContent().getData())).parse());
-    }
-
-    @DELETE("/delete")
-    public static HttpResponse delete(HttpDeleteRequest req,
-                                      HttpResponse res) {
-        var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN},
-                AccessLevel.SUPERUSER, AccessLevel.STUDENT);
-        if (auth != null) return auth;
-
-        return res.setContent(StudentService.delete(SearchQueryBuilder.build(
-                Student.class, StudentService.Columns.class, StudentService.class,
-                req.getParameters())).parse());
-    }
-
-    @PATCH("/resetPassword")
-    @ExpectContent("application/x-www-form-urlencoded")
-    public static HttpResponse resetPassword(HttpPatchRequest req,
-                                             HttpResponse res) {
-        var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN, Role.STUDENT},
-                AccessLevel.SUPERUSER, AccessLevel.STUDENT);
-        if (auth != null) return auth;
-
-        return res.setContent(StudentService.resetPassword((UrlEncodedData) req.getContent().getData()).parse());
-    }
-
-    @PATCH("/logout")
-    public static HttpResponse logout(HttpPatchRequest req,
-                                      HttpResponse res) {
-        var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN, Role.STUDENT},
-                AccessLevel.SUPERUSER, AccessLevel.STUDENT);
+        var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN, Role.TEACHER, Role.STUDENT), null);
         if (auth != null) return auth;
 
         try {
-            return res.setContent(AuthenticationService.logout(Role.STUDENT, new BigInteger(req.getParameters().get("id"))).parse());
+            RequestModel<Student> requestModel = RequestModel.fromJson(Student.class, new String((byte[]) req.getContent().getData()));
+            return res.setContent(CommonService.read(Student.class, requestModel).parse());
         } catch (Exception e) {
-            return res.setContent(new Response<>().setError("Unparseable id").parse());
+            logger.atError().log(e.getMessage());
+            return res.setContent(new Response<Student>().setError(ResponseError.JSON_PARSE_ERROR).parse());
         }
+    }
+
+    @POST("/create")
+    @ExpectContent("application/json")
+    public static HttpResponse create(HttpPostRequest req,
+                                      HttpResponse res) {
+        var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN), Set.of(AccessLevel.SUPERUSER, AccessLevel.STUDENT));
+        if (auth != null) return auth;
+
+        try {
+            RequestModel<Student> requestModel = RequestModel.fromJson(Student.class, new String((byte[]) req.getContent().getData()));
+            return res.setContent(CommonService.create(Student.class, requestModel).parse());
+        } catch (Exception e) {
+            logger.atError().log(e.getMessage());
+            return res.setContent(new Response<Student>().setError(ResponseError.JSON_PARSE_ERROR).parse());
+        }
+    }
+
+    @POST("/update")
+    @ExpectContent("application/json")
+    public static HttpResponse update(HttpPostRequest req,
+                                      HttpResponse res) {
+        var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN), Set.of(AccessLevel.SUPERUSER, AccessLevel.STUDENT));
+        if (auth != null) return auth;
+
+        try {
+            RequestModel<Student> requestModel = RequestModel.fromJson(Student.class, new String((byte[]) req.getContent().getData()));
+            return res.setContent(CommonService.update(Student.class, requestModel).parse());
+        } catch (Exception e) {
+            logger.atError().log(e.getMessage());
+            return res.setContent(new Response<Student>().setError(ResponseError.JSON_PARSE_ERROR).parse());
+        }
+    }
+
+    @POST("/delete")
+    @ExpectContent("application/json")
+    public static HttpResponse delete(HttpPostRequest req,
+                                      HttpResponse res) {
+        var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN), Set.of(AccessLevel.SUPERUSER, AccessLevel.STUDENT));
+        if (auth != null) return auth;
+
+        try {
+            RequestModel<Student> requestModel = RequestModel.fromJson(Student.class, new String((byte[]) req.getContent().getData()));
+            return res.setContent(CommonService.delete(Student.class, requestModel).parse());
+        } catch (Exception e) {
+            logger.atError().log(e.getMessage());
+            return res.setContent(new Response<Student>().setError(ResponseError.JSON_PARSE_ERROR).parse());
+        }
+    }
+
+    @POST("/resetPassword")
+    @ExpectContent("application/x-www-form-urlencoded")
+    public static HttpResponse resetPassword(HttpPostRequest req,
+                                             HttpResponse res) {
+        var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN, Role.STUDENT),
+                Set.of(AccessLevel.SUPERUSER, AccessLevel.STUDENT));
+        if (auth != null) return auth;
+        return res.setContent(AuthenticationService.updateAuthentication(req).parse());
+    }
+
+    @POST("/logout")
+    @ExpectContent("none")
+    public static HttpResponse logout(HttpPostRequest req,
+                                      HttpResponse res) {
+        var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN, Role.STUDENT),
+                Set.of(AccessLevel.SUPERUSER, AccessLevel.STUDENT));
+        if (auth != null) return auth;
+        return res.setContent(DeviceService.removeDevice(req).parse());
     }
 }

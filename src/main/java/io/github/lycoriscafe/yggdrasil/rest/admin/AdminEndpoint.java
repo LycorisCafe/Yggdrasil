@@ -20,22 +20,25 @@ import io.github.lycoriscafe.nexus.http.core.HttpEndpoint;
 import io.github.lycoriscafe.nexus.http.core.headers.auth.Authenticated;
 import io.github.lycoriscafe.nexus.http.core.headers.content.ExpectContent;
 import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.POST;
-import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpDeleteRequest;
-import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpPatchRequest;
 import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpPostRequest;
 import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpRes.HttpResponse;
 import io.github.lycoriscafe.yggdrasil.authentication.AuthenticationService;
+import io.github.lycoriscafe.yggdrasil.authentication.DeviceService;
 import io.github.lycoriscafe.yggdrasil.authentication.Role;
 import io.github.lycoriscafe.yggdrasil.commons.CommonService;
 import io.github.lycoriscafe.yggdrasil.commons.RequestModel;
 import io.github.lycoriscafe.yggdrasil.commons.Response;
 import io.github.lycoriscafe.yggdrasil.commons.ResponseError;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Set;
 
 @HttpEndpoint("/admin")
 @Authenticated
 public class AdminEndpoint {
+    private static final Logger logger = LoggerFactory.getLogger(AdminEndpoint.class);
+
     @POST("/read")
     @ExpectContent("application/json")
     public static HttpResponse read(HttpPostRequest req,
@@ -45,11 +48,11 @@ public class AdminEndpoint {
 
         try {
             RequestModel<Admin> requestModel = RequestModel.fromJson(Admin.class, new String((byte[]) req.getContent().getData()));
+            return res.setContent(CommonService.read(Admin.class, requestModel).parse());
         } catch (Exception e) {
-            return new Response<Admin>().setError(ResponseError.JSON_PARSE_ERROR);
+            logger.atError().log(e.getMessage());
+            return res.setContent(new Response<Admin>().setError(ResponseError.JSON_PARSE_ERROR).parse());
         }
-        return res.setContent(CommonService.read(Admin.class, RequestModel.fromJson(Admin.class, new String((byte[]) req.getContent().getData())))
-                .parse());
     }
 
     @POST("/create")
@@ -59,6 +62,13 @@ public class AdminEndpoint {
         var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN), Set.of(AccessLevel.SUPERUSER));
         if (auth != null) return auth;
 
+        try {
+            RequestModel<Admin> requestModel = RequestModel.fromJson(Admin.class, new String((byte[]) req.getContent().getData()));
+            return res.setContent(CommonService.create(Admin.class, requestModel).parse());
+        } catch (Exception e) {
+            logger.atError().log(e.getMessage());
+            return res.setContent(new Response<Admin>().setError(ResponseError.JSON_PARSE_ERROR).parse());
+        }
     }
 
     @POST("/update")
@@ -68,31 +78,46 @@ public class AdminEndpoint {
         var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN), Set.of(AccessLevel.SUPERUSER));
         if (auth != null) return auth;
 
+        try {
+            RequestModel<Admin> requestModel = RequestModel.fromJson(Admin.class, new String((byte[]) req.getContent().getData()));
+            return res.setContent(CommonService.update(Admin.class, requestModel).parse());
+        } catch (Exception e) {
+            logger.atError().log(e.getMessage());
+            return res.setContent(new Response<Admin>().setError(ResponseError.JSON_PARSE_ERROR).parse());
+        }
     }
 
     @POST("/delete")
     @ExpectContent("application/json")
-    public static HttpResponse delete(HttpDeleteRequest req,
+    public static HttpResponse delete(HttpPostRequest req,
                                       HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN), Set.of(AccessLevel.SUPERUSER));
         if (auth != null) return auth;
 
+        try {
+            RequestModel<Admin> requestModel = RequestModel.fromJson(Admin.class, new String((byte[]) req.getContent().getData()));
+            return res.setContent(CommonService.delete(Admin.class, requestModel).parse());
+        } catch (Exception e) {
+            logger.atError().log(e.getMessage());
+            return res.setContent(new Response<Admin>().setError(ResponseError.JSON_PARSE_ERROR).parse());
+        }
     }
 
     @POST("/resetPassword")
     @ExpectContent("application/x-www-form-urlencoded")
-    public static HttpResponse resetPassword(HttpPatchRequest req,
+    public static HttpResponse resetPassword(HttpPostRequest req,
                                              HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN), Set.of(AccessLevel.SUPERUSER));
         if (auth != null) return auth;
-
+        return res.setContent(AuthenticationService.updateAuthentication(req).parse());
     }
 
     @POST("/logout")
-    public static HttpResponse logout(HttpPatchRequest req,
+    @ExpectContent("none")
+    public static HttpResponse logout(HttpPostRequest req,
                                       HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN), Set.of(AccessLevel.SUPERUSER));
         if (auth != null) return auth;
-
+        return res.setContent(DeviceService.removeDevice(req).parse());
     }
 }
