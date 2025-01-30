@@ -33,7 +33,7 @@ public class ReliefService implements EntityService<Relief> {
         if (!isUpdate) statement.setString(nextParamIndex++, instance.getId() == null ? null : instance.getId().toString());
         statement.setString(nextParamIndex++, instance.getTimetableId().toString());
         statement.setString(nextParamIndex++, instance.getTeacherId().toString());
-        statement.setString(nextParamIndex++, instance.getDate().format(Utils.getDateFormatter()));
+        statement.setString(nextParamIndex++, instance.getDate().format(Utils.getDateTimeFormatter()));
         if (isUpdate) statement.setString(nextParamIndex, instance.getId() == null ? null : instance.getId().toString());
     }
 
@@ -42,6 +42,6 @@ public class ReliefService implements EntityService<Relief> {
         instance.setId(new BigInteger(resultSet.getString("id")))
                 .setTimetableId(new BigInteger(resultSet.getString("timetableId")))
                 .setTeacherId(new BigInteger(resultSet.getString("teacherId")))
-                .setDate(LocalDate.parse(resultSet.getString("date"), Utils.getDateFormatter()));
+                .setDate(LocalDate.parse(resultSet.getString("date"), Utils.getDateTimeFormatter()));
     }
 }
