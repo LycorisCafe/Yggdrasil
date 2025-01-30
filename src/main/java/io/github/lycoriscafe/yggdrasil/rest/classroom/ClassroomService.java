@@ -29,7 +29,7 @@ public class ClassroomService implements EntityService<Classroom> {
                                   boolean isUpdate) throws SQLException {
         int nextParamIndex = 1;
         if (!isUpdate) statement.setString(nextParamIndex++, instance.getId() == null ? null : instance.getId().toString());
-        statement.setString(nextParamIndex++, instance.getTeacherId().toString());
+        statement.setString(nextParamIndex++, instance.getTeacherId() == null ? null : instance.getTeacherId().toString());
         statement.setInt(nextParamIndex++, instance.getGrade());
         statement.setString(nextParamIndex++, instance.getName());
         if (isUpdate) statement.setString(nextParamIndex, instance.getId() == null ? null : instance.getId().toString());
@@ -38,7 +38,8 @@ public class ClassroomService implements EntityService<Classroom> {
     public static void fromDatabase(ResultSet resultSet,
                                     Classroom instance) throws SQLException {
         instance.setId(new BigInteger(resultSet.getString("id")))
-                .setTeacherId(new BigInteger(resultSet.getString("teacherId")))
+                .setTeacherId(resultSet.getString("teacherId") == null ?
+                        null : new BigInteger(resultSet.getString("teacherId")))
                 .setGrade(resultSet.getInt("grade"))
                 .setName(resultSet.getString("name"));
     }
