@@ -60,7 +60,7 @@ public class StudentService implements EntityService<Student> {
                 .setDateOfBirth(LocalDate.parse(resultSet.getString("dateOfBirth"), Utils.getDateTimeFormatter()))
                 .setNic(resultSet.getString("nic"))
                 .setAddress(resultSet.getString("address"))
-                .setRegYear(Year.parse(resultSet.getString("regYear"), Utils.getDateTimeFormatter()))
+                .setRegYear(Year.parse(resultSet.getString("regYear"), Utils.getDateFormatter()))
                 .setContactNo(resultSet.getString("contactNo"))
                 .setEmail(resultSet.getString("email"))
                 .setDisabled(resultSet.getBoolean("disabled"));
