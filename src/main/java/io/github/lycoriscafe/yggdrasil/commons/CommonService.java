@@ -57,15 +57,21 @@ public class CommonService {
              var statement = connection.prepareStatement(query.toString(), Statement.RETURN_GENERATED_KEYS)) {
             Method method = entityService.getMethod("toDatabase", PreparedStatement.class, entity, boolean.class);
             method.invoke(null, statement, instance, false);
-            if (statement.executeUpdate() != 1) return new ResponseModel<T>().setError("Internal system error");
+            if (statement.executeUpdate() != 1) {
+                connection.rollback();
+                return new ResponseModel<T>().setError("Internal system error");
+            }
             try (var resultSet = statement.getGeneratedKeys()) {
-                if (!resultSet.next()) return new ResponseModel<T>().setError("Internal system error");
+                if (!resultSet.next()) {
+                    connection.rollback();
+                    return new ResponseModel<T>().setError("Internal system error");
+                }
+                connection.commit();
                 return read(entity, entityService,
                         new SearchModel().setSearchBy(Map.of("id", Map.of(resultSet.getString(1), false))));
             }
         } catch (Exception e) {
-            logger.atError().log(e.getMessage());
-            return new ResponseModel<T>().setError(e.getMessage());
+            throw new RuntimeException(e);
         }
     }
 
@@ -142,7 +148,7 @@ public class CommonService {
                 List<T> data = new ArrayList<>();
                 while (resultSet.next()) {
                     T instance = entity.getConstructor().newInstance();
-                    Method method = entity.getMethod("fromDatabase", ResultSet.class, entity);
+                    Method method = entityService.getMethod("fromDatabase", ResultSet.class, entity);
                     method.invoke(null, resultSet, instance);
                     data.add(instance);
                 }
@@ -153,10 +159,10 @@ public class CommonService {
                 if (!resultsOffsetResultSet.next()) return new ResponseModel<T>().setError("Internal system error");
                 response.setResultsOffset(new BigInteger(resultsOffsetResultSet.getString(1)));
             }
+            connection.commit();
             return response.setSuccess(true);
         } catch (Exception e) {
-            logger.atError().log(e.getMessage());
-            return new ResponseModel<T>().setError(e.getMessage());
+            throw new RuntimeException(e);
         }
     }
 
@@ -177,14 +183,17 @@ public class CommonService {
 
         try (var connection = Utils.getDatabaseConnection();
              var statement = connection.prepareStatement(query.toString())) {
-            Method method = entity.getMethod("toDatabase", PreparedStatement.class, entity, boolean.class);
+            Method method = entityService.getMethod("toDatabase", PreparedStatement.class, entity, boolean.class);
             method.invoke(null, statement, instance, true);
-            if (statement.executeUpdate() != 1) return new ResponseModel<T>().setError("Internal system error");
+            if (statement.executeUpdate() != 1) {
+                connection.rollback();
+                return new ResponseModel<T>().setError("Internal system error");
+            }
+            connection.commit();
             return read(entity, entityService,
                     new SearchModel().setSearchBy(Map.of("id", Map.of(instance.getId().toString(), false))));
         } catch (Exception e) {
-            logger.atError().log(e.getMessage());
-            return new ResponseModel<T>().setError(e.getMessage());
+            throw new RuntimeException(e);
         }
     }
 
@@ -196,11 +205,14 @@ public class CommonService {
         try (var connection = Utils.getDatabaseConnection();
              var statement = connection.prepareStatement("DELETE FROM " + entity.getSimpleName() + " WHERE id = ?")) {
             statement.setString(1, id.toString());
-            if (statement.executeUpdate() != 1) return new ResponseModel<T>().setError("Internal system error");
+            if (statement.executeUpdate() != 1) {
+                connection.rollback();
+                return new ResponseModel<T>().setError("Internal system error");
+            }
+            connection.commit();
             return new ResponseModel<T>().setSuccess(true);
         } catch (Exception e) {
-            logger.atError().log(e.getMessage());
-            return new ResponseModel<T>().setError("Internal system error");
+            throw new RuntimeException(e);
         }
     }
 }
