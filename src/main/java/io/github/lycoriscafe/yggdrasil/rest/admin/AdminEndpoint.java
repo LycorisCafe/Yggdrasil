@@ -53,8 +53,8 @@ public class AdminEndpoint {
             SearchModel searchModel = SearchModel.fromJson(new String((byte[]) req.getContent().getData()));
             return res.setContent(CommonService.read(Admin.class, AdminService.class, searchModel).parse());
         } catch (Exception e) {
-            logger.atError().log(e.toString());
-            return res.setContent(new ResponseModel<Admin>().setError(e.getMessage()).parse());
+            e.printStackTrace(System.err);
+            return res.setContent(new ResponseModel<Admin>().setError("Internal system error").parse());
         }
     }
 
@@ -74,8 +74,8 @@ public class AdminEndpoint {
             }
             return res.setContent(response.parse());
         } catch (Exception e) {
-            logger.atError().log(e.toString());
-            return res.setContent(new ResponseModel<Admin>().setError(e.getMessage()).parse());
+            e.printStackTrace(System.err);
+            return res.setContent(new ResponseModel<Admin>().setError("Internal system error").parse());
         }
     }
 
@@ -90,8 +90,8 @@ public class AdminEndpoint {
             Admin instance = Utils.getGson().fromJson(new String((byte[]) req.getContent().getData()), Admin.class);
             return res.setContent(CommonService.update(Admin.class, AdminService.class, instance).parse());
         } catch (Exception e) {
-            logger.atError().log(e.toString());
-            return res.setContent(new ResponseModel<Admin>().setError(e.getMessage()).parse());
+            e.printStackTrace(System.err);
+            return res.setContent(new ResponseModel<Admin>().setError("Internal system error").parse());
         }
     }
 
@@ -112,8 +112,8 @@ public class AdminEndpoint {
             }
             return res.setContent(response.parse());
         } catch (Exception e) {
-            logger.atError().log(e.toString());
-            return res.setContent(new ResponseModel<Admin>().setError(e.getMessage()).parse());
+            e.printStackTrace(System.err);
+            return res.setContent(new ResponseModel<Admin>().setError("Internal system error").parse());
         }
     }
 
@@ -124,16 +124,17 @@ public class AdminEndpoint {
         var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN),
                 req.getParameters() == null ? null : Set.of(AccessLevel.SUPERUSER));
         if (auth != null) return auth;
-        return res.setContent(AuthenticationService.updateAuthentication(req).parse());
+        return res.setContent(AuthenticationService.updateAuthentication(req, Role.ADMIN, req.getParameters() == null).parse());
     }
 
     @PATCH("/logout")
     @ExpectContent("none")
     public static HttpResponse logout(HttpPatchRequest req,
                                       HttpResponse res) {
-        var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN), null);
+        var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN),
+                req.getParameters() == null ? null : Set.of(AccessLevel.SUPERUSER));
         if (auth != null) return auth;
-        return res.setContent(DeviceService.removeDevice(req).parse());
+        return res.setContent(DeviceService.removeDevice(req, Role.ADMIN, req.getParameters() == null).parse());
     }
 
     @GET("/devices")

@@ -53,7 +53,7 @@ public class TeacherAttendanceEndpoint {
             SearchModel searchModel = SearchModel.fromJson(new String((byte[]) req.getContent().getData()));
             return res.setContent(CommonService.read(TeacherAttendance.class, TeacherAttendanceService.class, searchModel).parse());
         } catch (Exception e) {
-            logger.atError().log(e.toString());
+            e.printStackTrace(System.err);
             return res.setContent(new ResponseModel<TeacherAttendance>().setError(e.getMessage()).parse());
         }
     }
@@ -69,7 +69,7 @@ public class TeacherAttendanceEndpoint {
             TeacherAttendance instance = Utils.getGson().fromJson(new String((byte[]) req.getContent().getData()), TeacherAttendance.class);
             return res.setContent(CommonService.create(TeacherAttendance.class, TeacherAttendanceService.class, instance).parse());
         } catch (Exception e) {
-            logger.atError().log(e.toString());
+            e.printStackTrace(System.err);
             return res.setContent(new ResponseModel<TeacherAttendance>().setError(e.getMessage()).parse());
         }
     }
@@ -87,7 +87,7 @@ public class TeacherAttendanceEndpoint {
             BigInteger id = new BigInteger(req.getParameters().get("id"));
             return res.setContent(CommonService.delete(TeacherAttendance.class, id).parse());
         } catch (Exception e) {
-            logger.atError().log(e.toString());
+            e.printStackTrace(System.err);
             return res.setContent(new ResponseModel<TeacherAttendance>().setError(e.getMessage()).parse());
         }
     }

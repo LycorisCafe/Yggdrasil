@@ -9,7 +9,7 @@ START TRANSACTION;
 CREATE TABLE admin
 (
     id          SERIAL PRIMARY KEY,
-    name        VARCHAR(100)                                    NOT NULL,
+    deviceId VARCHAR(100) NOT NULL,
     accessLevel SET ('SUPERUSER', 'CLASSROOM', 'GUARDIAN', 'NOTIFICATION',
         'RELIEF', 'STUDENT', 'SUBJECT', 'TEACHER', 'TIMETABLE') NOT NULL,
     disabled    BOOLEAN DEFAULT FALSE # Used for disabling without deleting
@@ -20,9 +20,9 @@ CREATE TABLE classroom
 (
     id        SERIAL PRIMARY KEY,
     teacherId BIGINT UNSIGNED UNIQUE,
-    grade TINYINT(2) UNSIGNED NOT NULL,
-    name  VARCHAR(10)         NOT NULL,
-    UNIQUE (grade, name)
+    grade    TINYINT(2) UNSIGNED NOT NULL,
+    deviceId VARCHAR(10)         NOT NULL,
+    UNIQUE (grade, deviceId)
 );
 
 ## GUARDIAN
@@ -163,16 +163,15 @@ CREATE TABLE authentication
 );
 
 ## DEVICES
-CREATE TABLE devices
+CREATE TABLE device
 (
     role         ENUM ('STUDENT', 'TEACHER', 'ADMIN') NOT NULL,
     userId       BIGINT UNSIGNED                      NOT NULL,
-    name         VARCHAR(20)           NOT NULL,
+    deviceName   VARCHAR(20)           NOT NULL,
     accessToken  VARBINARY(100) UNIQUE NOT NULL,
     expires      BIGINT                NOT NULL,
     refreshToken VARBINARY(100) UNIQUE NOT NULL,
-    lastLogin DATETIME DEFAULT NOW() ON UPDATE NOW(),
-    UNIQUE (role, userId, name)
+    lastLogin    DATETIME DEFAULT NOW() ON UPDATE NOW()
 );
 
 ALTER TABLE classroom
@@ -207,7 +206,7 @@ ALTER TABLE timetable
     ADD FOREIGN KEY (subjectId) REFERENCES subject (id) ON UPDATE CASCADE ON DELETE CASCADE,
     ADD FOREIGN KEY (classroomId) REFERENCES classroom (id) ON UPDATE CASCADE ON DELETE CASCADE;
 
-ALTER TABLE devices
+ALTER TABLE device
     ADD FOREIGN KEY (role, userId) REFERENCES authentication (role, userId) ON UPDATE CASCADE ON DELETE CASCADE;
 
 DELIMITER //
@@ -246,7 +245,7 @@ COMMIT;
 ## INSERT SUPERUSER (DEFAULT)
 START TRANSACTION;
 
-INSERT INTO admin (id, name, accessLevel)
+INSERT INTO admin (id, deviceId, accessLevel)
 VALUES (1, 'SUPERUSER', 'SUPERUSER');
 
 INSERT INTO authentication (role, userId, password) # password is SUPERUSER

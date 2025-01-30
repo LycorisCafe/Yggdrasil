@@ -54,7 +54,7 @@ public class TeacherEndpoint {
             SearchModel searchModel = SearchModel.fromJson(new String((byte[]) req.getContent().getData()));
             return res.setContent(CommonService.read(Teacher.class, TeacherService.class, searchModel).parse());
         } catch (Exception e) {
-            logger.atError().log(e.toString());
+            e.printStackTrace(System.err);
             return res.setContent(new ResponseModel<Teacher>().setError(e.getMessage()).parse());
         }
     }
@@ -75,7 +75,7 @@ public class TeacherEndpoint {
             }
             return res.setContent(response.parse());
         } catch (Exception e) {
-            logger.atError().log(e.toString());
+            e.printStackTrace(System.err);
             return res.setContent(new ResponseModel<Teacher>().setError(e.getMessage()).parse());
         }
     }
@@ -91,7 +91,7 @@ public class TeacherEndpoint {
             Teacher instance = Utils.getGson().fromJson(new String((byte[]) req.getContent().getData()), Teacher.class);
             return res.setContent(CommonService.update(Teacher.class, TeacherService.class, instance).parse());
         } catch (Exception e) {
-            logger.atError().log(e.toString());
+            e.printStackTrace(System.err);
             return res.setContent(new ResponseModel<Teacher>().setError(e.getMessage()).parse());
         }
     }
@@ -113,7 +113,7 @@ public class TeacherEndpoint {
             }
             return res.setContent(response.parse());
         } catch (Exception e) {
-            logger.atError().log(e.toString());
+            e.printStackTrace(System.err);
             return res.setContent(new ResponseModel<Teacher>().setError(e.getMessage()).parse());
         }
     }
@@ -123,18 +123,19 @@ public class TeacherEndpoint {
     public static HttpResponse resetPassword(HttpPatchRequest req,
                                              HttpResponse res) {
         var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN, Role.TEACHER),
-                Set.of(AccessLevel.SUPERUSER, AccessLevel.TEACHER));
+                req.getParameters() == null ? null : Set.of(AccessLevel.SUPERUSER, AccessLevel.TEACHER));
         if (auth != null) return auth;
-        return res.setContent(AuthenticationService.updateAuthentication(req).parse());
+        return res.setContent(AuthenticationService.updateAuthentication(req, Role.TEACHER, req.getParameters() == null).parse());
     }
 
     @PATCH("/logout")
     @ExpectContent("none")
     public static HttpResponse logout(HttpPatchRequest req,
                                       HttpResponse res) {
-        var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN, Role.TEACHER), Set.of(AccessLevel.SUPERUSER, AccessLevel.TEACHER));
+        var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN, Role.STUDENT),
+                req.getParameters() == null ? null : Set.of(AccessLevel.SUPERUSER, AccessLevel.STUDENT));
         if (auth != null) return auth;
-        return res.setContent(DeviceService.removeDevice(req).parse());
+        return res.setContent(DeviceService.removeDevice(req, Role.TEACHER, req.getParameters() == null).parse());
     }
 
     @GET("/devices")

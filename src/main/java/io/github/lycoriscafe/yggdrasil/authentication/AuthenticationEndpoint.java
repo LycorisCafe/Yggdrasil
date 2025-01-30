@@ -90,10 +90,8 @@ public class AuthenticationEndpoint {
 
                 var accessToken = AuthenticationService.generateToken();
                 var refreshToken = AuthenticationService.generateToken();
-                if (!DeviceService.addDevice(new Device(auth.getRole(), auth.getUserId(), tokenRequest.getParams().get("deviceName"), accessToken,
-                        Instant.now().getEpochSecond() + YggdrasilConfig.getDefaultAuthTimeout(), refreshToken))) {
-                    throw new RuntimeException("Failed to add device");
-                }
+                DeviceService.addDevice(new Device(auth.getRole(), auth.getUserId(), tokenRequest.getParams().get("deviceName"),
+                        accessToken, Instant.now().getEpochSecond() + YggdrasilConfig.getDefaultAuthTimeout(), refreshToken));
 
                 return new BearerTokenSuccessResponse(accessToken)
                         .setExpiresIn(YggdrasilConfig.getDefaultAuthTimeout())
@@ -120,10 +118,8 @@ public class AuthenticationEndpoint {
                 }
 
                 var accessToken = AuthenticationService.generateToken();
-                if (!DeviceService.updateDevice(devices.getFirst().setAccessToken(accessToken)
-                        .setExpires(Instant.now().getEpochSecond() + YggdrasilConfig.getDefaultAuthTimeout()))) {
-                    throw new RuntimeException("Failed to update device");
-                }
+                DeviceService.updateDevice(devices.getFirst().setAccessToken(accessToken)
+                        .setExpires(Instant.now().getEpochSecond() + YggdrasilConfig.getDefaultAuthTimeout()));
 
                 return new BearerTokenSuccessResponse(accessToken)
                         .setExpiresIn(YggdrasilConfig.getDefaultAuthTimeout());

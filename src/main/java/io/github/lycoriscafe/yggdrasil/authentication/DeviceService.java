@@ -18,7 +18,7 @@ package io.github.lycoriscafe.yggdrasil.authentication;
 
 import io.github.lycoriscafe.nexus.http.core.headers.auth.scheme.bearer.BearerAuthorization;
 import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpGetRequest;
-import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpPostRequest;
+import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpPatchRequest;
 import io.github.lycoriscafe.yggdrasil.commons.Entity;
 import io.github.lycoriscafe.yggdrasil.commons.ResponseModel;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
@@ -55,7 +55,7 @@ public class DeviceService {
         Objects.requireNonNull(token);
         List<Device> devices;
         try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement("SELECT * FROM devices WHERE " + tokenType + " = BINARY ?")) {
+             var statement = connection.prepareStatement("SELECT * FROM device WHERE " + tokenType + " = BINARY ?")) {
             statement.setString(1, token);
             devices = deserialize(statement.executeQuery());
             connection.commit();
@@ -75,109 +75,87 @@ public class DeviceService {
         }
     }
 
-    public static boolean addDevice(Device device) throws SQLException, NoSuchAlgorithmException {
+    public static void addDevice(Device device) throws SQLException, NoSuchAlgorithmException {
         Objects.requireNonNull(device);
         try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement("INSERT INTO devices (role, userId, name, accessToken, expires, refreshToken) " +
+             var statement = connection.prepareStatement("INSERT INTO device (role, userId, deviceName, accessToken, expires, refreshToken) " +
                      "VALUES (?, ?, ?, ?, ?, ?)")) {
             statement.setString(1, device.getRole().toString());
             statement.setString(2, device.getUserId().toString());
-            statement.setString(3, device.getName());
+            statement.setString(3, device.getDeviceName());
             statement.setString(4, device.getAccessToken());
             statement.setLong(5, device.getExpires());
             statement.setString(6, AuthenticationService.encryptData(device.getRefreshToken().getBytes(StandardCharsets.UTF_8)));
             if (statement.executeUpdate() != 1) {
                 connection.rollback();
-                return false;
+                throw new RuntimeException("Device adding failed");
             }
             connection.commit();
-            return true;
         }
     }
 
-    public static boolean removeDevices(Role role,
-                                        BigInteger userId) throws SQLException {
+    public static void removeDevices(Role role,
+                                     BigInteger userId) throws SQLException {
         Objects.requireNonNull(role);
         Objects.requireNonNull(userId);
         try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement("DELETE FROM devices WHERE role = ? AND userid = ?")) {
+             var statement = connection.prepareStatement("DELETE FROM device WHERE role = ? AND userid = ?")) {
             statement.setString(1, role.toString());
             statement.setString(2, userId.toString());
             if (statement.executeUpdate() != 1) {
                 connection.rollback();
-                return false;
+                throw new RuntimeException("Device removing failed");
             }
             connection.commit();
-            return true;
         }
     }
 
-    public static boolean removeDevice(TokenType tokenType,
-                                       String token) throws SQLException {
+    public static void removeDevice(TokenType tokenType,
+                                    String token) throws SQLException {
         Objects.requireNonNull(tokenType);
         Objects.requireNonNull(token);
         try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement("DELETE FROM devices WHERE " + tokenType + " = BINARY ?")) {
+             var statement = connection.prepareStatement("DELETE FROM device WHERE " + tokenType + " = BINARY ?")) {
             statement.setString(1, token);
             if (statement.executeUpdate() != 1) {
                 connection.rollback();
-                return false;
+                throw new RuntimeException("Device removing failed");
             }
             connection.commit();
-            return true;
         }
     }
 
-    public static <T extends Entity> ResponseModel<T> removeDevice(HttpPostRequest req) {
+    public static <T extends Entity> ResponseModel<T> removeDevice(HttpPatchRequest req,
+                                                                   Role role,
+                                                                   boolean selfRemove) {
+        Objects.requireNonNull(req);
+        Objects.requireNonNull(role);
         try {
-            if (req.getParameters() != null && req.getParameters().containsKey("device")) {
-                switch (req.getParameters().get("device")) {
-                    case "self" -> {
-                        if (!removeDevice(TokenType.ACCESS_TOKEN, ((BearerAuthorization) req.getAuthorization()).getAccessToken())) {
-                            return new ResponseModel<T>().setError("Internal system error");
-                        }
-                    }
-                    case "all" -> {
-                        var device = getDevices(TokenType.ACCESS_TOKEN, ((BearerAuthorization) req.getAuthorization()).getAccessToken()).getFirst();
-                        if (!removeDevices(device.getRole(), device.getUserId())) return new ResponseModel<T>().setError("Internal system error");
-                    }
-                    default -> {
-                        var device = getDevices(TokenType.ACCESS_TOKEN, ((BearerAuthorization) req.getAuthorization()).getAccessToken()).getFirst();
-                        var devices = getDevices(device.getRole(), device.getUserId());
-                        var target = devices.stream().filter(e -> e.getName().equals(req.getParameters().get("devices"))).findAny();
-                        if (target.isEmpty()) return new ResponseModel<T>().setError("Device not found");
-                        if (!removeDevice(TokenType.REFRESH_TOKEN, target.get().getRefreshToken())) {
-                            return new ResponseModel<T>().setError("Internal system error");
-                        }
-                    }
-                }
+            if (!selfRemove) {
+                removeDevices(role, new BigInteger(req.getParameters().get("userId")));
                 return new ResponseModel<T>().setSuccess(true);
             }
 
-            if (!DeviceService.removeDevice(TokenType.ACCESS_TOKEN, ((BearerAuthorization) req.getAuthorization()).getAccessToken())) {
-                return new ResponseModel<T>().setError("Internal system error");
-            }
+            removeDevice(TokenType.ACCESS_TOKEN, ((BearerAuthorization) req.getAuthorization()).getAccessToken());
             return new ResponseModel<T>().setSuccess(true);
         } catch (SQLException e) {
+            e.printStackTrace(System.err);
             return new ResponseModel<T>().setError("Internal system error");
         }
     }
 
-    public static boolean updateDevice(Device device) throws SQLException {
+    public static void updateDevice(Device device) throws SQLException {
         Objects.requireNonNull(device);
         try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement(
-                     "UPDATE devices SET name = ?, accessToken = ?, expires = ? WHERE refreshToken = BINARY ?")) {
-            statement.setString(1, device.getName());
-            statement.setString(2, device.getAccessToken());
-            statement.setLong(3, device.getExpires());
-            statement.setString(4, device.getRefreshToken());
+             var statement = connection.prepareStatement("UPDATE device SET accessToken = ?, expires = ? WHERE refreshToken = BINARY ?")) {
+            statement.setString(1, device.getAccessToken());
+            statement.setLong(2, device.getExpires());
+            statement.setString(3, device.getRefreshToken());
             if (statement.executeUpdate() != 1) {
                 connection.rollback();
-                return false;
+                throw new RuntimeException("Device updating failed");
             }
             connection.commit();
-            return true;
         }
     }
 
@@ -188,7 +166,7 @@ public class DeviceService {
                 devices.add(new Device(
                         Role.valueOf(resultSet.getString("role")),
                         new BigInteger(resultSet.getString("userId")),
-                        resultSet.getString("name"),
+                        resultSet.getString("deviceName"),
                         resultSet.getString("accessToken"),
                         resultSet.getLong("expires"),
                         resultSet.getString("refreshToken")

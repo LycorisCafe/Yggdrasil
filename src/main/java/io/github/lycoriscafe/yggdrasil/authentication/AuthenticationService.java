@@ -22,7 +22,7 @@ import io.github.lycoriscafe.nexus.http.core.headers.auth.scheme.bearer.BearerAu
 import io.github.lycoriscafe.nexus.http.core.headers.auth.scheme.bearer.BearerAuthorizationError;
 import io.github.lycoriscafe.nexus.http.core.headers.content.UrlEncodedData;
 import io.github.lycoriscafe.nexus.http.core.statusCodes.HttpStatusCode;
-import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpPostRequest;
+import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpPatchRequest;
 import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpRequest;
 import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpRes.HttpResponse;
 import io.github.lycoriscafe.yggdrasil.commons.CommonService;
@@ -111,6 +111,7 @@ public class AuthenticationService {
             }
             return null;
         } catch (SQLException | NoSuchFieldException e) {
+            e.printStackTrace(System.err);
             return httpResponse.setStatusCode(HttpStatusCode.INTERNAL_SERVER_ERROR);
         }
     }
@@ -130,7 +131,7 @@ public class AuthenticationService {
         return auth;
     }
 
-    public static boolean addAuthentication(Authentication auth) throws SQLException, NoSuchAlgorithmException {
+    public static void addAuthentication(Authentication auth) throws SQLException, NoSuchAlgorithmException {
         Objects.requireNonNull(auth);
         try (var connection = Utils.getDatabaseConnection();
              var statement = connection.prepareStatement("INSERT INTO authentication VALUES(?, ?, ?)")) {
@@ -139,14 +140,13 @@ public class AuthenticationService {
             statement.setString(3, encryptData(auth.getPassword().getBytes(StandardCharsets.UTF_8)));
             if (statement.executeUpdate() != 1) {
                 connection.rollback();
-                return false;
+                throw new RuntimeException("Authentication adding failed");
             }
             connection.commit();
-            return true;
         }
     }
 
-    public static boolean updateAuthentication(Authentication authentication) throws SQLException, NoSuchAlgorithmException {
+    public static void updateAuthentication(Authentication authentication) throws SQLException, NoSuchAlgorithmException {
         Objects.requireNonNull(authentication);
         try (var connection = Utils.getDatabaseConnection();
              var statement = connection.prepareStatement("UPDATE authentication SET password = ? WHERE role = ? AND userId = ?")) {
@@ -155,46 +155,51 @@ public class AuthenticationService {
             statement.setString(3, authentication.getUserId().toString());
             if (statement.executeUpdate() != 1) {
                 connection.rollback();
-                return false;
+                throw new RuntimeException("Authentication updating failed");
             }
             connection.commit();
-            return true;
         }
     }
 
-    public static <T extends Entity> ResponseModel<T> updateAuthentication(HttpPostRequest req) {
+    public static <T extends Entity> ResponseModel<T> updateAuthentication(HttpPatchRequest req,
+                                                                           Role role,
+                                                                           boolean selfUpdate) {
         Objects.requireNonNull(req);
+        Objects.requireNonNull(role);
         UrlEncodedData data = (UrlEncodedData) req.getContent().getData();
-        if (!data.containsKey("oldPassword") || !data.containsKey("newPassword")) {
+        if ((selfUpdate && !data.containsKey("oldPassword")) || !data.containsKey("newPassword")) {
             return new ResponseModel<T>().setError("Required parameters missing");
         }
 
         var oldPassword = data.get("oldPassword");
         var newPassword = data.get("newPassword");
-
         if (newPassword.length() < YggdrasilConfig.getDefaultUserPasswordBoundary()[0]
                 || newPassword.length() > YggdrasilConfig.getDefaultUserPasswordBoundary()[1]) {
             return new ResponseModel<T>().setError("Password length out of bound " + Arrays.toString(YggdrasilConfig.getDefaultUserPasswordBoundary()));
         }
 
         try {
+            if (!selfUpdate) {
+                var authentication = AuthenticationService.getAuthentication(role, new BigInteger(req.getParameters().get("userId")));
+                updateAuthentication(authentication.setPassword(newPassword));
+                return new ResponseModel<T>().setSuccess(true);
+            }
+
             var devices = DeviceService.getDevices(TokenType.ACCESS_TOKEN, ((BearerAuthorization) req.getAuthorization()).getAccessToken());
             var authentication = AuthenticationService.getAuthentication(devices.getFirst().getRole(), devices.getFirst().getUserId());
-
             if (authentication.getPassword().equals(AuthenticationService.encryptData(oldPassword.getBytes(StandardCharsets.UTF_8)))) {
                 return new ResponseModel<T>().setError("oldPassword doesn't match");
             }
-            authentication.setPassword(newPassword);
-            if (!updateAuthentication(authentication)) return new ResponseModel<T>().setError("Internal system error");
+            updateAuthentication(authentication.setPassword(newPassword));
             return new ResponseModel<T>().setSuccess(true);
         } catch (SQLException | NoSuchAlgorithmException e) {
-            logger.atError().log(e.toString());
+            e.printStackTrace(System.err);
             return new ResponseModel<T>().setError("Internal system error");
         }
     }
 
-    public static boolean deleteAuthentication(Role role,
-                                               BigInteger userId) throws SQLException {
+    public static void deleteAuthentication(Role role,
+                                            BigInteger userId) throws SQLException {
         Objects.requireNonNull(role);
         Objects.requireNonNull(userId);
         try (var connection = Utils.getDatabaseConnection();
@@ -203,10 +208,9 @@ public class AuthenticationService {
             statement.setString(2, userId.toString());
             if (statement.executeUpdate() != 1) {
                 connection.rollback();
-                return false;
+                throw new RuntimeException("Authentication deleting failed");
             }
             connection.commit();
-            return true;
         }
     }
 

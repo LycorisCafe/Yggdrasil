@@ -55,7 +55,7 @@ public class GuardianEndpoint {
             SearchModel searchModel = SearchModel.fromJson(new String((byte[]) req.getContent().getData()));
             return res.setContent(CommonService.read(Guardian.class, GuardianService.class, searchModel).parse());
         } catch (Exception e) {
-            logger.atError().log(e.toString());
+            e.printStackTrace(System.err);
             return res.setContent(new ResponseModel<Guardian>().setError(e.getMessage()).parse());
         }
     }
@@ -71,7 +71,7 @@ public class GuardianEndpoint {
             Guardian instance = Utils.getGson().fromJson(new String((byte[]) req.getContent().getData()), Guardian.class);
             return res.setContent(CommonService.create(Guardian.class, GuardianService.class, instance).parse());
         } catch (Exception e) {
-            logger.atError().log(e.toString());
+            e.printStackTrace(System.err);
             return res.setContent(new ResponseModel<Guardian>().setError(e.getMessage()).parse());
         }
     }
@@ -87,7 +87,7 @@ public class GuardianEndpoint {
             Guardian instance = Utils.getGson().fromJson(new String((byte[]) req.getContent().getData()), Guardian.class);
             return res.setContent(CommonService.update(Guardian.class, GuardianService.class, instance).parse());
         } catch (Exception e) {
-            logger.atError().log(e.toString());
+            e.printStackTrace(System.err);
             return res.setContent(new ResponseModel<Guardian>().setError(e.getMessage()).parse());
         }
     }
@@ -105,7 +105,7 @@ public class GuardianEndpoint {
             BigInteger id = new BigInteger(req.getParameters().get("id"));
             return res.setContent(CommonService.delete(Guardian.class, id).parse());
         } catch (Exception e) {
-            logger.atError().log(e.toString());
+            e.printStackTrace(System.err);
             return res.setContent(new ResponseModel<Guardian>().setError(e.getMessage()).parse());
         }
     }

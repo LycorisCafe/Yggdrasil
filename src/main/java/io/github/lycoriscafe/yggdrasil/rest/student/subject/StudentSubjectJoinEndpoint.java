@@ -55,7 +55,7 @@ public class StudentSubjectJoinEndpoint {
             SearchModel searchModel = SearchModel.fromJson(new String((byte[]) req.getContent().getData()));
             return res.setContent(CommonService.read(StudentSubjectJoin.class, StudentSubjectJoinService.class, searchModel).parse());
         } catch (Exception e) {
-            logger.atError().log(e.toString());
+            e.printStackTrace(System.err);
             return res.setContent(new ResponseModel<StudentSubjectJoin>().setError(e.getMessage()).parse());
         }
     }
@@ -71,7 +71,7 @@ public class StudentSubjectJoinEndpoint {
             StudentSubjectJoin instance = Utils.getGson().fromJson(new String((byte[]) req.getContent().getData()), StudentSubjectJoin.class);
             return res.setContent(CommonService.create(StudentSubjectJoin.class, StudentSubjectJoinService.class, instance).parse());
         } catch (Exception e) {
-            logger.atError().log(e.toString());
+            e.printStackTrace(System.err);
             return res.setContent(new ResponseModel<StudentSubjectJoin>().setError(e.getMessage()).parse());
         }
     }
@@ -87,7 +87,7 @@ public class StudentSubjectJoinEndpoint {
             StudentSubjectJoin instance = Utils.getGson().fromJson(new String((byte[]) req.getContent().getData()), StudentSubjectJoin.class);
             return res.setContent(CommonService.update(StudentSubjectJoin.class, StudentSubjectJoinService.class, instance).parse());
         } catch (Exception e) {
-            logger.atError().log(e.toString());
+            e.printStackTrace(System.err);
             return res.setContent(new ResponseModel<StudentSubjectJoin>().setError(e.getMessage()).parse());
         }
     }
@@ -105,7 +105,7 @@ public class StudentSubjectJoinEndpoint {
             BigInteger id = new BigInteger(req.getParameters().get("id"));
             return res.setContent(CommonService.delete(StudentSubjectJoin.class, id).parse());
         } catch (Exception e) {
-            logger.atError().log(e.toString());
+            e.printStackTrace(System.err);
             return res.setContent(new ResponseModel<StudentSubjectJoin>().setError(e.getMessage()).parse());
         }
     }

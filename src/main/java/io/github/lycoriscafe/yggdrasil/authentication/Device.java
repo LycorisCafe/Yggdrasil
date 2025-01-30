@@ -23,7 +23,7 @@ import java.util.Objects;
 public class Device {
     private Role role;
     private BigInteger userId;
-    private String name;
+    private String deviceName;
     private String accessToken;
     private Long expires;
     private String refreshToken;
@@ -31,13 +31,13 @@ public class Device {
 
     public Device(Role role,
                   BigInteger userId,
-                  String name,
+                  String deviceId,
                   String accessToken,
                   Long expires,
                   String refreshToken) {
         this.role = Objects.requireNonNull(role);
         this.userId = Objects.requireNonNull(userId);
-        this.name = Objects.requireNonNull(name);
+        this.deviceName = Objects.requireNonNull(deviceName);
         this.accessToken = Objects.requireNonNull(accessToken);
         this.expires = Objects.requireNonNull(expires);
         this.refreshToken = Objects.requireNonNull(refreshToken);
@@ -61,12 +61,12 @@ public class Device {
         return this;
     }
 
-    public String getName() {
-        return name;
+    public String getDeviceName() {
+        return deviceName;
     }
 
-    public Device setName(String name) {
-        this.name = name;
+    public Device setDeviceName(String deviceName) {
+        this.deviceName = deviceName;
         return this;
     }
 
