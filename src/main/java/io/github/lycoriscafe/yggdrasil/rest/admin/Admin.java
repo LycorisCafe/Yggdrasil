@@ -30,12 +30,7 @@ public class Admin implements Entity {
 
     public Admin() {}
 
-    public Admin(String name,
-                 Set<AccessLevel> accessLevel) {
-        this.name = Objects.requireNonNull(name);
-        this.accessLevel = Objects.requireNonNull(accessLevel);
-    }
-
+    @Override
     public BigInteger getId() {
         return id;
     }
@@ -59,7 +54,7 @@ public class Admin implements Entity {
     }
 
     public Admin setAccessLevel(Set<AccessLevel> accessLevel) {
-        this.accessLevel = accessLevel;
+        this.accessLevel = Objects.requireNonNull(accessLevel);
         return this;
     }
 

@@ -31,10 +31,7 @@ public class TeacherAttendance implements Entity {
 
     public TeacherAttendance() {}
 
-    public TeacherAttendance(BigInteger teacherId) {
-        this.teacherId = Objects.requireNonNull(teacherId);
-    }
-
+    @Override
     public BigInteger getId() {
         return id;
     }

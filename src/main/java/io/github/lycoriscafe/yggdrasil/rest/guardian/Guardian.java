@@ -36,6 +36,7 @@ public class Guardian implements Entity {
 
     public Guardian() {}
 
+    @Override
     public BigInteger getId() {
         return id;
     }
@@ -78,12 +79,6 @@ public class Guardian implements Entity {
 
     public Guardian setGender(Gender gender) {
         this.gender = Objects.requireNonNull(gender);
-        return this;
-    }
-
-    public Guardian setGender(String gender) {
-        Objects.requireNonNull(gender);
-        this.gender = Gender.valueOf(gender);
         return this;
     }
 

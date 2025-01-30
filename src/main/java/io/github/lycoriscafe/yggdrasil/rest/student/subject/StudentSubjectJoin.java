@@ -28,6 +28,7 @@ public class StudentSubjectJoin implements Entity {
 
     public StudentSubjectJoin() {}
 
+    @Override
     public BigInteger getId() {
         return id;
     }

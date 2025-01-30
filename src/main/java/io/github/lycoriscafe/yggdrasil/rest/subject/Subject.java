@@ -30,6 +30,7 @@ public class Subject implements Entity {
 
     public Subject() {}
 
+    @Override
     public BigInteger getId() {
         return id;
     }

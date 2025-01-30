@@ -32,12 +32,7 @@ public class Notification implements Entity {
 
     public Notification() {}
 
-    public Notification(Scope scope,
-                        String message) {
-        this.scope = Objects.requireNonNull(scope);
-        this.message = Objects.requireNonNull(message);
-    }
-
+    @Override
     public BigInteger getId() {
         return id;
     }

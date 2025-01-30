@@ -30,14 +30,7 @@ public class Relief implements Entity {
 
     public Relief() {}
 
-    public Relief(BigInteger timetableId,
-                  BigInteger teacherId,
-                  LocalDate date) {
-        this.timetableId = Objects.requireNonNull(timetableId);
-        this.teacherId = Objects.requireNonNull(teacherId);
-        this.date = Objects.requireNonNull(date);
-    }
-
+    @Override
     public BigInteger getId() {
         return id;
     }

@@ -28,12 +28,7 @@ public class TeacherSubjectJoin implements Entity {
 
     public TeacherSubjectJoin() {}
 
-    public TeacherSubjectJoin(BigInteger teacherId,
-                              BigInteger subjectId) {
-        this.teacherId = Objects.requireNonNull(teacherId);
-        this.subjectId = Objects.requireNonNull(subjectId);
-    }
-
+    @Override
     public BigInteger getId() {
         return id;
     }

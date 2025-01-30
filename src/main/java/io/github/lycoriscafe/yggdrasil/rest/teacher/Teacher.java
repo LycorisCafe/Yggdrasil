@@ -37,24 +37,7 @@ public class Teacher implements Entity {
 
     public Teacher() {}
 
-    public Teacher(String nic,
-                   String initName,
-                   String fullName,
-                   Gender gender,
-                   LocalDate dateOfBirth,
-                   String address,
-                   String email,
-                   String contactNo) {
-        this.nic = Objects.requireNonNull(nic);
-        this.initName = Objects.requireNonNull(initName);
-        this.fullName = Objects.requireNonNull(fullName);
-        this.gender = Objects.requireNonNull(gender);
-        this.dateOfBirth = Objects.requireNonNull(dateOfBirth);
-        this.address = Objects.requireNonNull(address);
-        this.email = Objects.requireNonNull(email);
-        this.contactNo = Objects.requireNonNull(contactNo);
-    }
-
+    @Override
     public BigInteger getId() {
         return id;
     }
@@ -97,12 +80,6 @@ public class Teacher implements Entity {
 
     public Teacher setGender(Gender gender) {
         this.gender = Objects.requireNonNull(gender);
-        return this;
-    }
-
-    public Teacher setGender(String gender) {
-        Objects.requireNonNull(gender);
-        this.gender = Gender.valueOf(gender);
         return this;
     }
 

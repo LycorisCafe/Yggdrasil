@@ -32,18 +32,7 @@ public class Timetable implements Entity {
 
     public Timetable() {}
 
-    public Timetable(BigInteger teacherId,
-                     BigInteger subjectId,
-                     BigInteger classroomId,
-                     DayOfWeek day,
-                     Integer timeslot) {
-        this.teacherId = Objects.requireNonNull(teacherId);
-        this.subjectId = Objects.requireNonNull(subjectId);
-        this.classroomId = Objects.requireNonNull(classroomId);
-        this.day = Objects.requireNonNull(day);
-        this.timeslot = Objects.requireNonNull(timeslot);
-    }
-
+    @Override
     public BigInteger getId() {
         return id;
     }

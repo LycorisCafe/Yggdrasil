@@ -29,12 +29,7 @@ public class Classroom implements Entity {
 
     public Classroom() {}
 
-    public Classroom(Integer grade,
-                     String name) {
-        this.grade = Objects.requireNonNull(grade);
-        this.name = Objects.requireNonNull(name);
-    }
-
+    @Override
     public BigInteger getId() {
         return id;
     }
