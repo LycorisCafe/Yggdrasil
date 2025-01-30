@@ -41,7 +41,7 @@ public class StudentService implements EntityService<Student> {
         statement.setString(nextParamIndex++, instance.getDateOfBirth().format(Utils.getDateFormatter()));
         statement.setString(nextParamIndex++, instance.getNic());
         statement.setString(nextParamIndex++, instance.getAddress());
-        statement.setString(nextParamIndex++, instance.getRegYear().toString());
+        statement.setString(nextParamIndex++, instance.getRegYear().format(Utils.getYearFormatter()));
         statement.setString(nextParamIndex++, instance.getContactNo());
         statement.setString(nextParamIndex++, instance.getEmail());
         statement.setBoolean(nextParamIndex++, instance.getDisabled() != null && instance.getDisabled());
@@ -60,7 +60,7 @@ public class StudentService implements EntityService<Student> {
                 .setDateOfBirth(LocalDate.parse(resultSet.getString("dateOfBirth"), Utils.getDateFormatter()))
                 .setNic(resultSet.getString("nic"))
                 .setAddress(resultSet.getString("address"))
-                .setRegYear(Year.parse(resultSet.getString("regYear")))
+                .setRegYear(Year.parse(resultSet.getString("regYear"), Utils.getYearFormatter()))
                 .setContactNo(resultSet.getString("contactNo"))
                 .setEmail(resultSet.getString("email"))
                 .setDisabled(resultSet.getBoolean("disabled"));
