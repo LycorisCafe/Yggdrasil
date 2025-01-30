@@ -36,7 +36,7 @@ public class GuardianService implements EntityService<Guardian> {
         statement.setString(nextParamIndex++, instance.getInitName());
         statement.setString(nextParamIndex++, instance.getFullName());
         statement.setString(nextParamIndex++, instance.getGender().toString());
-        statement.setString(nextParamIndex++, instance.getDateOfBirth().format(Utils.getDateFormatter()));
+        statement.setString(nextParamIndex++, instance.getDateOfBirth().format(Utils.getDateTimeFormatter()));
         statement.setString(nextParamIndex++, instance.getAddress());
         statement.setString(nextParamIndex++, instance.getEmail());
         statement.setString(nextParamIndex++, instance.getContactNo());
@@ -50,7 +50,7 @@ public class GuardianService implements EntityService<Guardian> {
                 .setInitName(resultSet.getString("initName"))
                 .setFullName(resultSet.getString("fullName"))
                 .setGender(Gender.valueOf(resultSet.getString("gender")))
-                .setDateOfBirth(LocalDate.parse(resultSet.getString("dateOfBirth"), Utils.getDateFormatter()))
+                .setDateOfBirth(LocalDate.parse(resultSet.getString("dateOfBirth"), Utils.getDateTimeFormatter()))
                 .setAddress(resultSet.getString("address"))
                 .setEmail(resultSet.getString("email"))
                 .setContactNo(resultSet.getString("contactNo"));

@@ -30,14 +30,14 @@ public class GsonTypeAdapters {
         public java.time.Year deserialize(JsonElement jsonElement,
                                           Type type,
                                           JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
-            return jsonElement == null ? null : java.time.Year.parse(jsonElement.getAsString(), Utils.getYearFormatter());
+            return jsonElement == null ? null : java.time.Year.parse(jsonElement.getAsString(), Utils.getDateTimeFormatter());
         }
 
         @Override
         public JsonElement serialize(java.time.Year year,
                                      Type type,
                                      JsonSerializationContext jsonSerializationContext) {
-            return year == null ? null : new JsonPrimitive(year.format(Utils.getYearFormatter()));
+            return year == null ? null : new JsonPrimitive(year.format(Utils.getDateTimeFormatter()));
         }
     }
 
@@ -46,14 +46,14 @@ public class GsonTypeAdapters {
         public LocalDate deserialize(JsonElement jsonElement,
                                      Type type,
                                      JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
-            return jsonElement == null ? null : LocalDate.parse(jsonElement.getAsString(), Utils.getDateFormatter());
+            return jsonElement == null ? null : LocalDate.parse(jsonElement.getAsString(), Utils.getDateTimeFormatter());
         }
 
         @Override
         public JsonElement serialize(LocalDate localDate,
                                      Type type,
                                      JsonSerializationContext jsonSerializationContext) {
-            return localDate == null ? null : new JsonPrimitive(localDate.format(Utils.getDateFormatter()));
+            return localDate == null ? null : new JsonPrimitive(localDate.format(Utils.getDateTimeFormatter()));
         }
     }
 
