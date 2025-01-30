@@ -12,7 +12,38 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ */
+
+/*
+ * Copyright 2025 Lycoris Café
  *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
+ * Copyright 2025 Lycoris Café
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 # Create the database
@@ -63,7 +94,7 @@ CREATE TABLE notification
     createTimestamp DATETIME DEFAULT NOW(),
     updateTimestamp DATETIME DEFAULT NOW() ON UPDATE NOW(),
     scope           SET ('STUDENT', 'TEACHER') NOT NULL,
-    message         JSON                       NOT NULL,
+    message VARCHAR(2000) NOT NULL,
     draft           BOOLEAN  DEFAULT FALSE
 );
 
@@ -166,20 +197,29 @@ CREATE TABLE timetable
     teacherId   BIGINT UNSIGNED     NOT NULL,
     subjectId   BIGINT UNSIGNED     NOT NULL,
     classroomId BIGINT UNSIGNED     NOT NULL,
-    day         TINYINT(1) UNSIGNED NOT NULL,
-    timeslot    TINYINT(1) UNSIGNED NOT NULL # Typical 8 periods of daily timetable
+    day      TINYINT(1) UNSIGNED NOT NULL, # Days begin as MONDAY = 1
+    timeslot TINYINT(1) UNSIGNED NOT NULL  # Typical 8 periods of daily timetable
 );
 
 ## AUTHENTICATION
 CREATE TABLE authentication
 (
+    role     ENUM ('STUDENT', 'TEACHER', 'ADMIN') NOT NULL,
+    userId   BIGINT UNSIGNED                      NOT NULL,
+    password VARBINARY(100)                       NOT NULL,
+    PRIMARY KEY (role, userId)
+);
+
+## DEVICES
+CREATE TABLE devices
+(
     role         ENUM ('STUDENT', 'TEACHER', 'ADMIN') NOT NULL,
     userId       BIGINT UNSIGNED                      NOT NULL,
-    password     VARBINARY(100)                       NOT NULL,
-    accessToken  VARBINARY(100) UNIQUE,
-    expires BIGINT,
-    refreshToken VARBINARY(100) UNIQUE,
-    UNIQUE (role, userId)
+    name         VARCHAR(20)           NOT NULL,
+    accessToken  VARBINARY(100) UNIQUE NOT NULL,
+    expires      BIGINT                NOT NULL,
+    refreshToken VARBINARY(100) UNIQUE NOT NULL,
+    UNIQUE (role, userId, name)
 );
 
 ALTER TABLE classroom
@@ -214,21 +254,8 @@ ALTER TABLE timetable
     ADD FOREIGN KEY (subjectId) REFERENCES subject (id) ON UPDATE CASCADE ON DELETE CASCADE,
     ADD FOREIGN KEY (classroomId) REFERENCES classroom (id) ON UPDATE CASCADE ON DELETE CASCADE;
 
-/*
- * Copyright 2025 Lycoris Café
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+ALTER TABLE devices
+    ADD FOREIGN KEY (role, userId) REFERENCES authentication (role, userId) ON UPDATE CASCADE ON DELETE CASCADE;
 
 # End the constructions of the structure
 COMMIT;
@@ -238,12 +265,10 @@ COMMIT;
 ## INSERT SUPERUSER (DEFAULT)
 START TRANSACTION;
 
-INSERT INTO admin (name, accessLevel)
-VALUES ('SUPERUSER', 'SUPERUSER');
-
-SET @userId = LAST_INSERT_ID();
+INSERT INTO admin (id, name, accessLevel)
+VALUES (1, 'SUPERUSER', 'SUPERUSER');
 
 INSERT INTO authentication (role, userId, password) # password is SUPERUSER
-VALUES ('ADMIN', @userId, '0ah66cwBDYMR1Gft+FRFe4y02jwep3Mmrsx19TLlI+c');
+VALUES ('ADMIN', 1, '0ah66cwBDYMR1Gft+FRFe4y02jwep3Mmrsx19TLlI+c');
 
 COMMIT;

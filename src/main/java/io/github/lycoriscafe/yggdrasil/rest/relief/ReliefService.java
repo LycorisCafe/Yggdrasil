@@ -16,71 +16,32 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.relief;
 
-import io.github.lycoriscafe.yggdrasil.commons.*;
+import io.github.lycoriscafe.yggdrasil.commons.EntityService;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
 
+import java.math.BigInteger;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 
 public class ReliefService implements EntityService<Relief> {
-    public enum Columns implements EntityColumn<Relief> {
-        id,
-        timetableId,
-        teacherId,
-        date
+    public static void toDatabase(PreparedStatement statement,
+                                  Relief instance,
+                                  boolean isUpdate) throws SQLException {
+        int nextParamIndex = 1;
+        if (!isUpdate) statement.setString(nextParamIndex++, instance.getId().toString());
+        statement.setString(nextParamIndex++, instance.getTimetableId().toString());
+        statement.setString(nextParamIndex++, instance.getTeacherId().toString());
+        statement.setString(nextParamIndex++, instance.getDate().format(Utils.getDateFormatter()));
+        if (isUpdate) statement.setString(nextParamIndex, instance.getId().toString());
     }
 
-    public static Response<Relief> select(SearchQueryBuilder<Relief, Columns, ReliefService> searchQueryBuilder) {
-        try {
-            var results = CommonService.select(searchQueryBuilder);
-            if (results.getResponse() != null) return results.getResponse();
-
-            List<Relief> reliefs = new ArrayList<>();
-            try (var resultSet = results.getResultSet()) {
-                while (resultSet.next()) {
-                    reliefs.add(new Relief(
-                            resultSet.getBigDecimal("timetableId"),
-                            resultSet.getBigDecimal("teacherId"),
-                            LocalDate.parse(resultSet.getString("date"), Utils.getDateFormatter())
-                    ).setId(resultSet.getBigDecimal("id")));
-                }
-            }
-
-            return new Response<Relief>()
-                    .setSuccess(true)
-                    .setGenerableResults(results.getGenerableResults())
-                    .setResultsFrom(results.getResultsFrom())
-                    .setResultsOffset(results.getResultsOffset())
-                    .setData(reliefs);
-        } catch (Exception e) {
-            return new Response<Relief>().setError(e.getMessage());
-        }
-    }
-
-    public static Response<Relief> delete(SearchQueryBuilder<Relief, Columns, ReliefService> searchQueryBuilder) {
-        if (searchQueryBuilder.getSearchBy() == null || !searchQueryBuilder.getSearchBy().contains(Columns.id)) {
-            return new Response<Relief>().setError("Required parameters not found");
-        }
-        return CommonService.delete(searchQueryBuilder);
-    }
-
-    public static Response<Relief> insert(UpdateQueryBuilder<Relief, Columns, ReliefService> updateQueryBuilder) {
-        if (updateQueryBuilder.getColumns() == null ||
-                !updateQueryBuilder.getColumns().containsAll(Set.of(Columns.timetableId, Columns.teacherId, Columns.date))) {
-            return new Response<Relief>().setError("Required parameters not found");
-        }
-        return CommonService.insert(updateQueryBuilder);
-    }
-
-    public static Response<Relief> update(UpdateQueryBuilder<Relief, Columns, ReliefService> updateQueryBuilder) {
-        if (updateQueryBuilder.getSearchBy() == null || !updateQueryBuilder.getSearchBy().contains(Columns.id)) {
-            return new Response<Relief>().setError("Required parameters not found");
-        }
-        if (updateQueryBuilder.getColumns() != null && updateQueryBuilder.getColumns().contains(Columns.id)) {
-            return new Response<Relief>().setError("'id' cannot be updated");
-        }
-        return CommonService.update(updateQueryBuilder);
+    public static void fromDatabase(ResultSet resultSet,
+                                    Relief instance) throws SQLException {
+        instance.setId(new BigInteger(resultSet.getString("id")))
+                .setTimetableId(new BigInteger(resultSet.getString("timetableId")))
+                .setTeacherId(new BigInteger(resultSet.getString("teacherId")))
+                .setDate(LocalDate.parse(resultSet.getString("date"), Utils.getDateFormatter()));
     }
 }

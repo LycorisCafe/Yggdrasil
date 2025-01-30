@@ -17,4 +17,6 @@
 package io.github.lycoriscafe.yggdrasil.commons;
 
 public interface EntityService<T extends Entity> {
+    // static void toDatabase(PreparedStatement statement, T instance, boolean isUpdate);
+    // static void fromDatabase(ResultSet resultSet, T instance);
 }

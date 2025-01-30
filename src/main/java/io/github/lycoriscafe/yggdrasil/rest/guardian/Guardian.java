@@ -19,12 +19,12 @@ package io.github.lycoriscafe.yggdrasil.rest.guardian;
 import io.github.lycoriscafe.yggdrasil.commons.Entity;
 import io.github.lycoriscafe.yggdrasil.rest.Gender;
 
-import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.LocalDate;
 import java.util.Objects;
 
 public class Guardian implements Entity {
-    private BigDecimal id;
+    private BigInteger id;
     private String nic;
     private String initName;
     private String fullName;
@@ -34,27 +34,13 @@ public class Guardian implements Entity {
     private String email;
     private String contactNo;
 
-    public Guardian(String nic,
-                    String initName,
-                    String fullName,
-                    Gender gender,
-                    LocalDate dateOfBirth,
-                    String address,
-                    String contactNo) {
-        this.nic = Objects.requireNonNull(nic);
-        this.initName = Objects.requireNonNull(initName);
-        this.fullName = Objects.requireNonNull(fullName);
-        this.gender = Objects.requireNonNull(gender);
-        this.dateOfBirth = Objects.requireNonNull(dateOfBirth);
-        this.address = Objects.requireNonNull(address);
-        this.contactNo = Objects.requireNonNull(contactNo);
-    }
+    public Guardian() {}
 
-    public BigDecimal getId() {
+    public BigInteger getId() {
         return id;
     }
 
-    public Guardian setId(BigDecimal id) {
+    public Guardian setId(BigInteger id) {
         this.id = id;
         return this;
     }
@@ -95,12 +81,19 @@ public class Guardian implements Entity {
         return this;
     }
 
+    public Guardian setGender(String gender) {
+        Objects.requireNonNull(gender);
+        this.gender = Gender.valueOf(gender);
+        return this;
+    }
+
     public LocalDate getDateOfBirth() {
         return dateOfBirth;
     }
 
-    public void setDateOfBirth(LocalDate dateOfBirth) {
+    public Guardian setDateOfBirth(LocalDate dateOfBirth) {
         this.dateOfBirth = Objects.requireNonNull(dateOfBirth);
+        return this;
     }
 
     public String getAddress() {

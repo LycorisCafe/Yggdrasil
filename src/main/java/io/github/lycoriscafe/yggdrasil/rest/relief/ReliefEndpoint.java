@@ -19,74 +19,94 @@ package io.github.lycoriscafe.yggdrasil.rest.relief;
 import io.github.lycoriscafe.nexus.http.core.HttpEndpoint;
 import io.github.lycoriscafe.nexus.http.core.headers.auth.Authenticated;
 import io.github.lycoriscafe.nexus.http.core.headers.content.ExpectContent;
-import io.github.lycoriscafe.nexus.http.core.headers.content.MultipartFormData;
 import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.DELETE;
-import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.GET;
 import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.POST;
+import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.PUT;
 import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpDeleteRequest;
-import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpGetRequest;
 import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpPostRequest;
+import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpPutRequest;
 import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpRes.HttpResponse;
 import io.github.lycoriscafe.yggdrasil.authentication.AuthenticationService;
 import io.github.lycoriscafe.yggdrasil.authentication.Role;
-import io.github.lycoriscafe.yggdrasil.commons.SearchQueryBuilder;
-import io.github.lycoriscafe.yggdrasil.commons.UpdateQueryBuilder;
+import io.github.lycoriscafe.yggdrasil.commons.CommonService;
+import io.github.lycoriscafe.yggdrasil.commons.ResponseModel;
+import io.github.lycoriscafe.yggdrasil.commons.SearchModel;
+import io.github.lycoriscafe.yggdrasil.configuration.Utils;
 import io.github.lycoriscafe.yggdrasil.rest.admin.AccessLevel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.List;
+import java.math.BigInteger;
+import java.util.Set;
 
 @HttpEndpoint("/relief")
 @Authenticated
 public class ReliefEndpoint {
-    @GET("/read")
-    public static HttpResponse read(HttpGetRequest req,
+    private static final Logger logger = LoggerFactory.getLogger(ReliefEndpoint.class);
+
+    @POST("/read")
+    @ExpectContent("application/json")
+    public static HttpResponse read(HttpPostRequest req,
                                     HttpResponse res) {
-        var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN, Role.TEACHER},
-                AccessLevel.SUPERUSER, AccessLevel.RELIEF);
+        var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN, Role.TEACHER, Role.STUDENT), null);
         if (auth != null) return auth;
 
-        return res.setContent(ReliefService.select(SearchQueryBuilder.build(
-                Relief.class, ReliefService.Columns.class, ReliefService.class,
-                req.getParameters())).parse());
+        try {
+            SearchModel searchModel = SearchModel.fromJson(new String((byte[]) req.getContent().getData()));
+            return res.setContent(CommonService.read(Relief.class, ReliefService.class, searchModel).parse());
+        } catch (Exception e) {
+            logger.atError().log(e.getMessage());
+            return res.setContent(new ResponseModel<Relief>().setError(e.getMessage()).parse());
+        }
     }
 
     @POST("/create")
-    @ExpectContent("multipart/form-data")
-    @SuppressWarnings("unchecked")
+    @ExpectContent("application/json")
     public static HttpResponse create(HttpPostRequest req,
                                       HttpResponse res) {
-        var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN},
-                AccessLevel.SUPERUSER, AccessLevel.RELIEF);
+        var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN), Set.of(AccessLevel.SUPERUSER, AccessLevel.RELIEF));
         if (auth != null) return auth;
 
-        return res.setContent(ReliefService.insert(UpdateQueryBuilder.build(
-                Relief.class, ReliefService.Columns.class, ReliefService.class,
-                req.getParameters(), (List<MultipartFormData>) req.getContent().getData())).parse());
+        try {
+            Relief instance = Utils.getGson().fromJson(new String((byte[]) req.getContent().getData()), Relief.class);
+            return res.setContent(CommonService.create(Relief.class, ReliefService.class, instance).parse());
+        } catch (Exception e) {
+            logger.atError().log(e.getMessage());
+            return res.setContent(new ResponseModel<Relief>().setError(e.getMessage()).parse());
+        }
     }
 
-    @POST("/update")
-    @ExpectContent("multipart/form-data")
-    @SuppressWarnings("unchecked")
-    public static HttpResponse update(HttpPostRequest req,
+    @PUT("/update")
+    @ExpectContent("application/json")
+    public static HttpResponse update(HttpPutRequest req,
                                       HttpResponse res) {
-        var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN},
-                AccessLevel.SUPERUSER, AccessLevel.RELIEF);
+        var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN), Set.of(AccessLevel.SUPERUSER, AccessLevel.RELIEF));
         if (auth != null) return auth;
 
-        return res.setContent(ReliefService.update(UpdateQueryBuilder.build(
-                Relief.class, ReliefService.Columns.class, ReliefService.class,
-                req.getParameters(), (List<MultipartFormData>) req.getContent().getData())).parse());
+        try {
+            Relief instance = Utils.getGson().fromJson(new String((byte[]) req.getContent().getData()), Relief.class);
+            return res.setContent(CommonService.update(Relief.class, ReliefService.class, instance).parse());
+        } catch (Exception e) {
+            logger.atError().log(e.getMessage());
+            return res.setContent(new ResponseModel<Relief>().setError(e.getMessage()).parse());
+        }
     }
 
     @DELETE("/delete")
     public static HttpResponse delete(HttpDeleteRequest req,
                                       HttpResponse res) {
-        var auth = AuthenticationService.authenticate(req, new Role[]{Role.ADMIN},
-                AccessLevel.SUPERUSER, AccessLevel.RELIEF);
+        var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN), Set.of(AccessLevel.SUPERUSER, AccessLevel.RELIEF));
         if (auth != null) return auth;
 
-        return res.setContent(ReliefService.delete(SearchQueryBuilder.build(
-                Relief.class, ReliefService.Columns.class, ReliefService.class,
-                req.getParameters())).parse());
+        if (req.getParameters() == null || !req.getParameters().containsKey("id")) {
+            return res.setContent(new ResponseModel<Relief>().setError("Required parameter 'id' is missing").parse());
+        }
+        try {
+            BigInteger id = new BigInteger(req.getParameters().get("id"));
+            return res.setContent(CommonService.delete(Relief.class, id).parse());
+        } catch (Exception e) {
+            logger.atError().log(e.getMessage());
+            return res.setContent(new ResponseModel<Relief>().setError(e.getMessage()).parse());
+        }
     }
 }

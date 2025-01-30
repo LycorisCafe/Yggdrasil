@@ -18,278 +18,201 @@ package io.github.lycoriscafe.yggdrasil.commons;
 
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
 import io.github.lycoriscafe.yggdrasil.configuration.YggdrasilConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Method;
+import java.math.BigInteger;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 public class CommonService {
-    public static class ResultSetHolder<T extends Entity> {
-        private Response<T> response;
-        private ResultSet resultSet;
-        private Long generableResults;
-        private Long resultsFrom;
-        private Long resultsOffset;
+    private static final Logger logger = LoggerFactory.getLogger(CommonService.class);
 
-        public Response<T> getResponse() {
-            return response;
-        }
+    public static <T extends Entity, U extends EntityService<T>> ResponseModel<T> create(Class<T> entity,
+                                                                                         Class<U> entityService,
+                                                                                         T instance) {
+        Objects.requireNonNull(entity);
+        Objects.requireNonNull(entityService);
+        Objects.requireNonNull(instance);
 
-        public ResultSetHolder<T> setResponse(Response<T> response) {
-            this.response = response;
-            return this;
-        }
-
-        public ResultSet getResultSet() {
-            return resultSet;
-        }
-
-        public ResultSetHolder<T> setResultSet(ResultSet resultSet) {
-            this.resultSet = resultSet;
-            return this;
-        }
-
-        public Long getGenerableResults() {
-            return generableResults;
-        }
-
-        public ResultSetHolder<T> setGenerableResults(Long generableResults) {
-            this.generableResults = generableResults;
-            return this;
-        }
-
-        public Long getResultsFrom() {
-            return resultsFrom;
-        }
-
-        public ResultSetHolder<T> setResultsFrom(Long resultsFrom) {
-            this.resultsFrom = resultsFrom;
-            return this;
-        }
-
-        public Long getResultsOffset() {
-            return resultsOffset;
-        }
-
-        public ResultSetHolder<T> setResultsOffset(Long resultsOffset) {
-            this.resultsOffset = resultsOffset;
-            return this;
-        }
-    }
-
-    public static <T extends Entity,
-            U extends Enum<U> & EntityColumn<T>,
-            V extends EntityService<T>> ResultSetHolder<T> select(SearchQueryBuilder<T, U, V> queryBuilder) {
-        Objects.requireNonNull(queryBuilder);
-        if (queryBuilder.getResultsFrom() == null || queryBuilder.getResultsFrom() < 0) queryBuilder.setResultsFrom(0L);
-        if (queryBuilder.getResultsOffset() == null || queryBuilder.getResultsOffset() < 0) {
-            queryBuilder.setResultsOffset(YggdrasilConfig.getDefaultResultsOffset());
-        }
-        if (queryBuilder.getResultsFrom() > queryBuilder.getResultsOffset()) {
-            return new ResultSetHolder<T>().setResponse(new Response<T>().setError("Invalid boundaries"));
-        }
-
-        StringBuilder query = new StringBuilder("SELECT * FROM " + queryBuilder.getEntity().getSimpleName().toLowerCase());
-        if (queryBuilder.getSearchBy() != null) {
-            if (queryBuilder.getSearchBy().size() != queryBuilder.getSearchByValues().size()) {
-                return new ResultSetHolder<T>().setResponse(new Response<T>().setError("searchBy != searchByValues (length)"));
-            }
-            if (queryBuilder.getIsCaseSensitive() != null && queryBuilder.getSearchBy().size() != queryBuilder.getIsCaseSensitive().size()) {
-                return new ResultSetHolder<T>().setResponse(new Response<T>().setError("searchBy != isCaseSensitive (length)"));
-            }
-            query.append(" WHERE ");
-            List<U> searchBy = queryBuilder.getSearchBy().stream().toList();
-            for (int i = 0; i < searchBy.size(); i++) {
-                if (i > 0) query.append(" AND ");
-                query.append(searchBy.get(i)).append(" LIKE ");
-                if (queryBuilder.getIsCaseSensitive() != null) query.append(queryBuilder.getIsCaseSensitive().get(i) ? " BINARY " : "");
-                query.append("?");
-            }
-        }
-        if (queryBuilder.getOrderBy() != null) {
-            query.append(" ORDER BY ");
-            List<U> orderBy = queryBuilder.getOrderBy().stream().toList();
-            for (int i = 0; i < orderBy.size(); i++) {
-                if (i > 0) query.append(", ");
-                query.append(orderBy.get(i));
-            }
-            if (queryBuilder.getAscending() != null) {
-                query.append(queryBuilder.getAscending() ? " ASC" : " DESC");
-            }
-        }
-        String generableResultQuery = query.toString().replaceFirst("\\*", "COUNT(1)");
-        query.append(" LIMIT ?, ?");
-        String resultsOffsetQuery = "SELECT COUNT(1) FROM (" + query + ") AS resultsOffset";
-
-        try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement(query.toString());
-             var generableResultsStatement = connection.prepareStatement(generableResultQuery);
-             var resultsOffsetStatement = connection.prepareStatement(resultsOffsetQuery)) {
-            int statementNextParamIndex = 1;
-            if (queryBuilder.getSearchByValues() != null) {
-                for (int i = 1; i <= queryBuilder.getSearchByValues().size(); i++) {
-                    statement.setString(i, queryBuilder.getSearchByValues().get(i - 1));
-                    generableResultsStatement.setString(i, queryBuilder.getSearchByValues().get(i - 1));
-                    resultsOffsetStatement.setString(i, queryBuilder.getSearchByValues().get(i - 1));
-                    statementNextParamIndex++;
-                }
-            }
-            statement.setString(statementNextParamIndex, Long.toUnsignedString(queryBuilder.getResultsFrom()));
-            resultsOffsetStatement.setString(statementNextParamIndex++, Long.toUnsignedString(queryBuilder.getResultsFrom()));
-            statement.setString(statementNextParamIndex, Long.toUnsignedString(queryBuilder.getResultsOffset()));
-            resultsOffsetStatement.setString(statementNextParamIndex, Long.toUnsignedString(queryBuilder.getResultsOffset()));
-
-            Long generableResults = null;
-            queryBuilder.setResultsOffset(null);
-            try (var generableResultsResultSet = generableResultsStatement.executeQuery();
-                 var resultsOffsetResultSet = resultsOffsetStatement.executeQuery()) {
-                if (generableResultsResultSet.next() && resultsOffsetResultSet.next()) {
-                    generableResults = Long.parseLong(generableResultsResultSet.getString(1));
-                    queryBuilder.setResultsOffset(Long.parseLong(resultsOffsetResultSet.getString(1)));
-                }
-            }
-
-            connection.commit();
-            return new ResultSetHolder<T>()
-                    .setResultSet(statement.executeQuery())
-                    .setGenerableResults(generableResults)
-                    .setResultsFrom(queryBuilder.getResultsFrom())
-                    .setResultsOffset(queryBuilder.getResultsOffset());
-        } catch (Exception e) {
-            return new ResultSetHolder<T>().setResponse(new Response<T>().setError(e.getMessage()));
-        }
-    }
-
-    public static <T extends Entity,
-            U extends Enum<U> & EntityColumn<T>,
-            V extends EntityService<T>> Response<T> delete(SearchQueryBuilder<T, U, V> queryBuilder) {
-        Objects.requireNonNull(queryBuilder);
-        if (queryBuilder.getSearchBy() == null || queryBuilder.getSearchByValues() == null ||
-                queryBuilder.getSearchBy().size() != queryBuilder.getSearchByValues().size()) {
-            return new Response<T>().setError("Invalid search parameters");
-        }
-
-        StringBuilder query = new StringBuilder("DELETE FROM ").append(queryBuilder.getEntity().getSimpleName().toLowerCase()).append(" WHERE ");
-        List<U> searchBy = queryBuilder.getSearchBy().stream().toList();
-        for (int i = 0; i < searchBy.size(); i++) {
-            if (i > 0) query.append(" AND ");
-            query.append(searchBy.get(i)).append(" LIKE ");
-            if (queryBuilder.getIsCaseSensitive() != null) query.append(queryBuilder.getIsCaseSensitive().get(i) ? " BINARY " : "");
-            query.append("?");
-        }
-        try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement(query.toString())) {
-            for (int i = 0; i < queryBuilder.getSearchByValues().size(); i++) {
-                statement.setString(i + 1, queryBuilder.getSearchByValues().get(i));
-            }
-            if (statement.executeUpdate() != 1) {
-                connection.rollback();
-                return new Response<T>().setError("Internal server error");
-            }
-            connection.commit();
-            return new Response<T>().setSuccess(true);
-        } catch (Exception e) {
-            return new Response<T>().setError(e.getMessage());
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    public static <T extends Entity,
-            U extends Enum<U> & EntityColumn<T>,
-            V extends EntityService<T>> Response<T> insert(UpdateQueryBuilder<T, U, V> queryBuilder) {
-        Objects.requireNonNull(queryBuilder);
-        if (queryBuilder.getColumns() == null || queryBuilder.getValues() == null ||
-                queryBuilder.getColumns().size() != queryBuilder.getValues().size()) {
-            return new Response<T>().setError("Invalid insert parameters");
-        }
-
-        StringBuilder query = new StringBuilder("INSERT INTO ").append(queryBuilder.getEntity().getSimpleName().toLowerCase()).append(" (");
-        List<U> columns = queryBuilder.getColumns().stream().toList();
-        for (int i = 0; i < columns.size(); i++) {
+        StringBuilder query = new StringBuilder("INSERT INTO ").append(entity.getSimpleName()).append(" (");
+        for (int i = 0; i < entity.getDeclaredFields().length; i++) {
             if (i > 0) query.append(", ");
-            query.append(columns.get(i));
+            query.append(entity.getDeclaredFields()[i].getName());
         }
-        query.append(") ").append("VALUES").append(" (");
-        for (int i = 0; i < queryBuilder.getValues().size(); i++) {
+        query.append(") VALUES (");
+        for (int i = 0; i < entity.getDeclaredFields().length; i++) {
             if (i > 0) query.append(", ");
             query.append("?");
         }
         query.append(")");
+
         try (var connection = Utils.getDatabaseConnection();
              var statement = connection.prepareStatement(query.toString(), Statement.RETURN_GENERATED_KEYS)) {
-            for (int i = 1; i <= queryBuilder.getValues().size(); i++) {
-                statement.setString(i, queryBuilder.getValues().get(i - 1));
-            }
+            Method method = entityService.getMethod("toDatabase", PreparedStatement.class, entity, boolean.class);
+            method.invoke(null, statement, instance, false);
             if (statement.executeUpdate() != 1) {
                 connection.rollback();
-                return new Response<T>().setError("Internal server error");
+                return new ResponseModel<T>().setError("Internal system error");
             }
-            connection.commit();
             try (var resultSet = statement.getGeneratedKeys()) {
-                if (resultSet.next()) {
-                    var searchQuery = new SearchQueryBuilder<>(queryBuilder.getEntity(), queryBuilder.getEntityColumns(), queryBuilder.getEntityService())
-                            .setSearchBy(Set.of(Enum.valueOf(queryBuilder.getEntityColumns(), "id")))
-                            .setSearchByValues(List.of(resultSet.getString(1)));
-                    Class<? extends EntityService<T>> serviceClass = queryBuilder.getEntityService();
-                    return (Response<T>) serviceClass.getDeclaredMethod("select", SearchQueryBuilder.class).invoke(null, searchQuery);
+                if (!resultSet.next()) {
+                    connection.rollback();
+                    return new ResponseModel<T>().setError("Internal system error");
                 }
+                connection.commit();
+                return read(entity, entityService,
+                        new SearchModel().setSearchBy(Map.of("id", Map.of(resultSet.getString(1), false))));
             }
-            return new Response<T>().setSuccess(true);
         } catch (Exception e) {
-            return new Response<T>().setError(e.getMessage());
+            throw new RuntimeException(e);
         }
     }
 
-    @SuppressWarnings("unchecked")
-    public static <T extends Entity,
-            U extends Enum<U> & EntityColumn<T>,
-            V extends EntityService<T>> Response<T> update(UpdateQueryBuilder<T, U, V> queryBuilder) {
-        Objects.requireNonNull(queryBuilder);
-        if (queryBuilder.getColumns() == null || queryBuilder.getValues() == null ||
-                queryBuilder.getColumns().size() != queryBuilder.getValues().size()) {
-            return new Response<T>().setError("Invalid update parameters");
+    public static <T extends Entity, U extends EntityService<T>> ResponseModel<T> read(Class<T> entity,
+                                                                                       Class<U> entityService,
+                                                                                       SearchModel searchModel) {
+        Objects.requireNonNull(entity);
+        Objects.requireNonNull(entityService);
+        if (searchModel.getResultsFrom() == null) searchModel.setResultsFrom(new BigInteger("0"));
+        if (searchModel.getResultsOffset() == null) {
+            searchModel.setResultsOffset(new BigInteger(String.valueOf(YggdrasilConfig.getDefaultResultsOffset())));
         }
-        if (queryBuilder.getSearchBy() == null || queryBuilder.getSearchByValues() == null ||
-                queryBuilder.getSearchBy().size() != queryBuilder.getSearchByValues().size()) {
-            return new Response<T>().setError("Invalid search parameters");
+        if (searchModel.getResultsFrom().compareTo(new BigInteger("0")) < 0) {
+            return new ResponseModel<T>().setError("Invalid 'resultsFrom'");
+        }
+        if (searchModel.getResultsOffset().compareTo(new BigInteger("0")) < 0) {
+            return new ResponseModel<T>().setError("Invalid 'resultsOffset'");
         }
 
-        StringBuilder query = new StringBuilder("UPDATE ").append(queryBuilder.getEntity().getSimpleName().toLowerCase()).append(" SET ");
-        List<U> columns = queryBuilder.getColumns().stream().toList();
-        for (int i = 0; i < columns.size(); i++) {
-            if (i > 0) query.append(", ");
-            query.append(columns.get(i)).append(" = ").append("?");
+        String generableResultsQuery;
+        String resultsOffsetQuery;
+        StringBuilder query = new StringBuilder("SELECT * FROM ").append(entity.getSimpleName());
+        if (searchModel.getSearchBy() != null) {
+            query.append(" WHERE ");
+            List<String> fields = searchModel.getSearchBy().keySet().stream().toList();
+            for (int i = 0; i < fields.size(); i++) {
+                if (i > 0) query.append(" AND ");
+                List<String> values = searchModel.getSearchBy().get(fields.get(i)).keySet().stream().toList();
+                for (int j = 0; j < values.size(); j++) {
+                    if (j > 0) query.append(" OR ");
+                    query.append(fields.get(i)).append(" LIKE ")
+                            .append(searchModel.getSearchBy().get(fields.get(i)).get(values.get(j)) ? " BINARY " : "")
+                            .append("?");
+                }
+            }
         }
-        query.append(" WHERE ");
-        List<U> searchBy = queryBuilder.getSearchBy().stream().toList();
-        for (int i = 0; i < searchBy.size(); i++) {
-            if (i > 0) query.append(" AND ");
-            query.append(searchBy.get(i)).append(" = ").append("?");
+        if (searchModel.getOrderBy() != null) {
+            query.append(" ORDER BY ");
+            for (int i = 0; i < searchModel.getOrderBy().size(); i++) {
+                if (i > 0) query.append(", ");
+                query.append(searchModel.getOrderBy().get(i));
+            }
         }
+        if (searchModel.getAscending() != null) {
+            query.append(searchModel.getAscending() ? " ASC" : " DESC");
+        }
+        generableResultsQuery = query.toString().replaceFirst("\\*", "COUNT(1)");
+        query.append(" LIMIT ").append("?, ?");
+        resultsOffsetQuery = "SELECT COUNT(1) FROM (" + query + ") AS resultsOffset";
+
         try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement(query.toString())) {
+             var statement = connection.prepareStatement(query.toString());
+             var generableResultsStatement = connection.prepareStatement(generableResultsQuery);
+             var resultsOffsetStatement = connection.prepareStatement(resultsOffsetQuery)) {
             int nextParamIndex = 1;
-            for (int i = 0; i < queryBuilder.getValues().size(); i++) {
-                statement.setString(nextParamIndex++, queryBuilder.getValues().get(i));
+            if (searchModel.getSearchBy() != null) {
+                for (String field : searchModel.getSearchBy().keySet()) {
+                    for (String value : searchModel.getSearchBy().get(field).keySet()) {
+                        statement.setString(nextParamIndex, value);
+                        generableResultsStatement.setString(nextParamIndex, value);
+                        resultsOffsetStatement.setString(nextParamIndex++, value);
+                    }
+                }
             }
-            for (int i = 0; i < queryBuilder.getSearchByValues().size(); i++) {
-                statement.setString(nextParamIndex++, queryBuilder.getSearchByValues().get(i));
-            }
-            if (statement.executeUpdate() != 1) {
-                connection.rollback();
-                return new Response<T>().setError("Internal server error");
+            statement.setString(nextParamIndex, searchModel.getResultsFrom().toString());
+            resultsOffsetStatement.setString(nextParamIndex++, searchModel.getResultsFrom().toString());
+            statement.setString(nextParamIndex, searchModel.getResultsOffset().toString());
+            resultsOffsetStatement.setString(nextParamIndex, searchModel.getResultsOffset().toString());
+
+            var response = new ResponseModel<T>();
+            try (var resultSet = statement.executeQuery();
+                 var generableResultsResultSet = generableResultsStatement.executeQuery();
+                 var resultsOffsetResultSet = resultsOffsetStatement.executeQuery()) {
+                List<T> data = new ArrayList<>();
+                while (resultSet.next()) {
+                    T instance = entity.getConstructor().newInstance();
+                    Method method = entityService.getMethod("fromDatabase", ResultSet.class, entity);
+                    method.invoke(null, resultSet, instance);
+                    data.add(instance);
+                }
+                response.setData(data);
+
+                if (!generableResultsResultSet.next()) return new ResponseModel<T>().setError("Internal system error");
+                response.setGenerableResults(new BigInteger(generableResultsResultSet.getString(1)));
+                if (!resultsOffsetResultSet.next()) return new ResponseModel<T>().setError("Internal system error");
+                response.setResultsOffset(new BigInteger(resultsOffsetResultSet.getString(1)));
             }
             connection.commit();
-            U id = Enum.valueOf(queryBuilder.getEntityColumns(), "id");
-            var searchQuery = new SearchQueryBuilder<>(queryBuilder.getEntity(), queryBuilder.getEntityColumns(), queryBuilder.getEntityService())
-                    .setSearchBy(Set.of(id))
-                    .setSearchByValues(List.of(queryBuilder.getSearchByValues().get(searchBy.indexOf(id))));
-            Class<? extends EntityService<T>> serviceClass = queryBuilder.getEntityService();
-            return (Response<T>) serviceClass.getDeclaredMethod("select", SearchQueryBuilder.class).invoke(null, searchQuery);
+            return response.setSuccess(true);
         } catch (Exception e) {
-            return new Response<T>().setError(e.getMessage());
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static <T extends Entity, U extends EntityService<T>> ResponseModel<T> update(Class<T> entity,
+                                                                                         Class<U> entityService,
+                                                                                         T instance) {
+        Objects.requireNonNull(entity);
+        Objects.requireNonNull(entityService);
+        Objects.requireNonNull(instance);
+
+        StringBuilder query = new StringBuilder("UPDATE ").append(entity.getSimpleName()).append(" SET ");
+        for (int i = 0; i < entity.getDeclaredFields().length; i++) {
+            if (i > 0) query.append(", ");
+            if (entity.getDeclaredFields()[i].getName().equals("id")) continue;
+            query.append(entity.getDeclaredFields()[i].getName()).append(" = ?");
+        }
+        query.append(" WHERE id = ?");
+
+        try (var connection = Utils.getDatabaseConnection();
+             var statement = connection.prepareStatement(query.toString())) {
+            Method method = entityService.getMethod("toDatabase", PreparedStatement.class, entity, boolean.class);
+            method.invoke(null, statement, instance, true);
+            if (statement.executeUpdate() != 1) {
+                connection.rollback();
+                return new ResponseModel<T>().setError("Internal system error");
+            }
+            connection.commit();
+            return read(entity, entityService,
+                    new SearchModel().setSearchBy(Map.of("id", Map.of(instance.getId().toString(), false))));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static <T extends Entity> ResponseModel<T> delete(Class<T> entity,
+                                                             BigInteger id) {
+        Objects.requireNonNull(entity);
+        Objects.requireNonNull(id);
+
+        try (var connection = Utils.getDatabaseConnection();
+             var statement = connection.prepareStatement("DELETE FROM " + entity.getSimpleName() + " WHERE id = ?")) {
+            statement.setString(1, id.toString());
+            if (statement.executeUpdate() != 1) {
+                connection.rollback();
+                return new ResponseModel<T>().setError("Internal system error");
+            }
+            connection.commit();
+            return new ResponseModel<T>().setSuccess(true);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 }

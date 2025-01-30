@@ -16,74 +16,35 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.timetable;
 
-import io.github.lycoriscafe.yggdrasil.commons.*;
+import io.github.lycoriscafe.yggdrasil.commons.EntityService;
 
+import java.math.BigInteger;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.DayOfWeek;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 
 public class TimetableService implements EntityService<Timetable> {
-    public enum Columns implements EntityColumn<Timetable> {
-        id,
-        teacherId,
-        subjectId,
-        classroomId,
-        day,
-        timeslot
+    public static void toDatabase(PreparedStatement statement,
+                                  Timetable instance,
+                                  boolean isUpdate) throws SQLException {
+        int nextParamIndex = 1;
+        if (!isUpdate) statement.setString(nextParamIndex++, instance.getId().toString());
+        statement.setString(nextParamIndex++, instance.getTeacherId().toString());
+        statement.setString(nextParamIndex++, instance.getSubjectId().toString());
+        statement.setString(nextParamIndex++, instance.getClassroomId().toString());
+        statement.setInt(nextParamIndex++, instance.getDay().getValue());
+        statement.setInt(nextParamIndex++, instance.getTimeslot());
+        if (isUpdate) statement.setString(nextParamIndex, instance.getId().toString());
     }
 
-    public static Response<Timetable> select(SearchQueryBuilder<Timetable, Columns, TimetableService> searchQueryBuilder) {
-        try {
-            var results = CommonService.select(searchQueryBuilder);
-            if (results.getResponse() != null) return results.getResponse();
-
-            List<Timetable> timetables = new ArrayList<>();
-            try (var resultSet = results.getResultSet()) {
-                while (resultSet.next()) {
-                    timetables.add(new Timetable(
-                            resultSet.getBigDecimal("teacherId"),
-                            resultSet.getBigDecimal("subjectId"),
-                            resultSet.getBigDecimal("classroomId"),
-                            DayOfWeek.of(resultSet.getInt("day")),
-                            resultSet.getInt("timeslot")
-                    ).setId(resultSet.getBigDecimal("id")));
-                }
-            }
-
-            return new Response<Timetable>()
-                    .setSuccess(true)
-                    .setGenerableResults(results.getGenerableResults())
-                    .setResultsFrom(results.getResultsFrom())
-                    .setResultsOffset(results.getResultsOffset())
-                    .setData(timetables);
-        } catch (Exception e) {
-            return new Response<Timetable>().setError(e.getMessage());
-        }
-    }
-
-    public static Response<Timetable> delete(SearchQueryBuilder<Timetable, Columns, TimetableService> searchQueryBuilder) {
-        if (searchQueryBuilder.getSearchBy() == null || !searchQueryBuilder.getSearchBy().contains(Columns.id)) {
-            return new Response<Timetable>().setError("Required parameters not found");
-        }
-        return CommonService.delete(searchQueryBuilder);
-    }
-
-    public static Response<Timetable> insert(UpdateQueryBuilder<Timetable, Columns, TimetableService> updateQueryBuilder) {
-        if (updateQueryBuilder.getColumns() == null || !updateQueryBuilder.getColumns().containsAll(Set.of(Columns.teacherId, Columns.subjectId,
-                Columns.classroomId, Columns.day, Columns.timeslot))) {
-            return new Response<Timetable>().setError("Required parameters not found");
-        }
-        return CommonService.insert(updateQueryBuilder);
-    }
-
-    public static Response<Timetable> update(UpdateQueryBuilder<Timetable, Columns, TimetableService> updateQueryBuilder) {
-        if (updateQueryBuilder.getSearchBy() == null || !updateQueryBuilder.getSearchBy().contains(Columns.id)) {
-            return new Response<Timetable>().setError("Required parameters not found");
-        }
-        if (updateQueryBuilder.getColumns() != null && updateQueryBuilder.getColumns().contains(Columns.id)) {
-            return new Response<Timetable>().setError("'id' cannot be updated");
-        }
-        return CommonService.update(updateQueryBuilder);
+    public static void fromDatabase(ResultSet resultSet,
+                                    Timetable instance) throws SQLException {
+        instance.setId(new BigInteger(resultSet.getString("id")))
+                .setTeacherId(new BigInteger(resultSet.getString("teacherId")))
+                .setSubjectId(new BigInteger(resultSet.getString("subjectId")))
+                .setClassroomId(new BigInteger(resultSet.getString("classroomId")))
+                .setDay(DayOfWeek.of(resultSet.getInt("day")))
+                .setTimeslot(resultSet.getInt("timeslot"));
     }
 }

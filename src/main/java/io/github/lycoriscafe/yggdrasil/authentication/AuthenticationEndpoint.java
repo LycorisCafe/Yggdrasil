@@ -22,7 +22,7 @@ import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.POST;
 import io.github.lycoriscafe.yggdrasil.configuration.YggdrasilConfig;
 
 import java.io.IOException;
-import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
@@ -31,57 +31,69 @@ import java.time.Instant;
 @HttpEndpoint("/login")
 public class AuthenticationEndpoint {
     @BearerEndpoint(@POST("/"))
-    public static BearerTokenResponse login(BearerTokenRequest tokenRequest) throws SQLException, NoSuchAlgorithmException, IOException {
+    public static BearerTokenResponse login(BearerTokenRequest tokenRequest)
+            throws SQLException, NoSuchAlgorithmException, IOException, NoSuchFieldException {
         switch (tokenRequest.getGrantType()) {
             case "credentials" -> {
-                if (tokenRequest.getParams().size() != 2) {
+                if (tokenRequest.getParams().size() != 3) {
                     return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_REQUEST)
-                            .setErrorDescription("Invalid parameters detected. Please provide two parameters: username, password");
+                            .setErrorDescription(AuthError.INVALID_PARAMETERS.toString());
                 }
-                if (!tokenRequest.getParams().containsKey("username") || !tokenRequest.getParams().containsKey("password")) {
+                if (!tokenRequest.getParams().containsKey("username") ||
+                        !tokenRequest.getParams().containsKey("password") ||
+                        !tokenRequest.getParams().containsKey("deviceName")) {
                     return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_REQUEST)
-                            .setErrorDescription("username/password parameter(s) missing");
+                            .setErrorDescription(AuthError.REQUIRED_PARAMETER_MISSING.toString());
                 }
 
                 Role role;
-                BigDecimal userId;
+                BigInteger userId;
+                String username = tokenRequest.getParams().get("username");
+                switch (username.toLowerCase().charAt(0)) {
+                    case 'a' -> role = Role.ADMIN;
+                    case 't' -> role = Role.TEACHER;
+                    case 's' -> role = Role.STUDENT;
+                    default -> {
+                        return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_REQUEST)
+                                .setErrorDescription(AuthError.INVALID_USERNAME_FORMAT.toString());
+                    }
+                }
                 try {
-                    String username = tokenRequest.getParams().get("username");
-                    role = switch (username.toLowerCase().charAt(0)) {
-                        case 'a' -> Role.ADMIN;
-                        case 't' -> Role.TEACHER;
-                        case 's' -> Role.STUDENT;
-                        default -> throw new IllegalStateException("Unexpected value");
-                    };
-                    userId = new BigDecimal(username.substring(1));
+                    userId = new BigInteger(username.substring(1));
                 } catch (Exception e) {
                     return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_CLIENT)
-                            .setErrorDescription("Invalid username. Try again.");
+                            .setErrorDescription(AuthError.INVALID_USERNAME_FORMAT.toString());
                 }
 
                 var auth = AuthenticationService.getAuthentication(role, userId);
                 if (auth == null) {
                     return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_CLIENT)
-                            .setErrorDescription("Client not found. Recheck credentials and try again.");
+                            .setErrorDescription(AuthError.CLIENT_NOT_FOUND.toString());
                 }
                 if (!auth.getPassword()
                         .equals(AuthenticationService.encryptData(tokenRequest.getParams().get("password").getBytes(StandardCharsets.UTF_8)))) {
                     return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_CLIENT)
-                            .setErrorDescription("Invalid password. Try again.");
+                            .setErrorDescription(AuthError.INVALID_PASSWORD.toString());
                 }
 
-                if (AuthenticationService.getIsAccountDisabled(auth.getRole(), auth.getUserId())) {
+                if (AuthenticationService.isAccountDisabled(auth.getRole(), auth.getUserId())) {
                     return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_CLIENT)
-                            .setErrorDescription("Target account is disabled. Contact your system admin for more details.");
+                            .setErrorDescription(AuthError.ACCOUNT_DISABLED.toString());
+                }
+
+                var devices = DeviceService.getDevices(auth.getRole(), auth.getUserId());
+                if (devices.size() == YggdrasilConfig.getMaxLoginDevices()) {
+                    return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_REQUEST)
+                            .setErrorDescription(AuthError.MAX_DEVICES_EXCEEDED.toString());
                 }
 
                 var accessToken = AuthenticationService.generateToken();
                 var refreshToken = AuthenticationService.generateToken();
-                auth.setAccessToken(accessToken)
-                        .setExpires(Instant.now().getEpochSecond() + YggdrasilConfig.getDefaultAuthTimeout())
-                        .setRefreshToken(refreshToken);
-                auth = AuthenticationService.updateAuthentication(auth);
-                if (auth == null) throw new RuntimeException("Failed to update authentication.");
+                if (!DeviceService.addDevice(new Device(auth.getRole(), auth.getUserId(), tokenRequest.getParams().get("deviceName"), accessToken,
+                        Instant.now().getEpochSecond() + YggdrasilConfig.getDefaultAuthTimeout(), refreshToken))) {
+                    throw new RuntimeException("Failed to add device");
+                }
+
                 return new BearerTokenSuccessResponse(accessToken)
                         .setExpiresIn(YggdrasilConfig.getDefaultAuthTimeout())
                         .setRefreshToken(refreshToken)
@@ -90,42 +102,42 @@ public class AuthenticationEndpoint {
             case "refresh_token" -> {
                 if (tokenRequest.getParams().size() != 1) {
                     return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_REQUEST)
-                            .setErrorDescription("Invalid parameters detected. Please provide two parameter: token");
+                            .setErrorDescription(AuthError.INVALID_PARAMETERS.toString());
                 }
-
-                var token = tokenRequest.getParams().get("token");
-                if (token == null) {
+                if (!tokenRequest.getParams().containsKey("token")) {
                     return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_REQUEST)
-                            .setErrorDescription("Invalid token. Try again.");
+                            .setErrorDescription(AuthError.REQUIRED_PARAMETER_MISSING.toString());
                 }
 
-                var auth = AuthenticationService.getAuthentication(TokenType.REFRESH_TOKEN, token);
-                if (auth == null) {
+                var devices = DeviceService.getDevices(TokenType.REFRESH_TOKEN,
+                        AuthenticationService.encryptData(tokenRequest.getParams().get("token").getBytes(StandardCharsets.UTF_8)));
+                if (devices.isEmpty()) {
                     return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_CLIENT)
-                            .setErrorDescription("Client not found. Recheck refresh token and try again.");
+                            .setErrorDescription(AuthError.CLIENT_NOT_FOUND.toString());
                 }
-                if (!auth.getRefreshToken().equals(token)) {
+                if (!devices.getFirst().getRefreshToken().equals(
+                        AuthenticationService.encryptData(tokenRequest.getParams().get("token").getBytes(StandardCharsets.UTF_8)))) {
                     return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_CLIENT)
-                            .setErrorDescription("Invalid refresh token. Use credentials or try again.");
+                            .setErrorDescription(AuthError.INVALID_REFRESH_TOKEN.toString());
                 }
 
-                if (AuthenticationService.getIsAccountDisabled(auth.getRole(), auth.getUserId())) {
+                if (AuthenticationService.isAccountDisabled(devices.getFirst().getRole(), devices.getFirst().getUserId())) {
                     return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_CLIENT)
-                            .setErrorDescription("Target account is disabled. Contact your system admin for more details.");
+                            .setErrorDescription(AuthError.ACCOUNT_DISABLED.toString());
                 }
 
                 var accessToken = AuthenticationService.generateToken();
-                auth.setAccessToken(accessToken).setExpires(Instant.now().getEpochSecond() + YggdrasilConfig.getDefaultAuthTimeout());
-                auth = AuthenticationService.updateAuthentication(auth);
-                if (auth == null) throw new RuntimeException("Failed to update authentication.");
+                if (!DeviceService.updateDevice(devices.getFirst().setAccessToken(accessToken)
+                        .setExpires(Instant.now().getEpochSecond() + YggdrasilConfig.getDefaultAuthTimeout()))) {
+                    throw new RuntimeException("Failed to update device");
+                }
+
                 return new BearerTokenSuccessResponse(accessToken)
-                        .setExpiresIn(YggdrasilConfig.getDefaultAuthTimeout())
-                        .setRefreshToken(auth.getRefreshToken())
-                        .setScope(auth.getRole().toString());
+                        .setExpiresIn(YggdrasilConfig.getDefaultAuthTimeout());
             }
             default -> {
                 return new BearerTokenFailResponse(BearerTokenRequestError.UNSUPPORTED_GRANT_TYPE)
-                        .setErrorDescription("Unsupported grant type. Use credentials/refresh_token instead.");
+                        .setErrorDescription(AuthError.UNSUPPORTED_GRANT_TYPE.toString());
             }
         }
     }

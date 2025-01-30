@@ -16,5 +16,8 @@
 
 package io.github.lycoriscafe.yggdrasil.commons;
 
+import java.math.BigInteger;
+
 public interface Entity {
+    BigInteger getId();
 }

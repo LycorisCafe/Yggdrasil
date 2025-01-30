@@ -16,6 +16,7 @@
 
 package io.github.lycoriscafe.yggdrasil.configuration;
 
+import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import java.sql.Connection;
@@ -26,22 +27,12 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
 public class Utils {
-    private static final String DATE_FORMAT = "yyyy-MM-dd";
-    private static final String TIME_FORMAT = "HH:mm:ss";
-    private static final String DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
+    public static final String DATE_FORMAT = "yyyy-MM-dd";
+    public static final String TIME_FORMAT = "HH:mm:ss";
+    public static final String DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
     public static Connection getDatabaseConnection() throws SQLException {
         return YggdrasilConfig.getDatabase().getConnection();
-    }
-
-    public static String toJson(Object obj) {
-        return new GsonBuilder()
-                .serializeNulls()
-                .setDateFormat(DATE_TIME_FORMAT)
-                .registerTypeAdapter(LocalDate.class, new GsonTypeAdapters.Date())
-                .registerTypeAdapter(LocalTime.class, new GsonTypeAdapters.Time())
-                .registerTypeAdapter(LocalDateTime.class, new GsonTypeAdapters.DateTime())
-                .create().toJson(obj);
     }
 
     public static DateTimeFormatter getDateTimeFormatter() {
@@ -54,5 +45,15 @@ public class Utils {
 
     public static DateTimeFormatter getTimeFormatter() {
         return DateTimeFormatter.ofPattern(TIME_FORMAT);
+    }
+
+    public static Gson getGson() {
+        return new GsonBuilder()
+                .serializeNulls()
+                .setDateFormat(Utils.DATE_TIME_FORMAT)
+                .registerTypeAdapter(LocalDate.class, new GsonTypeAdapters.Date())
+                .registerTypeAdapter(LocalTime.class, new GsonTypeAdapters.Time())
+                .registerTypeAdapter(LocalDateTime.class, new GsonTypeAdapters.DateTime())
+                .create();
     }
 }

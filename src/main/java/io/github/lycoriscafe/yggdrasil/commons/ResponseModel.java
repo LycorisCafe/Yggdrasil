@@ -19,19 +19,20 @@ package io.github.lycoriscafe.yggdrasil.commons;
 import io.github.lycoriscafe.nexus.http.core.headers.content.Content;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
 
+import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public class Response<T extends Entity> {
+public class ResponseModel<T extends Entity> {
     private boolean success;
     private LocalDateTime timestamp;
     private String error;
-    private Long generableResults;
-    private Long resultsFrom;
-    private Long resultsOffset;
+    private BigInteger generableResults;
+    private BigInteger resultsFrom;
+    private BigInteger resultsOffset;
     private List<T> data;
 
-    public Response() {
+    public ResponseModel() {
         timestamp = LocalDateTime.now();
     }
 
@@ -39,7 +40,7 @@ public class Response<T extends Entity> {
         return success;
     }
 
-    public Response<T> setSuccess(boolean success) {
+    public ResponseModel<T> setSuccess(boolean success) {
         this.success = success;
         return this;
     }
@@ -48,7 +49,7 @@ public class Response<T extends Entity> {
         return timestamp;
     }
 
-    public Response<T> setTimestamp(LocalDateTime timestamp) {
+    public ResponseModel<T> setTimestamp(LocalDateTime timestamp) {
         this.timestamp = timestamp;
         return this;
     }
@@ -57,34 +58,34 @@ public class Response<T extends Entity> {
         return error;
     }
 
-    public Response<T> setError(String error) {
+    public ResponseModel<T> setError(String error) {
         this.error = error;
         return this;
     }
 
-    public Long getGenerableResults() {
+    public BigInteger getGenerableResults() {
         return generableResults;
     }
 
-    public Response<T> setGenerableResults(Long generableResults) {
+    public ResponseModel<T> setGenerableResults(BigInteger generableResults) {
         this.generableResults = generableResults;
         return this;
     }
 
-    public Long getResultsFrom() {
+    public BigInteger getResultsFrom() {
         return resultsFrom;
     }
 
-    public Response<T> setResultsFrom(Long resultsFrom) {
-        this.resultsFrom = (resultsFrom == null ? 0L : resultsFrom);
+    public ResponseModel<T> setResultsFrom(BigInteger resultsFrom) {
+        this.resultsFrom = resultsFrom;
         return this;
     }
 
-    public Long getResultsOffset() {
+    public BigInteger getResultsOffset() {
         return resultsOffset;
     }
 
-    public Response<T> setResultsOffset(Long resultsOffset) {
+    public ResponseModel<T> setResultsOffset(BigInteger resultsOffset) {
         this.resultsOffset = resultsOffset;
         return this;
     }
@@ -93,12 +94,12 @@ public class Response<T extends Entity> {
         return data;
     }
 
-    public Response<T> setData(List<T> data) {
+    public ResponseModel<T> setData(List<T> data) {
         this.data = data;
         return this;
     }
 
     public Content parse() {
-        return new Content("application/json", Utils.toJson(this));
+        return new Content("application/json", Utils.getGson().toJson(this));
     }
 }

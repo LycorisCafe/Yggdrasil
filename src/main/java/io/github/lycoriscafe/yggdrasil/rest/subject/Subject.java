@@ -18,27 +18,23 @@ package io.github.lycoriscafe.yggdrasil.rest.subject;
 
 import io.github.lycoriscafe.yggdrasil.commons.Entity;
 
-import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Objects;
 
 public class Subject implements Entity {
-    private BigDecimal id;
+    private BigInteger id;
     private Integer grade;
     private String shortName;
     private String longName;
-    private BigDecimal teacherId;
+    private BigInteger teacherId;
 
-    public Subject(Integer grade,
-                   String shortName) {
-        this.grade = Objects.requireNonNull(grade);
-        this.shortName = Objects.requireNonNull(shortName);
-    }
+    public Subject() {}
 
-    public BigDecimal getId() {
+    public BigInteger getId() {
         return id;
     }
 
-    public Subject setId(BigDecimal id) {
+    public Subject setId(BigInteger id) {
         this.id = id;
         return this;
     }
@@ -70,11 +66,11 @@ public class Subject implements Entity {
         return this;
     }
 
-    public BigDecimal getTeacherId() {
+    public BigInteger getTeacherId() {
         return teacherId;
     }
 
-    public Subject setTeacherId(BigDecimal teacherId) {
+    public Subject setTeacherId(BigInteger teacherId) {
         this.teacherId = teacherId;
         return this;
     }

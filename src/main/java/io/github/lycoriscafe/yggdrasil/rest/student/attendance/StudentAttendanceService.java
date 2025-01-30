@@ -16,70 +16,34 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.student.attendance;
 
-import io.github.lycoriscafe.yggdrasil.commons.*;
+import com.mysql.cj.xdevapi.Type;
+import io.github.lycoriscafe.yggdrasil.commons.EntityService;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
 
+import java.math.BigInteger;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.List;
 
 public class StudentAttendanceService implements EntityService<StudentAttendance> {
-    public enum Columns implements EntityColumn<StudentAttendance> {
-        id,
-        studentId,
-        date,
-        time
+    public static void toDatabase(PreparedStatement statement,
+                                  StudentAttendance instance,
+                                  boolean isUpdate) throws SQLException {
+        int nextParamIndex = 1;
+        if (!isUpdate) statement.setString(nextParamIndex++, instance.getId().toString());
+        statement.setString(nextParamIndex++, instance.getStudentId().toString());
+        statement.setObject(nextParamIndex++, Type.DATE);
+        statement.setObject(nextParamIndex++, Type.TIME);
+        if (isUpdate) statement.setString(nextParamIndex, instance.getId().toString());
     }
 
-    public static Response<StudentAttendance> select(SearchQueryBuilder<StudentAttendance, Columns, StudentAttendanceService> searchQueryBuilder) {
-        try {
-            var results = CommonService.select(searchQueryBuilder);
-            if (results.getResponse() != null) return results.getResponse();
-
-            List<StudentAttendance> studentAttendances = new ArrayList<>();
-            try (var resultSet = results.getResultSet()) {
-                while (resultSet.next()) {
-                    studentAttendances.add(new StudentAttendance(
-                            resultSet.getBigDecimal("studentId")
-                    ).setId(resultSet.getBigDecimal("id"))
-                            .setDate(LocalDate.parse(resultSet.getString("date"), Utils.getDateFormatter()))
-                            .setTime(LocalTime.parse(resultSet.getString("time"), Utils.getTimeFormatter())));
-                }
-            }
-
-            return new Response<StudentAttendance>()
-                    .setSuccess(true)
-                    .setGenerableResults(results.getGenerableResults())
-                    .setResultsFrom(results.getResultsFrom())
-                    .setResultsOffset(results.getResultsOffset())
-                    .setData(studentAttendances);
-        } catch (Exception e) {
-            return new Response<StudentAttendance>().setError(e.getMessage());
-        }
-    }
-
-    public static Response<StudentAttendance> delete(SearchQueryBuilder<StudentAttendance, Columns, StudentAttendanceService> searchQueryBuilder) {
-        if (searchQueryBuilder.getSearchBy() == null || !searchQueryBuilder.getSearchBy().contains(Columns.id)) {
-            return new Response<StudentAttendance>().setError("Required parameters not found");
-        }
-        return CommonService.delete(searchQueryBuilder);
-    }
-
-    public static Response<StudentAttendance> insert(UpdateQueryBuilder<StudentAttendance, Columns, StudentAttendanceService> updateQueryBuilder) {
-        if (updateQueryBuilder.getColumns() == null || !updateQueryBuilder.getColumns().contains(Columns.studentId)) {
-            return new Response<StudentAttendance>().setError("Required parameters not found");
-        }
-        return CommonService.insert(updateQueryBuilder);
-    }
-
-    public static Response<StudentAttendance> update(UpdateQueryBuilder<StudentAttendance, Columns, StudentAttendanceService> updateQueryBuilder) {
-        if (updateQueryBuilder.getSearchBy() == null || !updateQueryBuilder.getSearchBy().contains(Columns.id)) {
-            return new Response<StudentAttendance>().setError("Required parameters not found");
-        }
-        if (updateQueryBuilder.getColumns() != null && updateQueryBuilder.getColumns().contains(Columns.id)) {
-            return new Response<StudentAttendance>().setError("'id' cannot be updated");
-        }
-        return CommonService.update(updateQueryBuilder);
+    public static void fromDatabase(ResultSet resultSet,
+                                    StudentAttendance instance) throws SQLException {
+        instance.setId(new BigInteger(resultSet.getString("id")))
+                .setStudentId(new BigInteger(resultSet.getString("studentId")))
+                .setDate(LocalDate.parse(resultSet.getString("date"), Utils.getDateFormatter()))
+                .setTime(LocalTime.parse(resultSet.getString("time"), Utils.getTimeFormatter()));
     }
 }

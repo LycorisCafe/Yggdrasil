@@ -16,83 +16,43 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.guardian;
 
-import io.github.lycoriscafe.yggdrasil.commons.*;
+import io.github.lycoriscafe.yggdrasil.commons.EntityService;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
 import io.github.lycoriscafe.yggdrasil.rest.Gender;
 
+import java.math.BigInteger;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 
 public class GuardianService implements EntityService<Guardian> {
-    public enum Columns implements EntityColumn<Guardian> {
-        id,
-        nic,
-        initName,
-        fullName,
-        gender,
-        dateOfBirth,
-        address,
-        email,
-        contactNo
+    public static void toDatabase(PreparedStatement statement,
+                                  Guardian instance,
+                                  boolean isUpdate) throws SQLException {
+        int nextParamIndex = 1;
+        if (!isUpdate) statement.setString(nextParamIndex++, instance.getId().toString());
+        statement.setString(nextParamIndex++, instance.getNic());
+        statement.setString(nextParamIndex++, instance.getInitName());
+        statement.setString(nextParamIndex++, instance.getFullName());
+        statement.setString(nextParamIndex++, instance.getGender().toString());
+        statement.setString(nextParamIndex++, instance.getDateOfBirth().format(Utils.getDateFormatter()));
+        statement.setString(nextParamIndex++, instance.getAddress());
+        statement.setString(nextParamIndex++, instance.getEmail());
+        statement.setString(nextParamIndex++, instance.getContactNo());
+        if (isUpdate) statement.setString(nextParamIndex, instance.getId().toString());
     }
 
-    public static Response<Guardian> select(SearchQueryBuilder<Guardian, Columns, GuardianService> searchQueryBuilder) {
-        try {
-            var results = CommonService.select(searchQueryBuilder);
-            if (results.getResponse() != null) return results.getResponse();
-
-            List<Guardian> guardians = new ArrayList<>();
-            try (var resultSet = results.getResultSet()) {
-                while (resultSet.next()) {
-                    guardians.add(new Guardian(
-                            resultSet.getString("nic"),
-                            resultSet.getString("initName"),
-                            resultSet.getString("fullName"),
-                            Gender.valueOf(resultSet.getString("gender")),
-                            LocalDate.parse(resultSet.getString("dateOfBirth"), Utils.getDateFormatter()),
-                            resultSet.getString("address"),
-                            resultSet.getString("contactNo")
-                    ).setId(resultSet.getBigDecimal("id"))
-                            .setEmail(resultSet.getString("email")));
-                }
-            }
-
-            return new Response<Guardian>()
-                    .setSuccess(true)
-                    .setGenerableResults(results.getGenerableResults())
-                    .setResultsFrom(results.getResultsFrom())
-                    .setResultsOffset(results.getResultsOffset())
-                    .setData(guardians);
-        } catch (Exception e) {
-            return new Response<Guardian>().setError(e.getMessage());
-        }
-    }
-
-    public static Response<Guardian> delete(SearchQueryBuilder<Guardian, Columns, GuardianService> searchQueryBuilder) {
-        if (searchQueryBuilder.getSearchBy() == null || !searchQueryBuilder.getSearchBy().contains(Columns.id)) {
-            return new Response<Guardian>().setError("Required parameters not found");
-        }
-        return CommonService.delete(searchQueryBuilder);
-    }
-
-    public static Response<Guardian> insert(UpdateQueryBuilder<Guardian, Columns, GuardianService> updateQueryBuilder) {
-        if (updateQueryBuilder.getColumns() == null ||
-                !updateQueryBuilder.getColumns().containsAll(Set.of(Columns.nic, Columns.initName, Columns.fullName, Columns.gender,
-                        Columns.dateOfBirth, Columns.address, Columns.contactNo))) {
-            return new Response<Guardian>().setError("Required parameters not found");
-        }
-        return CommonService.insert(updateQueryBuilder);
-    }
-
-    public static Response<Guardian> update(UpdateQueryBuilder<Guardian, Columns, GuardianService> updateQueryBuilder) {
-        if (updateQueryBuilder.getSearchBy() == null || !updateQueryBuilder.getSearchBy().contains(Columns.id)) {
-            return new Response<Guardian>().setError("Required parameters not found");
-        }
-        if (updateQueryBuilder.getColumns() != null && updateQueryBuilder.getColumns().contains(Columns.id)) {
-            return new Response<Guardian>().setError("'id' cannot be updated");
-        }
-        return CommonService.update(updateQueryBuilder);
+    public static void fromDatabase(ResultSet resultSet,
+                                    Guardian instance) throws SQLException {
+        instance.setId(new BigInteger(resultSet.getString("id")))
+                .setNic(resultSet.getString("nic"))
+                .setInitName(resultSet.getString("init_name"))
+                .setFullName(resultSet.getString("full_name"))
+                .setGender(Gender.valueOf(resultSet.getString("gender")))
+                .setDateOfBirth(LocalDate.parse(resultSet.getString("dateOfBirth"), Utils.getDateFormatter()))
+                .setAddress(resultSet.getString("address"))
+                .setEmail(resultSet.getString("email"))
+                .setContactNo(resultSet.getString("contactNo"));
     }
 }

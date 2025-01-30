@@ -16,19 +16,16 @@
 
 package io.github.lycoriscafe.yggdrasil.authentication;
 
-import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Objects;
 
 public class Authentication {
     private Role role;
-    private BigDecimal userId;
+    private BigInteger userId;
     private String password;
-    private String accessToken;
-    private Long expires;
-    private String refreshToken;
 
     public Authentication(Role role,
-                          BigDecimal userId,
+                          BigInteger userId,
                           String password) {
         this.role = Objects.requireNonNull(role);
         this.userId = Objects.requireNonNull(userId);
@@ -44,11 +41,11 @@ public class Authentication {
         return this;
     }
 
-    public BigDecimal getUserId() {
+    public BigInteger getUserId() {
         return userId;
     }
 
-    public Authentication setUserId(BigDecimal userId) {
+    public Authentication setUserId(BigInteger userId) {
         this.userId = Objects.requireNonNull(userId);
         return this;
     }
@@ -59,33 +56,6 @@ public class Authentication {
 
     public Authentication setPassword(String password) {
         this.password = Objects.requireNonNull(password);
-        return this;
-    }
-
-    public String getAccessToken() {
-        return accessToken;
-    }
-
-    public Authentication setAccessToken(String accessToken) {
-        this.accessToken = accessToken;
-        return this;
-    }
-
-    public Long getExpires() {
-        return expires;
-    }
-
-    public Authentication setExpires(Long expires) {
-        this.expires = expires;
-        return this;
-    }
-
-    public String getRefreshToken() {
-        return refreshToken;
-    }
-
-    public Authentication setRefreshToken(String refreshToken) {
-        this.refreshToken = refreshToken;
         return this;
     }
 }

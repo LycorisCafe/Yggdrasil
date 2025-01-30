@@ -16,66 +16,28 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.teacher.subject;
 
-import io.github.lycoriscafe.yggdrasil.commons.*;
+import io.github.lycoriscafe.yggdrasil.commons.EntityService;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.math.BigInteger;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class TeacherSubjectJoinService implements EntityService<TeacherSubjectJoin> {
-    public enum Columns implements EntityColumn<TeacherSubjectJoin> {
-        id,
-        teacherId,
-        subjectId
+    public static void toDatabase(PreparedStatement statement,
+                                  TeacherSubjectJoin instance,
+                                  boolean isUpdate) throws SQLException {
+        int nextParamIndex = 1;
+        if (!isUpdate) statement.setString(nextParamIndex++, instance.getId().toString());
+        statement.setString(nextParamIndex++, instance.getTeacherId().toString());
+        statement.setString(nextParamIndex++, instance.getSubjectId().toString());
+        if (isUpdate) statement.setString(nextParamIndex, instance.getId().toString());
     }
 
-    public static Response<TeacherSubjectJoin> select(SearchQueryBuilder<TeacherSubjectJoin, Columns, TeacherSubjectJoinService> searchQueryBuilder) {
-        try {
-            var results = CommonService.select(searchQueryBuilder);
-            if (results.getResponse() != null) return results.getResponse();
-
-            List<TeacherSubjectJoin> teacherSubjectJoins = new ArrayList<>();
-            try (var resultSet = results.getResultSet()) {
-                while (resultSet.next()) {
-                    teacherSubjectJoins.add(new TeacherSubjectJoin(
-                            resultSet.getBigDecimal("teacherId"),
-                            resultSet.getBigDecimal("subjectId")
-                    ).setId(resultSet.getBigDecimal("id")));
-                }
-            }
-
-            return new Response<TeacherSubjectJoin>()
-                    .setSuccess(true)
-                    .setGenerableResults(results.getGenerableResults())
-                    .setResultsFrom(results.getResultsFrom())
-                    .setResultsOffset(results.getResultsOffset())
-                    .setData(teacherSubjectJoins);
-        } catch (Exception e) {
-            return new Response<TeacherSubjectJoin>().setError(e.getMessage());
-        }
-    }
-
-    public static Response<TeacherSubjectJoin> delete(SearchQueryBuilder<TeacherSubjectJoin, Columns, TeacherSubjectJoinService> searchQueryBuilder) {
-        if (searchQueryBuilder.getSearchBy() == null || !searchQueryBuilder.getSearchBy().contains(Columns.id)) {
-            return new Response<TeacherSubjectJoin>().setError("Required parameters not found");
-        }
-        return CommonService.delete(searchQueryBuilder);
-    }
-
-    public static Response<TeacherSubjectJoin> insert(UpdateQueryBuilder<TeacherSubjectJoin, Columns, TeacherSubjectJoinService> updateQueryBuilder) {
-        if (updateQueryBuilder.getColumns() == null || !updateQueryBuilder.getColumns().containsAll(Set.of(Columns.teacherId, Columns.subjectId))) {
-            return new Response<TeacherSubjectJoin>().setError("Required parameters not found");
-        }
-        return CommonService.insert(updateQueryBuilder);
-    }
-
-    public static Response<TeacherSubjectJoin> update(UpdateQueryBuilder<TeacherSubjectJoin, Columns, TeacherSubjectJoinService> updateQueryBuilder) {
-        if (updateQueryBuilder.getSearchBy() == null || !updateQueryBuilder.getSearchBy().contains(Columns.id)) {
-            return new Response<TeacherSubjectJoin>().setError("Required parameters not found");
-        }
-        if (updateQueryBuilder.getColumns() != null && updateQueryBuilder.getColumns().contains(Columns.id)) {
-            return new Response<TeacherSubjectJoin>().setError("'id' cannot be updated");
-        }
-        return CommonService.update(updateQueryBuilder);
+    public static void fromDatabase(ResultSet resultSet,
+                                    TeacherSubjectJoin instance) throws SQLException {
+        instance.setId(new BigInteger(resultSet.getString("id")))
+                .setTeacherId(new BigInteger(resultSet.getString("teacherId")))
+                .setSubjectId(new BigInteger(resultSet.getString("subjectId")));
     }
 }
