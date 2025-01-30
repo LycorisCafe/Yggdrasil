@@ -31,7 +31,7 @@ public class Device {
 
     public Device(Role role,
                   BigInteger userId,
-                  String deviceId,
+                  String deviceName,
                   String accessToken,
                   Long expires,
                   String refreshToken) {

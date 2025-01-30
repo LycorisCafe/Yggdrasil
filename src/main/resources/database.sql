@@ -9,7 +9,7 @@ START TRANSACTION;
 CREATE TABLE admin
 (
     id          SERIAL PRIMARY KEY,
-    deviceId VARCHAR(100) NOT NULL,
+    name VARCHAR(100) NOT NULL,
     accessLevel SET ('SUPERUSER', 'CLASSROOM', 'GUARDIAN', 'NOTIFICATION',
         'RELIEF', 'STUDENT', 'SUBJECT', 'TEACHER', 'TIMETABLE') NOT NULL,
     disabled    BOOLEAN DEFAULT FALSE # Used for disabling without deleting
@@ -20,9 +20,9 @@ CREATE TABLE classroom
 (
     id        SERIAL PRIMARY KEY,
     teacherId BIGINT UNSIGNED UNIQUE,
-    grade    TINYINT(2) UNSIGNED NOT NULL,
-    deviceId VARCHAR(10)         NOT NULL,
-    UNIQUE (grade, deviceId)
+    grade TINYINT(2) UNSIGNED NOT NULL,
+    name  VARCHAR(10)         NOT NULL,
+    UNIQUE (grade, name)
 );
 
 ## GUARDIAN
@@ -245,7 +245,7 @@ COMMIT;
 ## INSERT SUPERUSER (DEFAULT)
 START TRANSACTION;
 
-INSERT INTO admin (id, deviceId, accessLevel)
+INSERT INTO admin (id, name, accessLevel)
 VALUES (1, 'SUPERUSER', 'SUPERUSER');
 
 INSERT INTO authentication (role, userId, password) # password is SUPERUSER
