@@ -109,7 +109,8 @@ public class AuthenticationEndpoint {
                             .setErrorDescription(AuthError.REQUIRED_PARAMETER_MISSING.toString());
                 }
 
-                var devices = DeviceService.getDevices(TokenType.REFRESH_TOKEN, tokenRequest.getParams().get("token"));
+                var devices = DeviceService.getDevices(TokenType.REFRESH_TOKEN,
+                        AuthenticationService.encryptData(tokenRequest.getParams().get("token").getBytes(StandardCharsets.UTF_8)));
                 if (devices.isEmpty()) {
                     return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_CLIENT)
                             .setErrorDescription(AuthError.CLIENT_NOT_FOUND.toString());
