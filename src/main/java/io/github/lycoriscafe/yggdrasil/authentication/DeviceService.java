@@ -17,6 +17,7 @@
 package io.github.lycoriscafe.yggdrasil.authentication;
 
 import io.github.lycoriscafe.nexus.http.core.headers.auth.scheme.bearer.BearerAuthorization;
+import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpGetRequest;
 import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpPostRequest;
 import io.github.lycoriscafe.yggdrasil.commons.Entity;
 import io.github.lycoriscafe.yggdrasil.commons.ResponseModel;
@@ -27,6 +28,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -61,10 +63,23 @@ public class DeviceService {
         return devices;
     }
 
+    public static String getDevices(HttpGetRequest req) {
+        Objects.requireNonNull(req);
+        try {
+            var device = DeviceService.getDevices(TokenType.ACCESS_TOKEN, ((BearerAuthorization) req.getAuthorization()).getAccessToken());
+            var devices = DeviceService.getDevices(device.getFirst().getRole(), device.getFirst().getUserId());
+            devices.forEach(e -> e.setAccessToken(null).setExpires(null).setRefreshToken(null));
+            return Utils.getGson().toJson(devices);
+        } catch (SQLException e) {
+            return "\"error\": \"" + e.getMessage() + "\"";
+        }
+    }
+
     public static boolean addDevice(Device device) throws SQLException, NoSuchAlgorithmException {
         Objects.requireNonNull(device);
         try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement("INSERT INTO devices VALUES (?, ?, ?, ?, ?, ?)")) {
+             var statement = connection.prepareStatement("INSERT INTO devices (role, userId, name, accessToken, expires, refreshToken) " +
+                     "VALUES (?, ?, ?, ?, ?, ?)")) {
             statement.setString(1, device.getRole().toString());
             statement.setString(2, device.getUserId().toString());
             statement.setString(3, device.getName());
@@ -97,11 +112,13 @@ public class DeviceService {
         }
     }
 
-    public static boolean removeDevice(String accessToken) throws SQLException {
-        Objects.requireNonNull(accessToken);
+    public static boolean removeDevice(TokenType tokenType,
+                                       String token) throws SQLException {
+        Objects.requireNonNull(tokenType);
+        Objects.requireNonNull(token);
         try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement("DELETE FROM devices WHERE accessToken = BINARY ?")) {
-            statement.setString(1, accessToken);
+             var statement = connection.prepareStatement("DELETE FROM devices WHERE " + tokenType + " = BINARY ?")) {
+            statement.setString(1, token);
             if (statement.executeUpdate() != 1) {
                 connection.rollback();
                 return false;
@@ -113,15 +130,31 @@ public class DeviceService {
 
     public static <T extends Entity> ResponseModel<T> removeDevice(HttpPostRequest req) {
         try {
-            if (req.getParameters() != null && req.getParameters().containsKey("all")) {
-                var devices = DeviceService.getDevices(TokenType.ACCESS_TOKEN, ((BearerAuthorization) req.getAuthorization()).getAccessToken());
-                if (!DeviceService.removeDevices(devices.getFirst().getRole(), devices.getFirst().getUserId())) {
-                    return new ResponseModel<T>().setError("Internal system error");
+            if (req.getParameters() != null && req.getParameters().containsKey("device")) {
+                switch (req.getParameters().get("device")) {
+                    case "self" -> {
+                        if (!removeDevice(TokenType.ACCESS_TOKEN, ((BearerAuthorization) req.getAuthorization()).getAccessToken())) {
+                            return new ResponseModel<T>().setError("Internal system error");
+                        }
+                    }
+                    case "all" -> {
+                        var device = getDevices(TokenType.ACCESS_TOKEN, ((BearerAuthorization) req.getAuthorization()).getAccessToken()).getFirst();
+                        if (!removeDevices(device.getRole(), device.getUserId())) return new ResponseModel<T>().setError("Internal system error");
+                    }
+                    default -> {
+                        var device = getDevices(TokenType.ACCESS_TOKEN, ((BearerAuthorization) req.getAuthorization()).getAccessToken()).getFirst();
+                        var devices = getDevices(device.getRole(), device.getUserId());
+                        var target = devices.stream().filter(e -> e.getName().equals(req.getParameters().get("devices"))).findAny();
+                        if (target.isEmpty()) return new ResponseModel<T>().setError("Device not found");
+                        if (!removeDevice(TokenType.REFRESH_TOKEN, target.get().getRefreshToken())) {
+                            return new ResponseModel<T>().setError("Internal system error");
+                        }
+                    }
                 }
                 return new ResponseModel<T>().setSuccess(true);
             }
 
-            if (!DeviceService.removeDevice(((BearerAuthorization) req.getAuthorization()).getAccessToken())) {
+            if (!DeviceService.removeDevice(TokenType.ACCESS_TOKEN, ((BearerAuthorization) req.getAuthorization()).getAccessToken())) {
                 return new ResponseModel<T>().setError("Internal system error");
             }
             return new ResponseModel<T>().setSuccess(true);
@@ -159,7 +192,7 @@ public class DeviceService {
                         resultSet.getString("accessToken"),
                         resultSet.getLong("expires"),
                         resultSet.getString("refreshToken")
-                ));
+                ).setLastLogin(LocalDateTime.parse(resultSet.getString("lastLogin"), Utils.getDateTimeFormatter())));
             }
         }
         return devices;

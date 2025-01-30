@@ -55,7 +55,7 @@ public class TimetableEndpoint {
             SearchModel searchModel = SearchModel.fromJson(new String((byte[]) req.getContent().getData()));
             return res.setContent(CommonService.read(Timetable.class, TimetableService.class, searchModel).parse());
         } catch (Exception e) {
-            logger.atError().log(e.getMessage());
+            logger.atError().log(e.toString());
             return res.setContent(new ResponseModel<Timetable>().setError(e.getMessage()).parse());
         }
     }
@@ -71,7 +71,7 @@ public class TimetableEndpoint {
             Timetable instance = Utils.getGson().fromJson(new String((byte[]) req.getContent().getData()), Timetable.class);
             return res.setContent(CommonService.create(Timetable.class, TimetableService.class, instance).parse());
         } catch (Exception e) {
-            logger.atError().log(e.getMessage());
+            logger.atError().log(e.toString());
             return res.setContent(new ResponseModel<Timetable>().setError(e.getMessage()).parse());
         }
     }
@@ -87,7 +87,7 @@ public class TimetableEndpoint {
             Timetable instance = Utils.getGson().fromJson(new String((byte[]) req.getContent().getData()), Timetable.class);
             return res.setContent(CommonService.update(Timetable.class, TimetableService.class, instance).parse());
         } catch (Exception e) {
-            logger.atError().log(e.getMessage());
+            logger.atError().log(e.toString());
             return res.setContent(new ResponseModel<Timetable>().setError(e.getMessage()).parse());
         }
     }
@@ -105,7 +105,7 @@ public class TimetableEndpoint {
             BigInteger id = new BigInteger(req.getParameters().get("id"));
             return res.setContent(CommonService.delete(Timetable.class, id).parse());
         } catch (Exception e) {
-            logger.atError().log(e.getMessage());
+            logger.atError().log(e.toString());
             return res.setContent(new ResponseModel<Timetable>().setError(e.getMessage()).parse());
         }
     }

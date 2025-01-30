@@ -21,10 +21,8 @@ import io.github.lycoriscafe.nexus.http.core.headers.auth.Authenticated;
 import io.github.lycoriscafe.nexus.http.core.headers.content.ExpectContent;
 import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.DELETE;
 import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.POST;
-import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.PUT;
 import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpDeleteRequest;
 import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpPostRequest;
-import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpPutRequest;
 import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpRes.HttpResponse;
 import io.github.lycoriscafe.yggdrasil.authentication.AuthenticationService;
 import io.github.lycoriscafe.yggdrasil.authentication.Role;
@@ -55,7 +53,7 @@ public class StudentAttendanceEndpoint {
             SearchModel searchModel = SearchModel.fromJson(new String((byte[]) req.getContent().getData()));
             return res.setContent(CommonService.read(StudentAttendance.class, StudentAttendanceService.class, searchModel).parse());
         } catch (Exception e) {
-            logger.atError().log(e.getMessage());
+            logger.atError().log(e.toString());
             return res.setContent(new ResponseModel<StudentAttendance>().setError(e.getMessage()).parse());
         }
     }
@@ -71,23 +69,7 @@ public class StudentAttendanceEndpoint {
             StudentAttendance instance = Utils.getGson().fromJson(new String((byte[]) req.getContent().getData()), StudentAttendance.class);
             return res.setContent(CommonService.create(StudentAttendance.class, StudentAttendanceService.class, instance).parse());
         } catch (Exception e) {
-            logger.atError().log(e.getMessage());
-            return res.setContent(new ResponseModel<StudentAttendance>().setError(e.getMessage()).parse());
-        }
-    }
-
-    @PUT("/update")
-    @ExpectContent("application/json")
-    public static HttpResponse update(HttpPutRequest req,
-                                      HttpResponse res) {
-        var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN), Set.of(AccessLevel.SUPERUSER, AccessLevel.STUDENT));
-        if (auth != null) return auth;
-
-        try {
-            StudentAttendance instance = Utils.getGson().fromJson(new String((byte[]) req.getContent().getData()), StudentAttendance.class);
-            return res.setContent(CommonService.update(StudentAttendance.class, StudentAttendanceService.class, instance).parse());
-        } catch (Exception e) {
-            logger.atError().log(e.getMessage());
+            logger.atError().log(e.toString());
             return res.setContent(new ResponseModel<StudentAttendance>().setError(e.getMessage()).parse());
         }
     }
@@ -105,7 +87,7 @@ public class StudentAttendanceEndpoint {
             BigInteger id = new BigInteger(req.getParameters().get("id"));
             return res.setContent(CommonService.delete(StudentAttendance.class, id).parse());
         } catch (Exception e) {
-            logger.atError().log(e.getMessage());
+            logger.atError().log(e.toString());
             return res.setContent(new ResponseModel<StudentAttendance>().setError(e.getMessage()).parse());
         }
     }

@@ -55,7 +55,7 @@ public class ReliefEndpoint {
             SearchModel searchModel = SearchModel.fromJson(new String((byte[]) req.getContent().getData()));
             return res.setContent(CommonService.read(Relief.class, ReliefService.class, searchModel).parse());
         } catch (Exception e) {
-            logger.atError().log(e.getMessage());
+            logger.atError().log(e.toString());
             return res.setContent(new ResponseModel<Relief>().setError(e.getMessage()).parse());
         }
     }
@@ -71,7 +71,7 @@ public class ReliefEndpoint {
             Relief instance = Utils.getGson().fromJson(new String((byte[]) req.getContent().getData()), Relief.class);
             return res.setContent(CommonService.create(Relief.class, ReliefService.class, instance).parse());
         } catch (Exception e) {
-            logger.atError().log(e.getMessage());
+            logger.atError().log(e.toString());
             return res.setContent(new ResponseModel<Relief>().setError(e.getMessage()).parse());
         }
     }
@@ -87,7 +87,7 @@ public class ReliefEndpoint {
             Relief instance = Utils.getGson().fromJson(new String((byte[]) req.getContent().getData()), Relief.class);
             return res.setContent(CommonService.update(Relief.class, ReliefService.class, instance).parse());
         } catch (Exception e) {
-            logger.atError().log(e.getMessage());
+            logger.atError().log(e.toString());
             return res.setContent(new ResponseModel<Relief>().setError(e.getMessage()).parse());
         }
     }
@@ -105,7 +105,7 @@ public class ReliefEndpoint {
             BigInteger id = new BigInteger(req.getParameters().get("id"));
             return res.setContent(CommonService.delete(Relief.class, id).parse());
         } catch (Exception e) {
-            logger.atError().log(e.getMessage());
+            logger.atError().log(e.toString());
             return res.setContent(new ResponseModel<Relief>().setError(e.getMessage()).parse());
         }
     }

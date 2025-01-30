@@ -17,6 +17,7 @@
 package io.github.lycoriscafe.yggdrasil.authentication;
 
 import java.math.BigInteger;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class Device {
@@ -26,6 +27,7 @@ public class Device {
     private String accessToken;
     private Long expires;
     private String refreshToken;
+    private LocalDateTime lastLogin;
 
     public Device(Role role,
                   BigInteger userId,
@@ -92,6 +94,15 @@ public class Device {
 
     public Device setRefreshToken(String refreshToken) {
         this.refreshToken = refreshToken;
+        return this;
+    }
+
+    public LocalDateTime getLastLogin() {
+        return lastLogin;
+    }
+
+    public Device setLastLogin(LocalDateTime lastLogin) {
+        this.lastLogin = lastLogin;
         return this;
     }
 }

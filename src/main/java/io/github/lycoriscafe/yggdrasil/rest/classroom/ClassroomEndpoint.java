@@ -55,7 +55,7 @@ public class ClassroomEndpoint {
             SearchModel searchModel = SearchModel.fromJson(new String((byte[]) req.getContent().getData()));
             return res.setContent(CommonService.read(Classroom.class, ClassroomService.class, searchModel).parse());
         } catch (Exception e) {
-            logger.atError().log(e.getMessage());
+            logger.atError().log(e.toString());
             return res.setContent(new ResponseModel<Classroom>().setError(e.getMessage()).parse());
         }
     }
@@ -71,7 +71,7 @@ public class ClassroomEndpoint {
             Classroom instance = Utils.getGson().fromJson(new String((byte[]) req.getContent().getData()), Classroom.class);
             return res.setContent(CommonService.create(Classroom.class, ClassroomService.class, instance).parse());
         } catch (Exception e) {
-            logger.atError().log(e.getMessage());
+            logger.atError().log(e.toString());
             return res.setContent(new ResponseModel<Classroom>().setError(e.getMessage()).parse());
         }
     }
@@ -87,7 +87,7 @@ public class ClassroomEndpoint {
             Classroom instance = Utils.getGson().fromJson(new String((byte[]) req.getContent().getData()), Classroom.class);
             return res.setContent(CommonService.update(Classroom.class, ClassroomService.class, instance).parse());
         } catch (Exception e) {
-            logger.atError().log(e.getMessage());
+            logger.atError().log(e.toString());
             return res.setContent(new ResponseModel<Classroom>().setError(e.getMessage()).parse());
         }
     }
@@ -105,7 +105,7 @@ public class ClassroomEndpoint {
             BigInteger id = new BigInteger(req.getParameters().get("id"));
             return res.setContent(CommonService.delete(Classroom.class, id).parse());
         } catch (Exception e) {
-            logger.atError().log(e.getMessage());
+            logger.atError().log(e.toString());
             return res.setContent(new ResponseModel<Classroom>().setError(e.getMessage()).parse());
         }
     }

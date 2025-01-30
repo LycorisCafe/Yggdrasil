@@ -55,7 +55,7 @@ public class SubjectEndpoint {
             SearchModel searchModel = SearchModel.fromJson(new String((byte[]) req.getContent().getData()));
             return res.setContent(CommonService.read(Subject.class, SubjectService.class, searchModel).parse());
         } catch (Exception e) {
-            logger.atError().log(e.getMessage());
+            logger.atError().log(e.toString());
             return res.setContent(new ResponseModel<Subject>().setError(e.getMessage()).parse());
         }
     }
@@ -71,7 +71,7 @@ public class SubjectEndpoint {
             Subject instance = Utils.getGson().fromJson(new String((byte[]) req.getContent().getData()), Subject.class);
             return res.setContent(CommonService.create(Subject.class, SubjectService.class, instance).parse());
         } catch (Exception e) {
-            logger.atError().log(e.getMessage());
+            logger.atError().log(e.toString());
             return res.setContent(new ResponseModel<Subject>().setError(e.getMessage()).parse());
         }
     }
@@ -87,7 +87,7 @@ public class SubjectEndpoint {
             Subject instance = Utils.getGson().fromJson(new String((byte[]) req.getContent().getData()), Subject.class);
             return res.setContent(CommonService.update(Subject.class, SubjectService.class, instance).parse());
         } catch (Exception e) {
-            logger.atError().log(e.getMessage());
+            logger.atError().log(e.toString());
             return res.setContent(new ResponseModel<Subject>().setError(e.getMessage()).parse());
         }
     }
@@ -105,7 +105,7 @@ public class SubjectEndpoint {
             BigInteger id = new BigInteger(req.getParameters().get("id"));
             return res.setContent(CommonService.delete(Subject.class, id).parse());
         } catch (Exception e) {
-            logger.atError().log(e.getMessage());
+            logger.atError().log(e.toString());
             return res.setContent(new ResponseModel<Subject>().setError(e.getMessage()).parse());
         }
     }

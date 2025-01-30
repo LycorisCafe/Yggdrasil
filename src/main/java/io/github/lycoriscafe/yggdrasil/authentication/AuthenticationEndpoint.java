@@ -35,15 +35,12 @@ public class AuthenticationEndpoint {
             throws SQLException, NoSuchAlgorithmException, IOException, NoSuchFieldException {
         switch (tokenRequest.getGrantType()) {
             case "credentials" -> {
-                if (tokenRequest.getParams().size() != 3) {
-                    return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_REQUEST)
-                            .setErrorDescription(AuthError.INVALID_PARAMETERS.toString());
-                }
-                if (!tokenRequest.getParams().containsKey("username") ||
+                if (tokenRequest.getParams().size() != 3 ||
+                        !tokenRequest.getParams().containsKey("username") ||
                         !tokenRequest.getParams().containsKey("password") ||
                         !tokenRequest.getParams().containsKey("deviceName")) {
                     return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_REQUEST)
-                            .setErrorDescription(AuthError.REQUIRED_PARAMETER_MISSING.toString());
+                            .setErrorDescription("Required parameter expected. Try again.");
                 }
 
                 Role role;
@@ -55,36 +52,40 @@ public class AuthenticationEndpoint {
                     case 's' -> role = Role.STUDENT;
                     default -> {
                         return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_REQUEST)
-                                .setErrorDescription(AuthError.INVALID_USERNAME_FORMAT.toString());
+                                .setErrorDescription("Invalid username. Recheck and try again.");
                     }
                 }
                 try {
                     userId = new BigInteger(username.substring(1));
                 } catch (Exception e) {
                     return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_CLIENT)
-                            .setErrorDescription(AuthError.INVALID_USERNAME_FORMAT.toString());
+                            .setErrorDescription("Invalid username. Recheck and try again.");
                 }
 
                 var auth = AuthenticationService.getAuthentication(role, userId);
                 if (auth == null) {
                     return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_CLIENT)
-                            .setErrorDescription(AuthError.CLIENT_NOT_FOUND.toString());
+                            .setErrorDescription("Client not found. Contact your system administrator.");
                 }
                 if (!auth.getPassword()
                         .equals(AuthenticationService.encryptData(tokenRequest.getParams().get("password").getBytes(StandardCharsets.UTF_8)))) {
                     return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_CLIENT)
-                            .setErrorDescription(AuthError.INVALID_PASSWORD.toString());
+                            .setErrorDescription("Invalid password. Try again.");
                 }
 
                 if (AuthenticationService.isAccountDisabled(auth.getRole(), auth.getUserId())) {
                     return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_CLIENT)
-                            .setErrorDescription(AuthError.ACCOUNT_DISABLED.toString());
+                            .setErrorDescription("Target account is disabled. Contact your system administrator.");
                 }
 
                 var devices = DeviceService.getDevices(auth.getRole(), auth.getUserId());
-                if (devices.size() == YggdrasilConfig.getMaxLoginDevices()) {
-                    return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_REQUEST)
-                            .setErrorDescription(AuthError.MAX_DEVICES_EXCEEDED.toString());
+                if (devices.size() >= YggdrasilConfig.getMaxLoginDevices()) {
+                    DeviceService.removeDevice(TokenType.REFRESH_TOKEN, devices.getFirst().getRefreshToken());
+                }
+
+                if (tokenRequest.getParams().get("deviceName").equals("self") || tokenRequest.getParams().get("deviceName").equals("all")) {
+                    return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_CLIENT)
+                            .setErrorDescription("Invalid device name. Try again.");
                 }
 
                 var accessToken = AuthenticationService.generateToken();
@@ -100,30 +101,22 @@ public class AuthenticationEndpoint {
                         .setScope(role.toString());
             }
             case "refresh_token" -> {
-                if (tokenRequest.getParams().size() != 1) {
+                if (tokenRequest.getParams().size() != 1 ||
+                        !tokenRequest.getParams().containsKey("token")) {
                     return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_REQUEST)
-                            .setErrorDescription(AuthError.INVALID_PARAMETERS.toString());
-                }
-                if (!tokenRequest.getParams().containsKey("token")) {
-                    return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_REQUEST)
-                            .setErrorDescription(AuthError.REQUIRED_PARAMETER_MISSING.toString());
+                            .setErrorDescription("Required parameter expected. Try again.");
                 }
 
                 var devices = DeviceService.getDevices(TokenType.REFRESH_TOKEN,
                         AuthenticationService.encryptData(tokenRequest.getParams().get("token").getBytes(StandardCharsets.UTF_8)));
                 if (devices.isEmpty()) {
                     return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_CLIENT)
-                            .setErrorDescription(AuthError.CLIENT_NOT_FOUND.toString());
-                }
-                if (!devices.getFirst().getRefreshToken().equals(
-                        AuthenticationService.encryptData(tokenRequest.getParams().get("token").getBytes(StandardCharsets.UTF_8)))) {
-                    return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_CLIENT)
-                            .setErrorDescription(AuthError.INVALID_REFRESH_TOKEN.toString());
+                            .setErrorDescription("Client not found. Contact your system administrator.");
                 }
 
                 if (AuthenticationService.isAccountDisabled(devices.getFirst().getRole(), devices.getFirst().getUserId())) {
                     return new BearerTokenFailResponse(BearerTokenRequestError.INVALID_CLIENT)
-                            .setErrorDescription(AuthError.ACCOUNT_DISABLED.toString());
+                            .setErrorDescription("Target account is disabled. Contact your system administrator.");
                 }
 
                 var accessToken = AuthenticationService.generateToken();
@@ -137,7 +130,7 @@ public class AuthenticationEndpoint {
             }
             default -> {
                 return new BearerTokenFailResponse(BearerTokenRequestError.UNSUPPORTED_GRANT_TYPE)
-                        .setErrorDescription(AuthError.UNSUPPORTED_GRANT_TYPE.toString());
+                        .setErrorDescription("Unsupported authentication method. Use 'Bearer' scheme.");
             }
         }
     }

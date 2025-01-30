@@ -18,15 +18,10 @@ package io.github.lycoriscafe.yggdrasil.rest.admin;
 
 import io.github.lycoriscafe.nexus.http.core.HttpEndpoint;
 import io.github.lycoriscafe.nexus.http.core.headers.auth.Authenticated;
+import io.github.lycoriscafe.nexus.http.core.headers.content.Content;
 import io.github.lycoriscafe.nexus.http.core.headers.content.ExpectContent;
-import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.DELETE;
-import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.PATCH;
-import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.POST;
-import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.PUT;
-import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpDeleteRequest;
-import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpPatchRequest;
-import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpPostRequest;
-import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpPutRequest;
+import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.*;
+import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.*;
 import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpRes.HttpResponse;
 import io.github.lycoriscafe.yggdrasil.authentication.Authentication;
 import io.github.lycoriscafe.yggdrasil.authentication.AuthenticationService;
@@ -58,7 +53,7 @@ public class AdminEndpoint {
             SearchModel searchModel = SearchModel.fromJson(new String((byte[]) req.getContent().getData()));
             return res.setContent(CommonService.read(Admin.class, AdminService.class, searchModel).parse());
         } catch (Exception e) {
-            logger.atError().log(e.getMessage());
+            logger.atError().log(e.toString());
             return res.setContent(new ResponseModel<Admin>().setError(e.getMessage()).parse());
         }
     }
@@ -79,7 +74,7 @@ public class AdminEndpoint {
             }
             return res.setContent(response.parse());
         } catch (Exception e) {
-            logger.atError().log(e.getMessage());
+            logger.atError().log(e.toString());
             return res.setContent(new ResponseModel<Admin>().setError(e.getMessage()).parse());
         }
     }
@@ -95,7 +90,7 @@ public class AdminEndpoint {
             Admin instance = Utils.getGson().fromJson(new String((byte[]) req.getContent().getData()), Admin.class);
             return res.setContent(CommonService.update(Admin.class, AdminService.class, instance).parse());
         } catch (Exception e) {
-            logger.atError().log(e.getMessage());
+            logger.atError().log(e.toString());
             return res.setContent(new ResponseModel<Admin>().setError(e.getMessage()).parse());
         }
     }
@@ -117,7 +112,7 @@ public class AdminEndpoint {
             }
             return res.setContent(response.parse());
         } catch (Exception e) {
-            logger.atError().log(e.getMessage());
+            logger.atError().log(e.toString());
             return res.setContent(new ResponseModel<Admin>().setError(e.getMessage()).parse());
         }
     }
@@ -126,7 +121,8 @@ public class AdminEndpoint {
     @ExpectContent("application/x-www-form-urlencoded")
     public static HttpResponse resetPassword(HttpPatchRequest req,
                                              HttpResponse res) {
-        var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN), Set.of(AccessLevel.SUPERUSER));
+        var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN),
+                req.getParameters() == null ? null : Set.of(AccessLevel.SUPERUSER));
         if (auth != null) return auth;
         return res.setContent(AuthenticationService.updateAuthentication(req).parse());
     }
@@ -135,8 +131,16 @@ public class AdminEndpoint {
     @ExpectContent("none")
     public static HttpResponse logout(HttpPatchRequest req,
                                       HttpResponse res) {
-        var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN), Set.of(AccessLevel.SUPERUSER));
+        var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN), null);
         if (auth != null) return auth;
         return res.setContent(DeviceService.removeDevice(req).parse());
+    }
+
+    @GET("/devices")
+    public static HttpResponse getDevices(HttpGetRequest req,
+                                          HttpResponse res) {
+        var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN), null);
+        if (auth != null) return auth;
+        return res.setContent(new Content("application/json", DeviceService.getDevices(req)));
     }
 }

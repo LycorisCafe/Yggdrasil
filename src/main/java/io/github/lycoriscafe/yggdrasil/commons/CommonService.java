@@ -160,7 +160,7 @@ public class CommonService {
                 response.setResultsOffset(new BigInteger(resultsOffsetResultSet.getString(1)));
             }
             connection.commit();
-            return response.setSuccess(true);
+            return response.setResultsFrom(searchModel.getResultsFrom()).setSuccess(true);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

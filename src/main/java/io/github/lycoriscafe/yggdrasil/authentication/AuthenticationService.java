@@ -66,21 +66,21 @@ public class AuthenticationService {
         if (httpRequest.getAuthorization() == null || httpRequest.getAuthorization().getAuthScheme() != AuthScheme.BEARER) {
             return httpResponse.setStatusCode(HttpStatusCode.BAD_REQUEST).addAuthentication(
                     new BearerAuthentication(BearerAuthorizationError.INVALID_REQUEST)
-                            .setErrorDescription(AuthError.UNSUPPORTED_AUTHENTICATION.toString()));
+                            .setErrorDescription("Unsupported authentication method. Use 'Bearer' scheme."));
         }
 
         var authRequest = (BearerAuthorization) httpRequest.getAuthorization();
         try {
             var device = DeviceService.getDevices(TokenType.ACCESS_TOKEN, authRequest.getAccessToken());
-            if (device == null || device.isEmpty()) {
+            if (device.isEmpty()) {
                 return httpResponse.setStatusCode(HttpStatusCode.UNAUTHORIZED).addAuthentication(
                         new BearerAuthentication(BearerAuthorizationError.INVALID_TOKEN)
-                                .setErrorDescription(AuthError.INVALID_ACCESS_TOKEN.toString()));
+                                .setErrorDescription("Invalid access token. Check the token and try again."));
             }
             if (Instant.now().getEpochSecond() > device.getFirst().getExpires()) {
                 return httpResponse.setStatusCode(HttpStatusCode.UNAUTHORIZED).addAuthentication(
                         new BearerAuthentication(BearerAuthorizationError.INVALID_TOKEN)
-                                .setErrorDescription(AuthError.ACCESS_TOKEN_EXPIRED.toString()));
+                                .setErrorDescription("Access token expired. Update the token and try again."));
             }
 
             if (!targetRoles.contains(device.getFirst().getRole())) {
@@ -89,13 +89,13 @@ public class AuthenticationService {
                 scope.deleteCharAt(scope.length() - 1).append("]");
                 return httpResponse.setStatusCode(HttpStatusCode.FORBIDDEN).addAuthentication(
                         new BearerAuthentication(BearerAuthorizationError.INSUFFICIENT_SCOPE).setScope(scope.toString())
-                                .setErrorDescription(AuthError.INSUFFICIENT_SCOPE.toString()));
+                                .setErrorDescription("Insufficient scope. Contact your system administrator."));
             }
 
             if (AuthenticationService.isAccountDisabled(device.getFirst().getRole(), device.getFirst().getUserId())) {
                 return httpResponse.setStatusCode(HttpStatusCode.UNAUTHORIZED).addAuthentication(
                         new BearerAuthentication(BearerAuthorizationError.INVALID_TOKEN)
-                                .setErrorDescription(AuthError.ACCOUNT_DISABLED.toString()));
+                                .setErrorDescription("Target account is disabled. Contact your system administrator."));
             }
 
             if (targetRoles.contains(Role.ADMIN) && accessLevels != null) {
@@ -106,7 +106,7 @@ public class AuthenticationService {
                     return httpResponse.setStatusCode(HttpStatusCode.FORBIDDEN).addAuthentication(
                             new BearerAuthentication(BearerAuthorizationError.INSUFFICIENT_SCOPE)
                                     .setScope(Role.ADMIN + "#" + accessLevels)
-                                    .setErrorDescription(AuthError.INSUFFICIENT_SCOPE.toString()));
+                                    .setErrorDescription("Insufficient scope. Contact your system administrator."));
                 }
             }
             return null;
@@ -146,6 +146,22 @@ public class AuthenticationService {
         }
     }
 
+    public static boolean updateAuthentication(Authentication authentication) throws SQLException, NoSuchAlgorithmException {
+        Objects.requireNonNull(authentication);
+        try (var connection = Utils.getDatabaseConnection();
+             var statement = connection.prepareStatement("UPDATE authentication SET password = ? WHERE role = ? AND userId = ?")) {
+            statement.setString(1, encryptData(authentication.getPassword().getBytes(StandardCharsets.UTF_8)));
+            statement.setString(2, authentication.getRole().toString());
+            statement.setString(3, authentication.getUserId().toString());
+            if (statement.executeUpdate() != 1) {
+                connection.rollback();
+                return false;
+            }
+            connection.commit();
+            return true;
+        }
+    }
+
     public static <T extends Entity> ResponseModel<T> updateAuthentication(HttpPostRequest req) {
         Objects.requireNonNull(req);
         UrlEncodedData data = (UrlEncodedData) req.getContent().getData();
@@ -169,21 +185,10 @@ public class AuthenticationService {
                 return new ResponseModel<T>().setError("oldPassword doesn't match");
             }
             authentication.setPassword(newPassword);
-
-            try (var connection = Utils.getDatabaseConnection();
-                 var statement = connection.prepareStatement("UPDATE authentication SET password = ? WHERE role = ? AND userId = ?")) {
-                statement.setString(1, encryptData(authentication.getPassword().getBytes(StandardCharsets.UTF_8)));
-                statement.setString(2, authentication.getRole().toString());
-                statement.setString(3, authentication.getUserId().toString());
-                if (statement.executeUpdate() != 1) {
-                    connection.rollback();
-                    return new ResponseModel<T>().setError("Internal system error");
-                }
-                connection.commit();
-                return new ResponseModel<T>().setSuccess(true);
-            }
+            if (!updateAuthentication(authentication)) return new ResponseModel<T>().setError("Internal system error");
+            return new ResponseModel<T>().setSuccess(true);
         } catch (SQLException | NoSuchAlgorithmException e) {
-            logger.atError().log(e.getMessage());
+            logger.atError().log(e.toString());
             return new ResponseModel<T>().setError("Internal system error");
         }
     }

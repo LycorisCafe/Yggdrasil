@@ -55,7 +55,7 @@ public class TeacherSubjectJoinEndpoint {
             SearchModel searchModel = SearchModel.fromJson(new String((byte[]) req.getContent().getData()));
             return res.setContent(CommonService.read(TeacherSubjectJoin.class, TeacherSubjectJoinService.class, searchModel).parse());
         } catch (Exception e) {
-            logger.atError().log(e.getMessage());
+            logger.atError().log(e.toString());
             return res.setContent(new ResponseModel<TeacherSubjectJoin>().setError(e.getMessage()).parse());
         }
     }
@@ -71,7 +71,7 @@ public class TeacherSubjectJoinEndpoint {
             TeacherSubjectJoin instance = Utils.getGson().fromJson(new String((byte[]) req.getContent().getData()), TeacherSubjectJoin.class);
             return res.setContent(CommonService.create(TeacherSubjectJoin.class, TeacherSubjectJoinService.class, instance).parse());
         } catch (Exception e) {
-            logger.atError().log(e.getMessage());
+            logger.atError().log(e.toString());
             return res.setContent(new ResponseModel<TeacherSubjectJoin>().setError(e.getMessage()).parse());
         }
     }
@@ -87,7 +87,7 @@ public class TeacherSubjectJoinEndpoint {
             TeacherSubjectJoin instance = Utils.getGson().fromJson(new String((byte[]) req.getContent().getData()), TeacherSubjectJoin.class);
             return res.setContent(CommonService.update(TeacherSubjectJoin.class, TeacherSubjectJoinService.class, instance).parse());
         } catch (Exception e) {
-            logger.atError().log(e.getMessage());
+            logger.atError().log(e.toString());
             return res.setContent(new ResponseModel<TeacherSubjectJoin>().setError(e.getMessage()).parse());
         }
     }
@@ -105,7 +105,7 @@ public class TeacherSubjectJoinEndpoint {
             BigInteger id = new BigInteger(req.getParameters().get("id"));
             return res.setContent(CommonService.delete(TeacherSubjectJoin.class, id).parse());
         } catch (Exception e) {
-            logger.atError().log(e.getMessage());
+            logger.atError().log(e.toString());
             return res.setContent(new ResponseModel<TeacherSubjectJoin>().setError(e.getMessage()).parse());
         }
     }

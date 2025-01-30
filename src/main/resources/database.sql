@@ -1,19 +1,3 @@
-/*
- * Copyright 2025 Lycoris Café
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 # Create the database
 # CREATE DATABASE yggdrasil CHARACTER SET 'utf8mb4';
 
@@ -187,6 +171,7 @@ CREATE TABLE devices
     accessToken  VARBINARY(100) UNIQUE NOT NULL,
     expires      BIGINT                NOT NULL,
     refreshToken VARBINARY(100) UNIQUE NOT NULL,
+    lastLogin DATETIME DEFAULT NOW() ON UPDATE NOW(),
     UNIQUE (role, userId, name)
 );
 
@@ -224,6 +209,34 @@ ALTER TABLE timetable
 
 ALTER TABLE devices
     ADD FOREIGN KEY (role, userId) REFERENCES authentication (role, userId) ON UPDATE CASCADE ON DELETE CASCADE;
+
+DELIMITER //
+CREATE TRIGGER notification_prevent_createTimestamp_update
+    BEFORE UPDATE
+    ON notification
+    FOR EACH ROW
+BEGIN
+    -- Ensure the createTimestamp remains unchanged
+    SET NEW.createTimestamp = OLD.createTimestamp;
+END;
+//
+DELIMITER ;
+
+/*
+ * Copyright 2025 Lycoris Café
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 # End the constructions of the structure
 COMMIT;

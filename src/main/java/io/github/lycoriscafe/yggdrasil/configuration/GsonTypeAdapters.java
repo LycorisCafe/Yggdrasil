@@ -24,6 +24,23 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 public class GsonTypeAdapters {
+    public static class Year implements JsonSerializer<java.time.Year>, JsonDeserializer<java.time.Year> {
+
+        @Override
+        public java.time.Year deserialize(JsonElement jsonElement,
+                                          Type type,
+                                          JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
+            return jsonElement == null ? null : java.time.Year.parse(jsonElement.getAsString(), Utils.getYearFormatter());
+        }
+
+        @Override
+        public JsonElement serialize(java.time.Year year,
+                                     Type type,
+                                     JsonSerializationContext jsonSerializationContext) {
+            return year == null ? null : new JsonPrimitive(year.format(Utils.getYearFormatter()));
+        }
+    }
+
     public static class Date implements JsonSerializer<LocalDate>, JsonDeserializer<LocalDate> {
         @Override
         public LocalDate deserialize(JsonElement jsonElement,
@@ -36,7 +53,7 @@ public class GsonTypeAdapters {
         public JsonElement serialize(LocalDate localDate,
                                      Type type,
                                      JsonSerializationContext jsonSerializationContext) {
-            return localDate == null ? null : new JsonPrimitive(localDate.toString());
+            return localDate == null ? null : new JsonPrimitive(localDate.format(Utils.getDateFormatter()));
         }
     }
 
@@ -52,7 +69,7 @@ public class GsonTypeAdapters {
         public JsonElement serialize(LocalTime localTime,
                                      Type type,
                                      JsonSerializationContext jsonSerializationContext) {
-            return localTime == null ? null : new JsonPrimitive(localTime.toString());
+            return localTime == null ? null : new JsonPrimitive(localTime.format(Utils.getDateTimeFormatter()));
         }
     }
 
@@ -68,7 +85,7 @@ public class GsonTypeAdapters {
         public JsonElement serialize(LocalDateTime localDateTime,
                                      Type type,
                                      JsonSerializationContext jsonSerializationContext) {
-            return localDateTime == null ? null : new JsonPrimitive(Utils.getDateTimeFormatter().format(localDateTime));
+            return localDateTime == null ? null : new JsonPrimitive(localDateTime.format(Utils.getDateTimeFormatter()));
         }
     }
 }

@@ -50,8 +50,8 @@ public class AdminService implements EntityService<Admin> {
         instance.setId(new BigInteger(resultSet.getString("id")))
                 .setName(resultSet.getString("name"));
         Set<AccessLevel> accessLevels = new HashSet<>();
-        Arrays.stream(resultSet.getString("accessLevel").split(",", 0)).forEach(e -> accessLevels.add(AccessLevel.valueOf(e)));
-        instance.setAccessLevel(accessLevels)
-                .setDisabled(resultSet.getBoolean("disabled"));
+        Arrays.stream(resultSet.getString("accessLevel").split(",", 0))
+                .forEach(e -> accessLevels.add(AccessLevel.valueOf(e)));
+        instance.setAccessLevel(accessLevels).setDisabled(resultSet.getBoolean("disabled"));
     }
 }

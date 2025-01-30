@@ -16,7 +16,6 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.notification;
 
-import com.mysql.cj.xdevapi.Type;
 import io.github.lycoriscafe.yggdrasil.commons.EntityService;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
 
@@ -32,8 +31,8 @@ public class NotificationService implements EntityService<Notification> {
                                   boolean isUpdate) throws SQLException {
         int nextParamIndex = 1;
         if (!isUpdate) statement.setString(nextParamIndex++, instance.getId().toString());
-        statement.setObject(nextParamIndex++, Type.DATETIME);
-        statement.setObject(nextParamIndex++, Type.DATETIME);
+        statement.setString(nextParamIndex++, null);
+        statement.setString(nextParamIndex++, null);
         statement.setString(nextParamIndex++, instance.getScope().toString());
         statement.setString(nextParamIndex++, instance.getMessage());
         statement.setBoolean(nextParamIndex++, instance.getDraft() != null && instance.getDraft());

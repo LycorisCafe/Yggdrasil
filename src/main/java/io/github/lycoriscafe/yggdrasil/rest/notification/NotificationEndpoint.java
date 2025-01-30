@@ -55,7 +55,7 @@ public class NotificationEndpoint {
             SearchModel searchModel = SearchModel.fromJson(new String((byte[]) req.getContent().getData()));
             return res.setContent(CommonService.read(Notification.class, NotificationService.class, searchModel).parse());
         } catch (Exception e) {
-            logger.atError().log(e.getMessage());
+            logger.atError().log(e.toString());
             return res.setContent(new ResponseModel<Notification>().setError(e.getMessage()).parse());
         }
     }
@@ -71,7 +71,7 @@ public class NotificationEndpoint {
             Notification instance = Utils.getGson().fromJson(new String((byte[]) req.getContent().getData()), Notification.class);
             return res.setContent(CommonService.create(Notification.class, NotificationService.class, instance).parse());
         } catch (Exception e) {
-            logger.atError().log(e.getMessage());
+            logger.atError().log(e.toString());
             return res.setContent(new ResponseModel<Notification>().setError(e.getMessage()).parse());
         }
     }
@@ -87,7 +87,7 @@ public class NotificationEndpoint {
             Notification instance = Utils.getGson().fromJson(new String((byte[]) req.getContent().getData()), Notification.class);
             return res.setContent(CommonService.update(Notification.class, NotificationService.class, instance).parse());
         } catch (Exception e) {
-            logger.atError().log(e.getMessage());
+            logger.atError().log(e.toString());
             return res.setContent(new ResponseModel<Notification>().setError(e.getMessage()).parse());
         }
     }
@@ -105,7 +105,7 @@ public class NotificationEndpoint {
             BigInteger id = new BigInteger(req.getParameters().get("id"));
             return res.setContent(CommonService.delete(Notification.class, id).parse());
         } catch (Exception e) {
-            logger.atError().log(e.getMessage());
+            logger.atError().log(e.toString());
             return res.setContent(new ResponseModel<Notification>().setError(e.getMessage()).parse());
         }
     }

@@ -18,15 +18,10 @@ package io.github.lycoriscafe.yggdrasil.rest.teacher;
 
 import io.github.lycoriscafe.nexus.http.core.HttpEndpoint;
 import io.github.lycoriscafe.nexus.http.core.headers.auth.Authenticated;
+import io.github.lycoriscafe.nexus.http.core.headers.content.Content;
 import io.github.lycoriscafe.nexus.http.core.headers.content.ExpectContent;
-import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.DELETE;
-import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.PATCH;
-import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.POST;
-import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.PUT;
-import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpDeleteRequest;
-import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpPatchRequest;
-import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpPostRequest;
-import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.HttpPutRequest;
+import io.github.lycoriscafe.nexus.http.core.requestMethods.annotations.*;
+import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpReq.*;
 import io.github.lycoriscafe.nexus.http.engine.reqResManager.httpRes.HttpResponse;
 import io.github.lycoriscafe.yggdrasil.authentication.Authentication;
 import io.github.lycoriscafe.yggdrasil.authentication.AuthenticationService;
@@ -59,7 +54,7 @@ public class TeacherEndpoint {
             SearchModel searchModel = SearchModel.fromJson(new String((byte[]) req.getContent().getData()));
             return res.setContent(CommonService.read(Teacher.class, TeacherService.class, searchModel).parse());
         } catch (Exception e) {
-            logger.atError().log(e.getMessage());
+            logger.atError().log(e.toString());
             return res.setContent(new ResponseModel<Teacher>().setError(e.getMessage()).parse());
         }
     }
@@ -80,7 +75,7 @@ public class TeacherEndpoint {
             }
             return res.setContent(response.parse());
         } catch (Exception e) {
-            logger.atError().log(e.getMessage());
+            logger.atError().log(e.toString());
             return res.setContent(new ResponseModel<Teacher>().setError(e.getMessage()).parse());
         }
     }
@@ -96,7 +91,7 @@ public class TeacherEndpoint {
             Teacher instance = Utils.getGson().fromJson(new String((byte[]) req.getContent().getData()), Teacher.class);
             return res.setContent(CommonService.update(Teacher.class, TeacherService.class, instance).parse());
         } catch (Exception e) {
-            logger.atError().log(e.getMessage());
+            logger.atError().log(e.toString());
             return res.setContent(new ResponseModel<Teacher>().setError(e.getMessage()).parse());
         }
     }
@@ -118,7 +113,7 @@ public class TeacherEndpoint {
             }
             return res.setContent(response.parse());
         } catch (Exception e) {
-            logger.atError().log(e.getMessage());
+            logger.atError().log(e.toString());
             return res.setContent(new ResponseModel<Teacher>().setError(e.getMessage()).parse());
         }
     }
@@ -140,5 +135,13 @@ public class TeacherEndpoint {
         var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN, Role.TEACHER), Set.of(AccessLevel.SUPERUSER, AccessLevel.TEACHER));
         if (auth != null) return auth;
         return res.setContent(DeviceService.removeDevice(req).parse());
+    }
+
+    @GET("/devices")
+    public static HttpResponse getDevices(HttpGetRequest req,
+                                          HttpResponse res) {
+        var auth = AuthenticationService.authenticate(req, Set.of(Role.TEACHER), null);
+        if (auth != null) return auth;
+        return res.setContent(new Content("application/json", DeviceService.getDevices(req)));
     }
 }

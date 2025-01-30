@@ -16,7 +16,6 @@
 
 package io.github.lycoriscafe.yggdrasil.rest.teacher.attendance;
 
-import com.mysql.cj.xdevapi.Type;
 import io.github.lycoriscafe.yggdrasil.commons.EntityService;
 import io.github.lycoriscafe.yggdrasil.configuration.Utils;
 
@@ -34,8 +33,8 @@ public class TeacherAttendanceService implements EntityService<TeacherAttendance
         int nextParamIndex = 1;
         if (!isUpdate) statement.setString(nextParamIndex++, instance.getId().toString());
         statement.setString(nextParamIndex++, instance.getTeacherId().toString());
-        statement.setObject(nextParamIndex++, Type.DATE);
-        statement.setObject(nextParamIndex++, Type.TIME);
+        statement.setString(nextParamIndex++, null);
+        statement.setString(nextParamIndex++, null);
         if (isUpdate) statement.setString(nextParamIndex, instance.getId().toString());
     }
 
