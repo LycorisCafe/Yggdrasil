@@ -31,11 +31,11 @@ public class StudentAttendanceService implements EntityService<StudentAttendance
                                   StudentAttendance instance,
                                   boolean isUpdate) throws SQLException {
         int nextParamIndex = 1;
-        if (!isUpdate) statement.setString(nextParamIndex++, instance.getId().toString());
+        if (!isUpdate) statement.setString(nextParamIndex++, instance.getId() == null ? null : instance.getId().toString());
         statement.setString(nextParamIndex++, instance.getStudentId().toString());
         statement.setString(nextParamIndex++, null);
         statement.setString(nextParamIndex++, null);
-        if (isUpdate) statement.setString(nextParamIndex, instance.getId().toString());
+        if (isUpdate) statement.setString(nextParamIndex, instance.getId() == null ? null : instance.getId().toString());
     }
 
     public static void fromDatabase(ResultSet resultSet,

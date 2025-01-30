@@ -28,12 +28,12 @@ public class SubjectService implements EntityService<Subject> {
                                   Subject instance,
                                   boolean isUpdate) throws SQLException {
         int nextParamIndex = 1;
-        if (!isUpdate) statement.setString(nextParamIndex++, instance.getId().toString());
+        if (!isUpdate) statement.setString(nextParamIndex++, instance.getId() == null ? null : instance.getId().toString());
         statement.setInt(nextParamIndex++, instance.getGrade());
         statement.setString(nextParamIndex++, instance.getShortName());
         statement.setString(nextParamIndex++, instance.getLongName());
         statement.setString(nextParamIndex++, instance.getTeacherId() == null ? null : instance.getTeacherId().toString());
-        if (isUpdate) statement.setString(nextParamIndex, instance.getId().toString());
+        if (isUpdate) statement.setString(nextParamIndex, instance.getId() == null ? null : instance.getId().toString());
     }
 
     public static void fromDatabase(ResultSet resultSet,

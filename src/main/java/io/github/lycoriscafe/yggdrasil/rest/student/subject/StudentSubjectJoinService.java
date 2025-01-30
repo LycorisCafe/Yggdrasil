@@ -28,10 +28,10 @@ public class StudentSubjectJoinService implements EntityService<StudentSubjectJo
                                   StudentSubjectJoin instance,
                                   boolean isUpdate) throws SQLException {
         int nextParamIndex = 1;
-        if (!isUpdate) statement.setString(nextParamIndex++, instance.getId().toString());
+        if (!isUpdate) statement.setString(nextParamIndex++, instance.getId() == null ? null : instance.getId().toString());
         statement.setString(nextParamIndex++, instance.getStudentId().toString());
         statement.setString(nextParamIndex++, instance.getSubjectId().toString());
-        if (isUpdate) statement.setString(nextParamIndex, instance.getId().toString());
+        if (isUpdate) statement.setString(nextParamIndex, instance.getId() == null ? null : instance.getId().toString());
     }
 
     public static void fromDatabase(ResultSet resultSet,

@@ -31,7 +31,7 @@ public class GuardianService implements EntityService<Guardian> {
                                   Guardian instance,
                                   boolean isUpdate) throws SQLException {
         int nextParamIndex = 1;
-        if (!isUpdate) statement.setString(nextParamIndex++, instance.getId().toString());
+        if (!isUpdate) statement.setString(nextParamIndex++, instance.getId() == null ? null : instance.getId().toString());
         statement.setString(nextParamIndex++, instance.getNic());
         statement.setString(nextParamIndex++, instance.getInitName());
         statement.setString(nextParamIndex++, instance.getFullName());
@@ -40,7 +40,7 @@ public class GuardianService implements EntityService<Guardian> {
         statement.setString(nextParamIndex++, instance.getAddress());
         statement.setString(nextParamIndex++, instance.getEmail());
         statement.setString(nextParamIndex++, instance.getContactNo());
-        if (isUpdate) statement.setString(nextParamIndex, instance.getId().toString());
+        if (isUpdate) statement.setString(nextParamIndex, instance.getId() == null ? null : instance.getId().toString());
     }
 
     public static void fromDatabase(ResultSet resultSet,

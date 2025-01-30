@@ -32,7 +32,7 @@ public class StudentService implements EntityService<Student> {
                                   Student instance,
                                   boolean isUpdate) throws SQLException {
         int nextParamIndex = 1;
-        if (!isUpdate) statement.setString(nextParamIndex++, instance.getId().toString());
+        if (!isUpdate) statement.setString(nextParamIndex++, instance.getId() == null ? null : instance.getId().toString());
         statement.setString(nextParamIndex++, instance.getGuardianId().toString());
         statement.setString(nextParamIndex++, instance.getClassroomId() == null ? null : instance.getClassroomId().toString());
         statement.setString(nextParamIndex++, instance.getInitName());
@@ -45,7 +45,7 @@ public class StudentService implements EntityService<Student> {
         statement.setString(nextParamIndex++, instance.getContactNo());
         statement.setString(nextParamIndex++, instance.getEmail());
         statement.setBoolean(nextParamIndex++, instance.getDisabled() != null && instance.getDisabled());
-        if (isUpdate) statement.setString(nextParamIndex, instance.getId().toString());
+        if (isUpdate) statement.setString(nextParamIndex, instance.getId() == null ? null : instance.getId().toString());
     }
 
     public static void fromDatabase(ResultSet resultSet,

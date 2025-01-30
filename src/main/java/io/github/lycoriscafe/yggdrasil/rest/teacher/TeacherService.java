@@ -31,7 +31,7 @@ public class TeacherService implements EntityService<Teacher> {
                                   Teacher instance,
                                   boolean isUpdate) throws SQLException {
         int nextParamIndex = 1;
-        if (!isUpdate) statement.setString(nextParamIndex++, instance.getId().toString());
+        if (!isUpdate) statement.setString(nextParamIndex++, instance.getId() == null ? null : instance.getId().toString());
         statement.setString(nextParamIndex++, instance.getNic());
         statement.setString(nextParamIndex++, instance.getInitName());
         statement.setString(nextParamIndex++, instance.getFullName());
@@ -41,7 +41,7 @@ public class TeacherService implements EntityService<Teacher> {
         statement.setString(nextParamIndex++, instance.getEmail());
         statement.setString(nextParamIndex++, instance.getContactNo());
         statement.setBoolean(nextParamIndex++, instance.getDisabled() != null && instance.getDisabled());
-        if (isUpdate) statement.setString(nextParamIndex, instance.getId().toString());
+        if (isUpdate) statement.setString(nextParamIndex, instance.getId() == null ? null : instance.getId().toString());
     }
 
     public static void fromDatabase(ResultSet resultSet,

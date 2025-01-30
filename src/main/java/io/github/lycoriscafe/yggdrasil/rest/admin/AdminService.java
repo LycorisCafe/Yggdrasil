@@ -32,7 +32,7 @@ public class AdminService implements EntityService<Admin> {
                                   Admin instance,
                                   boolean isUpdate) throws SQLException {
         int nextParamIndex = 1;
-        if (!isUpdate) statement.setString(nextParamIndex++, instance.getId().toString());
+        if (!isUpdate) statement.setString(nextParamIndex++, instance.getId() == null ? null : instance.getId().toString());
         statement.setString(nextParamIndex++, instance.getName());
         StringBuilder accessLevels = new StringBuilder();
         List<AccessLevel> accessLevelList = instance.getAccessLevel().stream().toList();
@@ -42,7 +42,7 @@ public class AdminService implements EntityService<Admin> {
         }
         statement.setString(nextParamIndex++, accessLevels.toString());
         statement.setBoolean(nextParamIndex++, instance.getDisabled() != null && instance.getDisabled());
-        if (isUpdate) statement.setString(nextParamIndex, instance.getId().toString());
+        if (isUpdate) statement.setString(nextParamIndex, instance.getId() == null ? null : instance.getId().toString());
     }
 
     public static void fromDatabase(ResultSet resultSet,

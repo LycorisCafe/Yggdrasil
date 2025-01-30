@@ -30,13 +30,13 @@ public class NotificationService implements EntityService<Notification> {
                                   Notification instance,
                                   boolean isUpdate) throws SQLException {
         int nextParamIndex = 1;
-        if (!isUpdate) statement.setString(nextParamIndex++, instance.getId().toString());
+        if (!isUpdate) statement.setString(nextParamIndex++, instance.getId() == null ? null : instance.getId().toString());
         statement.setString(nextParamIndex++, null);
         statement.setString(nextParamIndex++, null);
         statement.setString(nextParamIndex++, instance.getScope().toString());
         statement.setString(nextParamIndex++, instance.getMessage());
         statement.setBoolean(nextParamIndex++, instance.getDraft() != null && instance.getDraft());
-        if (isUpdate) statement.setString(nextParamIndex, instance.getId().toString());
+        if (isUpdate) statement.setString(nextParamIndex, instance.getId() == null ? null : instance.getId().toString());
     }
 
     public static void fromDatabase(ResultSet resultSet,
