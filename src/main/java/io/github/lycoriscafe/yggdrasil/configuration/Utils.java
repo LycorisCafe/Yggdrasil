@@ -32,6 +32,14 @@ public class Utils {
     private static final String DATE_FORMAT = "yyyy-MM-dd";
     private static final String TIME_FORMAT = "HH:mm:ss";
     private static final String DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
+    private static final Gson GSON_INSTANCE = new GsonBuilder()
+            .serializeNulls()
+            .setDateFormat(Utils.DATE_TIME_FORMAT)
+            .registerTypeAdapter(Year.class, new GsonTypeAdapters.Year())
+            .registerTypeAdapter(LocalDate.class, new GsonTypeAdapters.Date())
+            .registerTypeAdapter(LocalTime.class, new GsonTypeAdapters.Time())
+            .registerTypeAdapter(LocalDateTime.class, new GsonTypeAdapters.DateTime())
+            .create();
 
     public static Connection getDatabaseConnection() throws SQLException {
         return YggdrasilConfig.getDatabase().getConnection();
@@ -54,13 +62,6 @@ public class Utils {
     }
 
     public static Gson getGson() {
-        return new GsonBuilder()
-                .serializeNulls()
-                .setDateFormat(Utils.DATE_TIME_FORMAT)
-                .registerTypeAdapter(Year.class, new GsonTypeAdapters.Year())
-                .registerTypeAdapter(LocalDate.class, new GsonTypeAdapters.Date())
-                .registerTypeAdapter(LocalTime.class, new GsonTypeAdapters.Time())
-                .registerTypeAdapter(LocalDateTime.class, new GsonTypeAdapters.DateTime())
-                .create();
+        return GSON_INSTANCE;
     }
 }
