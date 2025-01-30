@@ -47,8 +47,8 @@ public class GuardianService implements EntityService<Guardian> {
                                     Guardian instance) throws SQLException {
         instance.setId(new BigInteger(resultSet.getString("id")))
                 .setNic(resultSet.getString("nic"))
-                .setInitName(resultSet.getString("init_name"))
-                .setFullName(resultSet.getString("full_name"))
+                .setInitName(resultSet.getString("initName"))
+                .setFullName(resultSet.getString("fullName"))
                 .setGender(Gender.valueOf(resultSet.getString("gender")))
                 .setDateOfBirth(LocalDate.parse(resultSet.getString("dateOfBirth"), Utils.getDateFormatter()))
                 .setAddress(resultSet.getString("address"))
