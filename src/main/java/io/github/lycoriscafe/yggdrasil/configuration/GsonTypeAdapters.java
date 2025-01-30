@@ -30,14 +30,14 @@ public class GsonTypeAdapters {
         public java.time.Year deserialize(JsonElement jsonElement,
                                           Type type,
                                           JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
-            return jsonElement == null ? null : java.time.Year.parse(jsonElement.getAsString(), Utils.getDateTimeFormatter());
+            return jsonElement == null ? null : java.time.Year.parse(jsonElement.getAsString(), Utils.getYearFormatter());
         }
 
         @Override
         public JsonElement serialize(java.time.Year year,
                                      Type type,
                                      JsonSerializationContext jsonSerializationContext) {
-            return year == null ? null : new JsonPrimitive(year.format(Utils.getDateTimeFormatter()));
+            return year == null ? null : new JsonPrimitive(year.format(Utils.getYearFormatter()));
         }
     }
 
@@ -46,14 +46,14 @@ public class GsonTypeAdapters {
         public LocalDate deserialize(JsonElement jsonElement,
                                      Type type,
                                      JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
-            return jsonElement == null ? null : LocalDate.parse(jsonElement.getAsString(), Utils.getDateTimeFormatter());
+            return jsonElement == null ? null : LocalDate.parse(jsonElement.getAsString(), Utils.getDateFormatter());
         }
 
         @Override
         public JsonElement serialize(LocalDate localDate,
                                      Type type,
                                      JsonSerializationContext jsonSerializationContext) {
-            return localDate == null ? null : new JsonPrimitive(localDate.format(Utils.getDateTimeFormatter()));
+            return localDate == null ? null : new JsonPrimitive(localDate.format(Utils.getDateFormatter()));
         }
     }
 
@@ -62,14 +62,14 @@ public class GsonTypeAdapters {
         public LocalTime deserialize(JsonElement jsonElement,
                                      Type type,
                                      JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
-            return jsonElement == null ? null : LocalTime.parse(jsonElement.getAsString(), Utils.getDateTimeFormatter());
+            return jsonElement == null ? null : LocalTime.parse(jsonElement.getAsString(), Utils.getTimeFormatter());
         }
 
         @Override
         public JsonElement serialize(LocalTime localTime,
                                      Type type,
                                      JsonSerializationContext jsonSerializationContext) {
-            return localTime == null ? null : new JsonPrimitive(localTime.format(Utils.getDateTimeFormatter()));
+            return localTime == null ? null : new JsonPrimitive(localTime.format(Utils.getTimeFormatter()));
         }
     }
 

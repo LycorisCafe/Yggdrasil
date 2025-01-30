@@ -41,7 +41,7 @@ public class StudentService implements EntityService<Student> {
         statement.setString(nextParamIndex++, instance.getDateOfBirth().format(Utils.getDateTimeFormatter()));
         statement.setString(nextParamIndex++, instance.getNic());
         statement.setString(nextParamIndex++, instance.getAddress());
-        statement.setString(nextParamIndex++, instance.getRegYear().format(Utils.getDateTimeFormatter()));
+        statement.setString(nextParamIndex++, instance.getRegYear().format(Utils.getYearFormatter()));
         statement.setString(nextParamIndex++, instance.getContactNo());
         statement.setString(nextParamIndex++, instance.getEmail());
         statement.setBoolean(nextParamIndex++, instance.getDisabled() != null && instance.getDisabled());

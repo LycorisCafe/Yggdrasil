@@ -42,7 +42,7 @@ public class StudentAttendanceService implements EntityService<StudentAttendance
                                     StudentAttendance instance) throws SQLException {
         instance.setId(new BigInteger(resultSet.getString("id")))
                 .setStudentId(new BigInteger(resultSet.getString("studentId")))
-                .setDate(LocalDate.parse(resultSet.getString("date"), Utils.getDateTimeFormatter()))
-                .setTime(LocalTime.parse(resultSet.getString("time"), Utils.getDateTimeFormatter()));
+                .setDate(LocalDate.parse(resultSet.getString("date"), Utils.getDateFormatter()))
+                .setTime(LocalTime.parse(resultSet.getString("time"), Utils.getTimeFormatter()));
     }
 }
