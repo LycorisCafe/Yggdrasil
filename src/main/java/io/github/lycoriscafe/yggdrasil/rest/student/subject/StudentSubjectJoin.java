@@ -21,7 +21,7 @@ import io.github.lycoriscafe.yggdrasil.commons.Entity;
 import java.math.BigInteger;
 import java.util.Objects;
 
-public class StudentSubjectJoin implements Entity {
+public final class StudentSubjectJoin implements Entity {
     private BigInteger id;
     private BigInteger studentId;
     private BigInteger subjectId;

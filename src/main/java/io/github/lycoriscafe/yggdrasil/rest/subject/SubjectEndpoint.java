@@ -41,7 +41,7 @@ import java.util.Set;
 
 @HttpEndpoint("/subject")
 @Authenticated
-public class SubjectEndpoint {
+public final class SubjectEndpoint {
     private static final Logger logger = LoggerFactory.getLogger(SubjectEndpoint.class);
 
     @POST("/read")

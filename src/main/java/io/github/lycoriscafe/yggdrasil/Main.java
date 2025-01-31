@@ -20,11 +20,10 @@ import io.github.lycoriscafe.nexus.http.helper.scanners.ScannerException;
 import io.github.lycoriscafe.yggdrasil.configuration.YggdrasilConfig;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.sql.SQLException;
 
-public class Main {
-    public static void main(String[] args) throws ScannerException, SQLException, IOException, URISyntaxException {
+public final class Main {
+    public static void main(String[] args) throws ScannerException, SQLException, IOException {
         // initialize application configurations
         YggdrasilConfig.initialize();
     }

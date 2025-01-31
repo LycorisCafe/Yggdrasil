@@ -27,7 +27,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Properties;
 
-public class YggdrasilConfig {
+public final class YggdrasilConfig {
     private static HikariDataSource database;
     private static HttpServer httpServer;
     private static Long defaultResultsOffset = 50L;

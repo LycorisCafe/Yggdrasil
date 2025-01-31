@@ -23,7 +23,7 @@ import java.math.BigInteger;
 import java.time.LocalDate;
 import java.util.Objects;
 
-public class Teacher implements Entity {
+public final class Teacher implements Entity {
     private BigInteger id;
     private String nic;
     private String initName;

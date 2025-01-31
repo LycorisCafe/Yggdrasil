@@ -29,7 +29,7 @@ import java.sql.SQLException;
 import java.time.Instant;
 
 @HttpEndpoint("/login")
-public class AuthenticationEndpoint {
+public final class AuthenticationEndpoint {
     @BearerEndpoint(@POST("/"))
     public static BearerTokenResponse login(BearerTokenRequest tokenRequest)
             throws SQLException, NoSuchAlgorithmException, IOException, NoSuchFieldException {

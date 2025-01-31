@@ -22,7 +22,7 @@ import java.math.BigInteger;
 import java.time.DayOfWeek;
 import java.util.Objects;
 
-public class Timetable implements Entity {
+public final class Timetable implements Entity {
     private BigInteger id;
     private BigInteger teacherId;
     private BigInteger subjectId;

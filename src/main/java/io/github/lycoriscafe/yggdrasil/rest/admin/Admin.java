@@ -22,7 +22,7 @@ import java.math.BigInteger;
 import java.util.Objects;
 import java.util.Set;
 
-public class Admin implements Entity {
+public final class Admin implements Entity {
     private BigInteger id;
     private String name;
     private Set<AccessLevel> accessLevel;

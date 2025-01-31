@@ -25,7 +25,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 
-public class ReliefService implements EntityService<Relief> {
+public final class ReliefService implements EntityService<Relief> {
     public static void toDatabase(PreparedStatement statement,
                                   Relief instance,
                                   boolean isUpdate) throws SQLException {

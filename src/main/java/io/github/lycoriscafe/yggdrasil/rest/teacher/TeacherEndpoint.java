@@ -40,7 +40,7 @@ import java.util.Set;
 
 @HttpEndpoint("/teacher")
 @Authenticated
-public class TeacherEndpoint {
+public final class TeacherEndpoint {
     private static final Logger logger = LoggerFactory.getLogger(TeacherEndpoint.class);
 
     @POST("/read")

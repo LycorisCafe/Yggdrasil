@@ -41,7 +41,7 @@ import java.util.Set;
 
 @HttpEndpoint("/timetable")
 @Authenticated
-public class TimetableEndpoint {
+public final class TimetableEndpoint {
     private static final Logger logger = LoggerFactory.getLogger(TimetableEndpoint.class);
 
     @POST("/read")

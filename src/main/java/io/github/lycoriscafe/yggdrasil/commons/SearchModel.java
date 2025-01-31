@@ -22,7 +22,7 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 
-public class SearchModel {
+public final class SearchModel {
     private Map<String, Map<String, Boolean>> searchBy;
     private List<String> orderBy;
     private Boolean isAscending;

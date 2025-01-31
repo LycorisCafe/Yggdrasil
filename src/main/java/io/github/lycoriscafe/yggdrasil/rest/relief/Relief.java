@@ -22,7 +22,7 @@ import java.math.BigInteger;
 import java.time.LocalDate;
 import java.util.Objects;
 
-public class Relief implements Entity {
+public final class Relief implements Entity {
     private BigInteger id;
     private BigInteger timetableId;
     private BigInteger teacherId;

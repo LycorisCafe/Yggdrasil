@@ -25,7 +25,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 
-public class NotificationService implements EntityService<Notification> {
+public final class NotificationService implements EntityService<Notification> {
     public static void toDatabase(PreparedStatement statement,
                                   Notification instance,
                                   boolean isUpdate) throws SQLException {

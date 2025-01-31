@@ -23,7 +23,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class StudentSubjectJoinService implements EntityService<StudentSubjectJoin> {
+public final class StudentSubjectJoinService implements EntityService<StudentSubjectJoin> {
     public static void toDatabase(PreparedStatement statement,
                                   StudentSubjectJoin instance,
                                   boolean isUpdate) throws SQLException {

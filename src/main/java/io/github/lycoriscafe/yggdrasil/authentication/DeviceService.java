@@ -33,14 +33,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class DeviceService {
+public final class DeviceService {
     public static List<Device> getDevices(Role role,
                                           BigInteger userId) throws SQLException {
         Objects.requireNonNull(role);
         Objects.requireNonNull(userId);
         List<Device> devices;
         try (var connection = Utils.getDatabaseConnection();
-             var statement = connection.prepareStatement("SELECT * FROM devices WHERE role = ? AND userid = ?")) {
+             var statement = connection.prepareStatement("SELECT * FROM device WHERE role = ? AND userid = ?")) {
             statement.setString(1, role.toString());
             statement.setString(2, userId.toString());
             devices = deserialize(statement.executeQuery());
@@ -68,7 +68,6 @@ public class DeviceService {
         try {
             var device = DeviceService.getDevices(TokenType.ACCESS_TOKEN, ((BearerAuthorization) req.getAuthorization()).getAccessToken());
             var devices = DeviceService.getDevices(device.getFirst().getRole(), device.getFirst().getUserId());
-            devices.forEach(e -> e.setAccessToken(null).setExpires(null).setRefreshToken(null));
             return Utils.getGson().toJson(devices);
         } catch (SQLException e) {
             return "\"error\": \"" + e.getMessage() + "\"";

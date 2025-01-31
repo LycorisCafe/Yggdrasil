@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public class CommonService {
+public final class CommonService {
     private static final Logger logger = LoggerFactory.getLogger(CommonService.class);
 
     public static <T extends Entity, U extends EntityService<T>> ResponseModel<T> create(Class<T> entity,

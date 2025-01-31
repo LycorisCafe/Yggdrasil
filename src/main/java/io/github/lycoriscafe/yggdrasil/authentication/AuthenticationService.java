@@ -53,7 +53,7 @@ import java.sql.SQLException;
 import java.time.Instant;
 import java.util.*;
 
-public class AuthenticationService {
+public final class AuthenticationService {
     private static final Logger logger = LoggerFactory.getLogger(AuthenticationService.class);
 
     public static HttpResponse authenticate(HttpRequest httpRequest,

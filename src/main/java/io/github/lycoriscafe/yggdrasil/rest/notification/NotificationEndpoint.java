@@ -41,7 +41,7 @@ import java.util.Set;
 
 @HttpEndpoint("/notification")
 @Authenticated
-public class NotificationEndpoint {
+public final class NotificationEndpoint {
     private static final Logger logger = LoggerFactory.getLogger(NotificationEndpoint.class);
 
     @POST("/read")

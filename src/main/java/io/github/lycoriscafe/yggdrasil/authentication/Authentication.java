@@ -19,10 +19,10 @@ package io.github.lycoriscafe.yggdrasil.authentication;
 import java.math.BigInteger;
 import java.util.Objects;
 
-public class Authentication {
-    private Role role;
-    private BigInteger userId;
-    private String password;
+public final class Authentication {
+    private transient Role role;
+    private transient BigInteger userId;
+    private transient String password;
 
     public Authentication(Role role,
                           BigInteger userId,

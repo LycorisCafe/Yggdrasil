@@ -41,7 +41,7 @@ import java.util.Set;
 
 @HttpEndpoint("/guardian")
 @Authenticated
-public class GuardianEndpoint {
+public final class GuardianEndpoint {
     private static final Logger logger = LoggerFactory.getLogger(GuardianEndpoint.class);
 
     @POST("/read")

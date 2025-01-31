@@ -24,7 +24,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.DayOfWeek;
 
-public class TimetableService implements EntityService<Timetable> {
+public final class TimetableService implements EntityService<Timetable> {
     public static void toDatabase(PreparedStatement statement,
                                   Timetable instance,
                                   boolean isUpdate) throws SQLException {

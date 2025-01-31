@@ -41,7 +41,7 @@ import java.util.Set;
 
 @HttpEndpoint("/relief")
 @Authenticated
-public class ReliefEndpoint {
+public final class ReliefEndpoint {
     private static final Logger logger = LoggerFactory.getLogger(ReliefEndpoint.class);
 
     @POST("/read")

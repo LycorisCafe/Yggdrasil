@@ -23,7 +23,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Objects;
 
-public class StudentAttendance implements Entity {
+public final class StudentAttendance implements Entity {
     private BigInteger id;
     private BigInteger studentId;
     private LocalDate date;

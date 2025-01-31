@@ -27,7 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class AdminService implements EntityService<Admin> {
+public final class AdminService implements EntityService<Admin> {
     public static void toDatabase(PreparedStatement statement,
                                   Admin instance,
                                   boolean isUpdate) throws SQLException {

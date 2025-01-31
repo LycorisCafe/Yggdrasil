@@ -27,7 +27,7 @@ import java.time.LocalTime;
 import java.time.Year;
 import java.time.format.DateTimeFormatter;
 
-public class Utils {
+public final class Utils {
     private static final String YEAR_FORMAT = "yyyy";
     private static final String DATE_FORMAT = "yyyy-MM-dd";
     private static final String TIME_FORMAT = "HH:mm:ss";

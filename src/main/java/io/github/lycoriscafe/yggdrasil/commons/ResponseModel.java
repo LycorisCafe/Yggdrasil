@@ -23,7 +23,7 @@ import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public class ResponseModel<T extends Entity> {
+public final class ResponseModel<T extends Entity> {
     private boolean success;
     private LocalDateTime timestamp;
     private String error;

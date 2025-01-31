@@ -23,8 +23,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
-public class GsonTypeAdapters {
-    public static class Year implements JsonSerializer<java.time.Year>, JsonDeserializer<java.time.Year> {
+public final class GsonTypeAdapters {
+    public static final class Year implements JsonSerializer<java.time.Year>, JsonDeserializer<java.time.Year> {
 
         @Override
         public java.time.Year deserialize(JsonElement jsonElement,
@@ -41,7 +41,7 @@ public class GsonTypeAdapters {
         }
     }
 
-    public static class Date implements JsonSerializer<LocalDate>, JsonDeserializer<LocalDate> {
+    public static final class Date implements JsonSerializer<LocalDate>, JsonDeserializer<LocalDate> {
         @Override
         public LocalDate deserialize(JsonElement jsonElement,
                                      Type type,
@@ -57,7 +57,7 @@ public class GsonTypeAdapters {
         }
     }
 
-    public static class Time implements JsonSerializer<LocalTime>, JsonDeserializer<LocalTime> {
+    public static final class Time implements JsonSerializer<LocalTime>, JsonDeserializer<LocalTime> {
         @Override
         public LocalTime deserialize(JsonElement jsonElement,
                                      Type type,
@@ -73,7 +73,7 @@ public class GsonTypeAdapters {
         }
     }
 
-    public static class DateTime implements JsonSerializer<LocalDateTime>, JsonDeserializer<LocalDateTime> {
+    public static final class DateTime implements JsonSerializer<LocalDateTime>, JsonDeserializer<LocalDateTime> {
         @Override
         public LocalDateTime deserialize(JsonElement jsonElement,
                                          Type type,

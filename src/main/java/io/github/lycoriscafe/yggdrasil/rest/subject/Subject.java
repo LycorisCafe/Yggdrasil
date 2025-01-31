@@ -21,7 +21,7 @@ import io.github.lycoriscafe.yggdrasil.commons.Entity;
 import java.math.BigInteger;
 import java.util.Objects;
 
-public class Subject implements Entity {
+public final class Subject implements Entity {
     private BigInteger id;
     private Integer grade;
     private String shortName;

@@ -24,7 +24,7 @@ import java.time.LocalDate;
 import java.time.Year;
 import java.util.Objects;
 
-public class Student implements Entity {
+public final class Student implements Entity {
     private BigInteger id;
     private BigInteger guardianId;
     private BigInteger classroomId;

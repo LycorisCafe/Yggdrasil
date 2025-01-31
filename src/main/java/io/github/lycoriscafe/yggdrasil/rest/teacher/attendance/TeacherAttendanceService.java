@@ -26,7 +26,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
-public class TeacherAttendanceService implements EntityService<TeacherAttendance> {
+public final class TeacherAttendanceService implements EntityService<TeacherAttendance> {
     public static void toDatabase(PreparedStatement statement,
                                   TeacherAttendance instance,
                                   boolean isUpdate) throws SQLException {

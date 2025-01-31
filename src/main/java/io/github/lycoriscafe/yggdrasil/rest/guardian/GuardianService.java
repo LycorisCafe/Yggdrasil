@@ -26,7 +26,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 
-public class GuardianService implements EntityService<Guardian> {
+public final class GuardianService implements EntityService<Guardian> {
     public static void toDatabase(PreparedStatement statement,
                                   Guardian instance,
                                   boolean isUpdate) throws SQLException {

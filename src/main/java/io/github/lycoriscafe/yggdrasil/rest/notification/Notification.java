@@ -22,7 +22,7 @@ import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-public class Notification implements Entity {
+public final class Notification implements Entity {
     private BigInteger id;
     private LocalDateTime createTimestamp;
     private LocalDateTime updateTimestamp;

@@ -23,7 +23,7 @@ import java.math.BigInteger;
 import java.time.LocalDate;
 import java.util.Objects;
 
-public class Guardian implements Entity {
+public final class Guardian implements Entity {
     private BigInteger id;
     private String nic;
     private String initName;

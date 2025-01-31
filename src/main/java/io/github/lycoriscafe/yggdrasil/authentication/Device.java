@@ -20,13 +20,13 @@ import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-public class Device {
-    private Role role;
-    private BigInteger userId;
+public final class Device {
+    private transient Role role;
+    private transient BigInteger userId;
     private String deviceName;
-    private String accessToken;
-    private Long expires;
-    private String refreshToken;
+    private transient String accessToken;
+    private transient Long expires;
+    private transient String refreshToken;
     private LocalDateTime lastLogin;
 
     public Device(Role role,
