@@ -131,10 +131,10 @@ public class AdminEndpoint {
     @ExpectContent("none")
     public static HttpResponse logout(HttpPatchRequest req,
                                       HttpResponse res) {
-        var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN),
-                req.getParameters() == null ? null : Set.of(AccessLevel.SUPERUSER));
+        var isSelf = req.getParameters() == null || (req.getParameters().containsKey("userId") && req.getParameters().get("userId").equals("0"));
+        var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN), isSelf ? null : Set.of(AccessLevel.SUPERUSER));
         if (auth != null) return auth;
-        return res.setContent(DeviceService.removeDevice(req, Role.ADMIN, req.getParameters() == null).parse());
+        return res.setContent(DeviceService.removeDevice(req, Role.ADMIN, isSelf).parse());
     }
 
     @GET("/devices")

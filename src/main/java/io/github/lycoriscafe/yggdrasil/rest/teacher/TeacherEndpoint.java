@@ -132,10 +132,11 @@ public class TeacherEndpoint {
     @ExpectContent("none")
     public static HttpResponse logout(HttpPatchRequest req,
                                       HttpResponse res) {
-        var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN, Role.STUDENT),
-                req.getParameters() == null ? null : Set.of(AccessLevel.SUPERUSER, AccessLevel.STUDENT));
+        var isSelf = req.getParameters() == null || (req.getParameters().containsKey("userId") && req.getParameters().get("userId").equals("0"));
+        var auth = AuthenticationService.authenticate(req, Set.of(Role.ADMIN, Role.TEACHER),
+                isSelf ? null : Set.of(AccessLevel.SUPERUSER, AccessLevel.TEACHER));
         if (auth != null) return auth;
-        return res.setContent(DeviceService.removeDevice(req, Role.TEACHER, req.getParameters() == null).parse());
+        return res.setContent(DeviceService.removeDevice(req, Role.TEACHER, isSelf).parse());
     }
 
     @GET("/devices")

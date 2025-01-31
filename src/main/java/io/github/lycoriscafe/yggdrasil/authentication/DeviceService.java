@@ -132,11 +132,23 @@ public class DeviceService {
         Objects.requireNonNull(role);
         try {
             if (!selfRemove) {
-                removeDevices(role, new BigInteger(req.getParameters().get("userId")));
+                BigInteger userId;
+                try {
+                    userId = new BigInteger(req.getParameters().get("userId"));
+                } catch (NumberFormatException e) {
+                    return new ResponseModel<T>().setError("Unparsable `userId`");
+                }
+                removeDevices(role, userId);
                 return new ResponseModel<T>().setSuccess(true);
             }
 
-            removeDevice(TokenType.ACCESS_TOKEN, ((BearerAuthorization) req.getAuthorization()).getAccessToken());
+            if (req.getParameters() == null) {
+                removeDevice(TokenType.ACCESS_TOKEN, ((BearerAuthorization) req.getAuthorization()).getAccessToken());
+                return new ResponseModel<T>().setSuccess(true);
+            }
+
+            var device = getDevices(TokenType.ACCESS_TOKEN, ((BearerAuthorization) req.getAuthorization()).getAccessToken()).getFirst();
+            removeDevices(device.getRole(), device.getUserId());
             return new ResponseModel<T>().setSuccess(true);
         } catch (SQLException e) {
             e.printStackTrace(System.err);
