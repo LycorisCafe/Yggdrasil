@@ -175,8 +175,8 @@ public final class CommonService {
 
         StringBuilder query = new StringBuilder("UPDATE ").append(entity.getSimpleName()).append(" SET ");
         for (int i = 0; i < entity.getDeclaredFields().length; i++) {
-            if (i > 0) query.append(", ");
-            if (entity.getDeclaredFields()[i].getName().equals("id")) continue;
+            if (i > 1) query.append(", ");
+            if (i == 0) continue;
             query.append(entity.getDeclaredFields()[i].getName()).append(" = ?");
         }
         query.append(" WHERE id = ?");
