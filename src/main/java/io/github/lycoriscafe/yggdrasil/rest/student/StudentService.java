@@ -38,7 +38,7 @@ public final class StudentService implements EntityService<Student> {
         statement.setString(nextParamIndex++, instance.getInitName());
         statement.setString(nextParamIndex++, instance.getFullName());
         statement.setString(nextParamIndex++, instance.getGender().toString());
-        statement.setString(nextParamIndex++, instance.getDateOfBirth().format(Utils.getDateTimeFormatter()));
+        statement.setString(nextParamIndex++, instance.getDateOfBirth().format(Utils.getDateFormatter()));
         statement.setString(nextParamIndex++, instance.getNic());
         statement.setString(nextParamIndex++, instance.getAddress());
         statement.setString(nextParamIndex++, instance.getRegYear().format(Utils.getYearFormatter()));
@@ -57,7 +57,7 @@ public final class StudentService implements EntityService<Student> {
                 .setInitName(resultSet.getString("initName"))
                 .setFullName(resultSet.getString("fullName"))
                 .setGender(Gender.valueOf(resultSet.getString("gender")))
-                .setDateOfBirth(LocalDate.parse(resultSet.getString("dateOfBirth"), Utils.getDateTimeFormatter()))
+                .setDateOfBirth(LocalDate.parse(resultSet.getString("dateOfBirth"), Utils.getDateFormatter()))
                 .setNic(resultSet.getString("nic"))
                 .setAddress(resultSet.getString("address"))
                 .setRegYear(Year.parse(resultSet.getString("regYear"), Utils.getDateFormatter()))
