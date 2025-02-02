@@ -101,10 +101,6 @@ public final class DeviceService {
              var statement = connection.prepareStatement("DELETE FROM device WHERE role = ? AND userid = ?")) {
             statement.setString(1, role.toString());
             statement.setString(2, userId.toString());
-            if (statement.executeUpdate() != 1) {
-                connection.rollback();
-                throw new RuntimeException("Device removing failed");
-            }
             connection.commit();
         }
     }
