@@ -1,19 +1,3 @@
-/*
- * Copyright 2025 Lycoris Café
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 # Create the database
 # CREATE DATABASE yggdrasil CHARACTER SET 'utf8mb4';
 
@@ -57,11 +41,11 @@ CREATE TABLE guardian
 CREATE TABLE notification
 (
     id              SERIAL PRIMARY KEY,
-    createTimestamp DATETIME DEFAULT NOW(),
-    updateTimestamp DATETIME DEFAULT NOW() ON UPDATE NOW(),
+    createTimestamp DATETIME,
+    updateTimestamp DATETIME,
     scope           SET ('STUDENT', 'TEACHER') NOT NULL,
-    message VARCHAR(2000) NOT NULL,
-    draft           BOOLEAN  DEFAULT FALSE
+    message         VARCHAR(2000) NOT NULL,
+    draft           BOOLEAN DEFAULT FALSE
 );
 
 # Relief
@@ -97,8 +81,8 @@ CREATE TABLE studentAttendance
 (
     id   SERIAL PRIMARY KEY,
     studentId BIGINT UNSIGNED NOT NULL,
-    date DATE DEFAULT (DATE(NOW())),
-    time TIME DEFAULT (TIME(NOW())),
+    date DATE,
+    time TIME,
     UNIQUE (studentId, date)
 );
 
@@ -142,8 +126,8 @@ CREATE TABLE teacherAttendance
 (
     id   SERIAL PRIMARY KEY,
     teacherId BIGINT UNSIGNED NOT NULL,
-    date DATE DEFAULT (DATE(NOW())),
-    time TIME DEFAULT (TIME(NOW())),
+    date DATE,
+    time TIME,
     UNIQUE (teacherId, date)
 );
 
@@ -223,33 +207,52 @@ ALTER TABLE timetable
 ALTER TABLE device
     ADD FOREIGN KEY (role, userId) REFERENCES authentication (role, userId) ON UPDATE CASCADE ON DELETE CASCADE;
 
-# Triggers for Notification
-# createTimestamp, updateTimestamp on null NOW()
+# Triggers for StudentAttendance
 DELIMITER //
-CREATE TRIGGER set_createTimestamp_on_insert
+CREATE TRIGGER studentAttendance_prevent_null_timestamp_insert
+    BEFORE INSERT
+    ON studentAttendance
+    FOR EACH ROW
+BEGIN
+    SET NEW.date = DATE(NOW());
+    SET NEW.time = TIME(NOW());
+END;
+//
+DELIMITER ;
+
+# Triggers for TeacherAttendance
+DELIMITER //
+CREATE TRIGGER teacherAttendance_prevent_null_timestamp_insert
+    BEFORE INSERT
+    ON teacherAttendance
+    FOR EACH ROW
+BEGIN
+    SET NEW.date = DATE(NOW());
+    SET NEW.time = TIME(NOW());
+END;
+//
+DELIMITER ;
+
+# Triggers for Notification
+DELIMITER //
+CREATE TRIGGER notification_prevent_null_timestamp_insert
     BEFORE INSERT
     ON notification
     FOR EACH ROW
 BEGIN
-    -- Set createTimestamp to NOW() if it is not already set
-    IF NEW.createTimestamp IS NULL THEN
-        SET NEW.createTimestamp = NOW();
-    END IF;
-    IF NEW.updateTimestamp IS NULL THEN
-        SET NEW.updateTimestamp = NOW();
-    END IF;
+    SET NEW.createTimestamp = NOW();
+    SET NEW.updateTimestamp = NOW();
 END;
 //
 DELIMITER ;
-# createTimestamp no update
 DELIMITER //
-CREATE TRIGGER notification_prevent_createTimestamp_update
+CREATE TRIGGER notification_prevent_null_timestamp_update
     BEFORE UPDATE
     ON notification
     FOR EACH ROW
 BEGIN
-    -- Ensure the createTimestamp remains unchanged
     SET NEW.createTimestamp = OLD.createTimestamp;
+    SET NEW.updateTimestamp = NOW();
 END;
 //
 DELIMITER ;
