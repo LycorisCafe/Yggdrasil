@@ -207,7 +207,7 @@ public final class CommonService {
             statement.setString(1, id.toString());
             if (statement.executeUpdate() != 1) {
                 connection.rollback();
-                return new ResponseModel<T>().setError("Internal system error");
+                return new ResponseModel<T>().setError("Check target ID and try again.");
             }
             connection.commit();
             return new ResponseModel<T>().setSuccess(true);
