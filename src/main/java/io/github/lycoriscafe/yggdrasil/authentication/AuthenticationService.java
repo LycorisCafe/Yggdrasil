@@ -102,7 +102,7 @@ public final class AuthenticationService {
                 var admin = CommonService.read(Admin.class, AdminService.class, new SearchModel()
                         .setSearchBy(Map.of("id", Map.of(device.getFirst().getUserId().toString(), false))));
                 var accessLevel = admin.getData().getFirst().getAccessLevel();
-                if (accessLevel.stream().noneMatch(accessLevel::contains)) {
+                if (accessLevels.stream().noneMatch(accessLevel::contains)) {
                     return httpResponse.setStatusCode(HttpStatusCode.FORBIDDEN).addAuthentication(
                             new BearerAuthentication(BearerAuthorizationError.INSUFFICIENT_SCOPE)
                                     .setScope(Role.ADMIN + "#" + accessLevels)
