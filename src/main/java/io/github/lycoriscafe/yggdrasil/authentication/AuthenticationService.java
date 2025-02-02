@@ -187,7 +187,7 @@ public final class AuthenticationService {
 
             var devices = DeviceService.getDevices(TokenType.ACCESS_TOKEN, ((BearerAuthorization) req.getAuthorization()).getAccessToken());
             var authentication = AuthenticationService.getAuthentication(devices.getFirst().getRole(), devices.getFirst().getUserId());
-            if (authentication.getPassword().equals(AuthenticationService.encryptData(oldPassword.getBytes(StandardCharsets.UTF_8)))) {
+            if (!authentication.getPassword().equals(AuthenticationService.encryptData(oldPassword.getBytes(StandardCharsets.UTF_8)))) {
                 return new ResponseModel<T>().setError("oldPassword doesn't match");
             }
             updateAuthentication(authentication.setPassword(newPassword));
