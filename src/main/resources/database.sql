@@ -1,11 +1,25 @@
+/*
+ * Copyright 2025 Lycoris Café
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 # Create the database
 # CREATE DATABASE yggdrasil CHARACTER SET 'utf8mb4';
 
 # ======================================================================================================================
-# Start the constructions of the structure
-START TRANSACTION;
 
-## ADMIN
+# Admin
 CREATE TABLE admin
 (
     id          SERIAL PRIMARY KEY,
@@ -15,7 +29,7 @@ CREATE TABLE admin
     disabled    BOOLEAN DEFAULT FALSE # Used for disabling without deleting
 );
 
-## CLASSROOM
+# Classroom
 CREATE TABLE classroom
 (
     id        SERIAL PRIMARY KEY,
@@ -25,7 +39,7 @@ CREATE TABLE classroom
     UNIQUE (grade, name)
 );
 
-## GUARDIAN
+# Guardian
 CREATE TABLE guardian
 (
     id          SERIAL PRIMARY KEY,
@@ -39,7 +53,7 @@ CREATE TABLE guardian
     contactNo   VARCHAR(10)             NOT NULL
 );
 
-## NOTIFICATION
+# Notification
 CREATE TABLE notification
 (
     id              SERIAL PRIMARY KEY,
@@ -50,7 +64,7 @@ CREATE TABLE notification
     draft           BOOLEAN  DEFAULT FALSE
 );
 
-## RELIEF
+# Relief
 CREATE TABLE relief
 (
     id          SERIAL PRIMARY KEY,
@@ -60,7 +74,7 @@ CREATE TABLE relief
     UNIQUE (timetableId, date)
 );
 
-## STUDENT
+# Student
 CREATE TABLE student
 (
     id          SERIAL PRIMARY KEY,
@@ -78,7 +92,7 @@ CREATE TABLE student
     disabled    BOOLEAN DEFAULT FALSE # Used for disabling without deleting
 );
 
-## STUDENT ATTENDANCE
+# Student Attendance
 CREATE TABLE studentAttendance
 (
     id   SERIAL PRIMARY KEY,
@@ -88,7 +102,7 @@ CREATE TABLE studentAttendance
     UNIQUE (studentId, date)
 );
 
-## STUDENT SUBJECT JOIN
+# Student Subject Join
 CREATE TABLE studentSubjectJoin
 (
     id SERIAL PRIMARY KEY,
@@ -97,7 +111,7 @@ CREATE TABLE studentSubjectJoin
     UNIQUE (studentId, subjectId)
 );
 
-## SUBJECT
+# Subject
 CREATE TABLE subject
 (
     id        SERIAL PRIMARY KEY,
@@ -108,7 +122,7 @@ CREATE TABLE subject
     UNIQUE (grade, shortName)
 );
 
-## TEACHER
+# Teacher
 CREATE TABLE teacher
 (
     id          SERIAL PRIMARY KEY,
@@ -123,7 +137,7 @@ CREATE TABLE teacher
     disabled    BOOLEAN DEFAULT FALSE # Used for disabling without deleting
 );
 
-## TEACHER ATTENDANCE
+# Teacher Attendance
 CREATE TABLE teacherAttendance
 (
     id   SERIAL PRIMARY KEY,
@@ -133,7 +147,7 @@ CREATE TABLE teacherAttendance
     UNIQUE (teacherId, date)
 );
 
-## TEACHER SUBJECT JOIN
+# Teacher Subject Join
 CREATE TABLE teacherSubjectJoin
 (
     id SERIAL PRIMARY KEY,
@@ -142,7 +156,7 @@ CREATE TABLE teacherSubjectJoin
     UNIQUE (teacherId, subjectId)
 );
 
-## TIMETABLE
+# Timetable
 CREATE TABLE timetable
 (
     id          SERIAL PRIMARY KEY,
@@ -153,7 +167,7 @@ CREATE TABLE timetable
     timeslot TINYINT(1) UNSIGNED NOT NULL  # Typical 8 periods of daily timetable
 );
 
-## AUTHENTICATION
+# Authentication
 CREATE TABLE authentication
 (
     role     ENUM ('STUDENT', 'TEACHER', 'ADMIN') NOT NULL,
@@ -162,7 +176,7 @@ CREATE TABLE authentication
     PRIMARY KEY (role, userId)
 );
 
-## DEVICES
+# Device
 CREATE TABLE device
 (
     role         ENUM ('STUDENT', 'TEACHER', 'ADMIN') NOT NULL,
@@ -209,6 +223,8 @@ ALTER TABLE timetable
 ALTER TABLE device
     ADD FOREIGN KEY (role, userId) REFERENCES authentication (role, userId) ON UPDATE CASCADE ON DELETE CASCADE;
 
+# Trigger for Notification update
+# createTimestamp no update
 DELIMITER //
 CREATE TRIGGER notification_prevent_createTimestamp_update
     BEFORE UPDATE
@@ -221,28 +237,9 @@ END;
 //
 DELIMITER ;
 
-/*
- * Copyright 2025 Lycoris Café
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-# End the constructions of the structure
-COMMIT;
-
 # ======================================================================================================================
 
-## INSERT SUPERUSER (DEFAULT)
+# INSERT SUPERUSER (DEFAULT)
 START TRANSACTION;
 
 INSERT INTO admin (id, name, accessLevel)
