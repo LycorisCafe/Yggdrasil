@@ -48,6 +48,17 @@
                 <Telegram>https://t.me/NaveenB2004</Telegram>
             </properties>
         </developer>
+        <developer>
+            <id>randillasith</id>
+            <name>Lasith Randil</name>
+            <email>randillasith900@gmail.com</email>
+            <url>https://github.com/randillasith</url>
+            <timezone>+05:30</timezone>
+            <properties>
+                <!-- messenger platform -->
+                <Telegram>https://t.me/RandilLasith</Telegram>
+            </properties>
+        </developer>
     </developers>
 
     <scm>
