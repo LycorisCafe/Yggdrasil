@@ -1,3 +1,19 @@
+/*
+ * Copyright 2025 Lycoris Café
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 # Create the database
 # CREATE DATABASE yggdrasil CHARACTER SET 'utf8mb4';
 
@@ -44,7 +60,7 @@ CREATE TABLE notification
     createTimestamp DATETIME,
     updateTimestamp DATETIME,
     scope           SET ('STUDENT', 'TEACHER') NOT NULL,
-    message         VARCHAR(2000) NOT NULL,
+    message VARCHAR(2000) NOT NULL,
     draft           BOOLEAN DEFAULT FALSE
 );
 
@@ -257,31 +273,95 @@ END;
 //
 DELIMITER ;
 
-/*
- * Copyright 2025 Lycoris Café
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 # ======================================================================================================================
 
 # INSERT SUPERUSER (DEFAULT)
-START TRANSACTION;
-
 INSERT INTO admin (id, name, accessLevel)
 VALUES (1, 'SUPERUSER', 'SUPERUSER');
 
 INSERT INTO authentication (role, userId, password) # password is SUPERUSER
 VALUES ('ADMIN', 1, '0ah66cwBDYMR1Gft+FRFe4y02jwep3Mmrsx19TLlI+c');
 
-COMMIT;
+# ======================================================================================================================
+
+# Book (Library)
+CREATE TABLE book
+(
+    isbn             VARCHAR(13) PRIMARY KEY,
+    authorId         BIGINT UNSIGNED   NOT NULL,
+    publisherId      BIGINT UNSIGNED   NOT NULL,
+    title            VARCHAR(200)      NOT NULL,
+    classificationNo VARCHAR(100)      NOT NULL,
+    publishedYear    YEAR              NOT NULL,
+    genre            JSON              NOT NULL,
+    reservedSection  VARCHAR(50)       NOT NULL,
+    pageCount        SMALLINT UNSIGNED NOT NULL,
+    price            INTEGER UNSIGNED  NOT NULL
+);
+
+# Accession (Library)
+CREATE TABLE accession
+(
+    id        SERIAL PRIMARY KEY,
+    isbn      VARCHAR(13)                         NOT NULL,
+    addedDate DATE                                NOT NULL,
+    status    ENUM ('GOOD', 'DAMAGED', 'REMOVED') NOT NULL
+);
+
+# Author (Library)
+CREATE TABLE author
+(
+    id   SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL
+);
+
+# Publisher (Library)
+CREATE TABLE publisher
+(
+    id   SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL
+);
+
+# Transaction (Library)
+CREATE TABLE transaction
+(
+    id              SERIAL PRIMARY KEY,
+    role            ENUM ('STUDENT', 'TEACHER')        NOT NULL,
+    borrowerId      BIGINT UNSIGNED                    NOT NULL,
+    accessionId     BIGINT UNSIGNED                    NOT NULL,
+    transactionDate DATE                               NOT NULL,
+    returnDate      DATE                               NOT NULL,
+    type            ENUM ('NORMAL', 'DAMAGED', 'LOST') NOT NULL
+);
+
+# Fine (Library)
+CREATE TABLE fine
+(
+    id            SERIAL PRIMARY KEY,
+    fineTypeId    BIGINT UNSIGNED NOT NULL,
+    transactionId BIGINT UNSIGNED NOT NULL,
+    status        BOOLEAN         NOT NULL
+);
+
+# FineType (Library)
+CREATE TABLE fineType
+(
+    id          SERIAL PRIMARY KEY,
+    name        VARCHAR(20)      NOT NULL,
+    description VARCHAR(200),
+    amount      INTEGER UNSIGNED NOT NULL
+);
+
+ALTER TABLE book
+    ADD FOREIGN KEY (authorId) REFERENCES author (id) ON UPDATE CASCADE ON DELETE CASCADE,
+    ADD FOREIGN KEY (publisherId) REFERENCES publisher (id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+ALTER TABLE accession
+    ADD FOREIGN KEY (isbn) REFERENCES book (isbn) ON UPDATE CASCADE ON DELETE CASCADE;
+
+ALTER TABLE transaction
+    ADD FOREIGN KEY (accessionId) REFERENCES accession (id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+ALTER TABLE fine
+    ADD FOREIGN KEY (fineTypeId) REFERENCES fineType (id) ON UPDATE CASCADE ON DELETE CASCADE,
+    ADD FOREIGN KEY (transactionId) REFERENCES transaction (id) ON UPDATE CASCADE ON DELETE CASCADE;
